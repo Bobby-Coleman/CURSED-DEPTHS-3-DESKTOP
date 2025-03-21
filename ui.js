@@ -227,7 +227,7 @@ export class UI {
         }, 2000);
     }
     
-    updateStats(player, gameState) {
+    updateStats(player, gameState, enemies) {
         document.getElementById('hp').textContent = player.hp;
         document.getElementById('max-hp').textContent = player.maxHp;
         document.getElementById('ammo').textContent = player.ammo;
@@ -249,11 +249,16 @@ export class UI {
             if (relic) {
                 const color = '#' + relic.color.toString(16).padStart(6, '0');
                 slot.style.backgroundColor = color;
-                slot.style.border = '2px solid #999';
+                slot.style.border = '2px solid #888';
                 
-                // Update tooltip content with sell option
+                // Update tooltip content
                 slot.onmouseover = () => {
-                    this.tooltip.innerHTML = `${relic.name}\nBlessing: ${relic.blessing}${relic.curse ? '\nCurse: ' + relic.curse : ''}\n\nPress R to sell for 5 Gold`;
+                    this.tooltip.innerHTML = `
+                        <div style="color: ${color};">${relic.name}</div>
+                        <div>Blessing: ${relic.blessing}</div>
+                        ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
+                        <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>
+                    `;
                 };
             } else {
                 slot.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
