@@ -60,6 +60,9 @@ export class LootSystem {
         // Create random weapon
         const damage = this.generateRandomDamage();
         const fireRate = this.generateRandomFireRate();
+        const range = this.generateRandomRange();
+        
+        console.log('Creating weapon drop with range:', range);
         
         // Create mesh
         const geometry = new THREE.BoxGeometry(20, 10, 5);
@@ -68,14 +71,18 @@ export class LootSystem {
         mesh.position.set(x, y, 1);
         this.scene.add(mesh);
         
-        return {
+        const weaponDrop = {
             type: 'weapon',
             data: {
-                damage: damage,
-                fireRate: fireRate
+                damage,
+                fireRate,
+                range
             },
             mesh: mesh
         };
+        
+        console.log('Weapon drop created:', weaponDrop);
+        return weaponDrop;
     }
     
     createHeartDrop(x, y) {
@@ -167,6 +174,13 @@ export class LootSystem {
         }
     }
     
+    generateRandomRange() {
+        const roomSize = 800;
+        const minRange = Math.floor(roomSize / 4);
+        const maxRange = roomSize;
+        return Math.floor(Math.random() * (maxRange - minRange) + minRange);
+    }
+    
     checkPickup(player, ui) {
         // Check if player is close enough to any drops
         for (let i = this.drops.length - 1; i >= 0; i--) {
@@ -200,8 +214,13 @@ export class LootSystem {
         switch (drop.type) {
             case 'weapon':
                 // Replace player's weapon
+                console.log('Attempting to pick up weapon:', drop);
+                console.log('Weapon data:', drop.data);
+                console.log('Weapon range:', drop.data.range);
                 player.baseDamage = drop.data.damage;
                 player.fireRate = drop.data.fireRate;
+                player.weaponRange = drop.data.range;
+                console.log('Player weapon range after pickup:', player.weaponRange);
                 break;
                 
             case 'heart':
