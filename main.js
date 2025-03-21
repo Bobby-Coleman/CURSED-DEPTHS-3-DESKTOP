@@ -13,11 +13,13 @@ const ROOM_SIZE = 800;
 // Game state
 let gameState = {
     level: 1,
-    gold: 0,
+    gold: 20,
     killStreak: 0,
     gameOver: false,
     isShopLevel: false,
-    currentPickup: null
+    currentPickup: null,
+    hoveredRelicIndex: -1,
+    lastRelicSellTime: 0  // Add this to track last sell time
 };
 
 // Initialize Three.js
@@ -90,11 +92,13 @@ function init() {
     // Reset game state
     gameState = {
         level: 1,
-        gold: 0,
+        gold: 20,
         killStreak: 0,
         gameOver: false,
         isShopLevel: false,
-        currentPickup: null
+        currentPickup: null,
+        hoveredRelicIndex: -1,
+        lastRelicSellTime: 0  // Add this to track last sell time
     };
     
     // Clear previous game objects
@@ -110,6 +114,18 @@ function init() {
     
     // Initialize player first
     player = new Player(scene);
+    
+    // Add Executioner's Seal for testing
+    player.relics.push({
+        id: 'executionersSeal',
+        name: "Executioner's Seal",
+        blessing: 'x3 damage if Kill Streak > 20',
+        curse: 'Take x2 damage',
+        color: 0x000000
+    });
+    
+    // Set initial kill streak for testing
+    gameState.killStreak = 15;
     
     // Make gameState globally accessible for relic effects
     window.gameState = gameState;
@@ -290,19 +306,15 @@ function animate() {
             }
             
             // Handle relic selling
-            if (keys.r && !keys.wasR) {
-                // Get the hovered relic index
-                const hoveredRelicIndex = player.relics.findIndex((relic, index) => {
-                    const slot = ui.relicSlots[index];
-                    const rect = slot.getBoundingClientRect();
-                    return document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2) === slot;
-                });
-                
-                if (hoveredRelicIndex !== -1) {
+            if (keys.r && !keys.wasR && gameState.hoveredRelicIndex !== -1) {
+                const currentTime = Date.now();
+                // Add 500ms cooldown between sells
+                if (currentTime - gameState.lastRelicSellTime > 500) {
                     // Try to sell the relic
-                    if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {
-                        if (relicSystem.sellRelic(player, hoveredRelicIndex)) {
+                    if (relicSystem.canSellRelic(player, player.relics[gameState.hoveredRelicIndex])) {
+                        if (relicSystem.sellRelic(player, gameState.hoveredRelicIndex)) {
                             gameState.gold += 5;
+                            gameState.lastRelicSellTime = currentTime;  // Update last sell time
                             ui.updateStats(player, gameState);
                             ui.showMessage("Relic sold for 5 gold!");
                         }
