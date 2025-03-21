@@ -226,7 +226,7 @@ function endGame(reason) {
 
 function updateUI() {
     // Use the complete UI update method that includes weapon stats
-    ui.updateStats(player, gameState);
+    ui.updateStats(player, gameState, enemies);
 }
 
 function animate() {
@@ -248,24 +248,17 @@ function animate() {
                     const dropY = enemies[i].mesh.position.y;
                     lootSystem.generateDrop(dropX, dropY);
                     
-                    // Handle kill streak
-                    gameState.killStreak++;
-                    if (gameState.killStreak % 5 === 0) {
-                        player.baseDamage += 5; // +5 damage every 5 kills
-                    }
-                    
-                    // Apply relic effects on kill
-                    relicSystem.onKill(player, gameState);
-                    
-                    // Remove enemy from scene and array
-                    scene.remove(enemies[i].mesh);
+                    // Remove enemy
+                    enemies[i].cleanup();
                     enemies.splice(i, 1);
+                    
+                    // Increment kill streak
+                    gameState.killStreak++;
                 }
             }
             
             // Check if all enemies are defeated
             if (enemies.length === 0 && !currentLevel.portalActive) {
-                // Spawn portal to next level
                 currentLevel.activatePortal();
             }
             
