@@ -257,7 +257,16 @@ export class LootSystem {
                     };
                 }
                 
-                // Add relic to player
+                // Check if player has enough gold
+                if (gameState.gold < 4) {
+                    return {
+                        success: false,
+                        message: "Need 4 gold to pick up relic!"
+                    };
+                }
+                
+                // Deduct gold and add relic to player
+                gameState.gold -= 4;
                 player.relics.push(drop.data);
                 drop.data.apply(player);
                 break;

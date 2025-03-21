@@ -190,6 +190,7 @@ export class UI {
                         <h3>${item.data.name}</h3>
                         <p>Blessing: ${item.data.blessing}</p>
                         ${item.data.curse ? `<p>Curse: ${item.data.curse}</p>` : ''}
+                        <p style="color: #FFD700;">Cost: 4 Gold</p>
                         <p>Press E to pick up</p>
                     `;
                 }
@@ -278,14 +279,21 @@ export class UI {
                 slot.style.backgroundColor = color;
                 slot.style.border = '2px solid #888';
                 
-                // Update tooltip content
+                // Update tooltip content and track hovered relic
                 slot.onmouseover = () => {
+                    gameState.hoveredRelicIndex = i;  // Track which relic is being hovered
                     this.tooltip.innerHTML = `
                         <div style="color: ${color};">${relic.name}</div>
                         <div>Blessing: ${relic.blessing}</div>
                         ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
                         <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>
                     `;
+                    this.tooltip.style.display = 'block';
+                };
+                
+                slot.onmouseout = () => {
+                    gameState.hoveredRelicIndex = -1;  // Clear hovered relic
+                    this.tooltip.style.display = 'none';
                 };
             } else {
                 slot.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
@@ -293,7 +301,14 @@ export class UI {
                 
                 // Update tooltip content for empty slot
                 slot.onmouseover = () => {
+                    gameState.hoveredRelicIndex = -1;  // No relic being hovered
                     this.tooltip.textContent = 'Empty Relic Slot';
+                    this.tooltip.style.display = 'block';
+                };
+                
+                slot.onmouseout = () => {
+                    gameState.hoveredRelicIndex = -1;  // Clear hovered relic
+                    this.tooltip.style.display = 'none';
                 };
             }
         }
