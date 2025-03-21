@@ -237,8 +237,8 @@ export class UI {
         document.getElementById('kill-streak').textContent = gameState.killStreak;
         document.getElementById('relics').textContent = player.relics.length;
 
-        // Update weapon stats with actual values
-        document.getElementById('current-weapon-damage').textContent = `${player.baseDamage}`;
+        // Update weapon stats with calculated values
+        document.getElementById('current-weapon-damage').textContent = `${player.calculateDamage()}`;
         document.getElementById('current-weapon-fire-rate').textContent = `${player.fireRate}`;
 
         // Update relic slots
