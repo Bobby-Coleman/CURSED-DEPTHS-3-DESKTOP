@@ -62,6 +62,30 @@ export class Enemy {
         this.healthBarBg.position.set(0, 24, -0.1); // Slightly behind health bar
         this.mesh.add(this.healthBarBg);
         
+        // Create health number display
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('15/15', 32, 16);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        const healthNumberMaterial = new THREE.MeshBasicMaterial({ 
+            map: texture,
+            transparent: true
+        });
+        const healthNumberGeometry = new THREE.PlaneGeometry(32, 16);
+        this.healthNumber = new THREE.Mesh(healthNumberGeometry, healthNumberMaterial);
+        this.healthNumber.position.set(0, 30, 0);
+        this.mesh.add(this.healthNumber);
+        
+        // Store canvas context for updates
+        this.canvas = canvas;
+        this.ctx = ctx;
+        
         // Bullets array for shooter type
         this.bullets = [];
         this.bulletGeometry = new THREE.CircleGeometry(5, 8);
@@ -77,8 +101,16 @@ export class Enemy {
     
     updateHealthBar() {
         const healthPercent = this.hp / this.maxHp;
-        this.healthBar.scale.x = Math.max(0, healthPercent); // Scale health bar width based on health percentage
-        this.healthBar.position.x = -16 * (1 - healthPercent); // Adjust position so it shrinks from right to left
+        this.healthBar.scale.x = Math.max(0, healthPercent);
+        this.healthBar.position.x = -16 * (1 - healthPercent);
+
+        // Update health number
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '20px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`${this.hp}/${this.maxHp}`, 32, 16);
+        this.healthNumber.material.map.needsUpdate = true;
     }
     
     takeDamage(amount) {
@@ -93,11 +125,17 @@ export class Enemy {
         }
         this.bullets = [];
         
-        // Remove enemy mesh (which will also remove the health bars)
+        // Remove enemy mesh (which will also remove health bar, background, and text)
         this.scene.remove(this.mesh);
     }
     
     update(player) {
+        // Make text always face camera at the start of each update
+        if (this.healthText) {
+            this.healthText.rotation.copy(this.mesh.rotation);
+            this.healthText.rotation.z = 0;
+        }
+        
         // Update stats display position
         this.updateHealthBar();
         
