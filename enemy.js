@@ -11,14 +11,14 @@ export class Enemy {
         
         // Set enemy properties based on type
         if (type === 0) { // Basic monster
-            this.baseHp = 5;
+            this.baseHp = 15;
             this.speed = 2;
             this.attackDamage = 1;
             this.attackRange = 30;
             this.color = 0x00FF00; // Green
             this.geometry = new THREE.CircleGeometry(16, 3); // Triangle
         } else if (type === 1) { // Shooter
-            this.baseHp = 3;
+            this.baseHp = 9;
             this.speed = 1;
             this.attackDamage = 1;
             this.attackRange = 200;
@@ -27,7 +27,7 @@ export class Enemy {
             this.shootCooldown = 3000; // 3 seconds
             this.lastShotTime = 0;
         } else { // Fast monster
-            this.baseHp = 2;
+            this.baseHp = 6;
             this.speed = 4;
             this.attackDamage = 1;
             this.attackRange = 30;
