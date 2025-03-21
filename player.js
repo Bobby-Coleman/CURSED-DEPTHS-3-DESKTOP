@@ -214,10 +214,19 @@ export class Player {
     }
     
     takeDamage(amount) {
-        // Apply relic effects to damage taken (will be implemented)
-        // For example: Doom's Promise - Take +50% damage
-        
-        this.hp -= amount;
+        // Calculate total damage multiplier from curses
+        let damageMultiplier = 1;
+        for (const relic of this.relics) {
+            if (relic.id === 'executionersSeal') {
+                damageMultiplier *= 2; // Take x2 damage
+            }
+            if (relic.id === 'doomsPromise') {
+                damageMultiplier *= 1.5; // Take +50% damage
+            }
+        }
+
+        // Apply multiplied damage
+        this.hp -= Math.ceil(amount * damageMultiplier);
         
         // Reset kill streak if hit
         if (window.gameState) {
