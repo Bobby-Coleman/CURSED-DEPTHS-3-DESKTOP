@@ -310,14 +310,19 @@ export class Enemy {
                             const angle = Math.atan2(dy, dx);
                             const degrees = ((angle * 180 / Math.PI) + 360) % 360;
                             
+                            // Map angles to directions:
+                            // Up: 225-315 degrees (row 0)
+                            // Right: 315-45 degrees (row 1)
+                            // Down: 45-135 degrees (row 2)
+                            // Left: 135-225 degrees (row 3)
                             if (degrees >= 225 && degrees < 315) {
-                                direction = 0; // Up (first row)
+                                direction = 1; // Right (when going up)
                             } else if (degrees >= 315 || degrees < 45) {
-                                direction = 1; // Right (second row)
+                                direction = 2; // Down (when going right)
                             } else if (degrees >= 45 && degrees < 135) {
-                                direction = 2; // Down (third row)
+                                direction = 3; // Left (when going down)
                             } else {
-                                direction = 3; // Left (fourth row)
+                                direction = 0; // Up (when going left)
                             }
                             
                             this.updateUVs(direction * 4 + this.currentFrame);
@@ -355,13 +360,13 @@ export class Enemy {
                 
                 let direction;
                 if (degrees >= 225 && degrees < 315) {
-                    direction = 0; // Up (first row)
+                    direction = 1; // Right (when going up)
                 } else if (degrees >= 315 || degrees < 45) {
-                    direction = 1; // Right (second row)
+                    direction = 2; // Down (when going right)
                 } else if (degrees >= 45 && degrees < 135) {
-                    direction = 2; // Down (third row)
+                    direction = 3; // Left (when going down)
                 } else {
-                    direction = 3; // Left (fourth row)
+                    direction = 0; // Up (when going left)
                 }
                 
                 this.updateUVs(direction * 4 + this.currentFrame);
