@@ -50,6 +50,7 @@ export class UI {
                 </div>
                 <div>Damage: <span id="current-weapon-damage">0</span></div>
                 <div>Fire Rate: <span id="current-weapon-fire-rate">0</span> bullets/sec</div>
+                <div>Range: <span id="current-weapon-range">200-800</span> units</div>
             `;
             
             document.body.appendChild(this.weaponStats);
@@ -127,6 +128,7 @@ export class UI {
                             <h3 style="color: #FF4444; margin: 0 0 5px 0;">Weapon for Sale</h3>
                             <p style="margin: 5px 0;">Damage: ${item.data.damage}</p>
                             <p style="margin: 5px 0;">Fire Rate: ${item.data.fireRate} bullets/sec</p>
+                            <p style="margin: 5px 0;">Range: ${item.data.range} units</p>
                             <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} Gold</p>
                             <p style="color: #88FF88; margin: 5px 0;">Press E to buy</p>
                         </div>
@@ -137,6 +139,7 @@ export class UI {
                         <h3>Pistol</h3>
                         <p>Damage: ${item.data.damage}</p>
                         <p>Fire Rate: ${item.data.fireRate} bullets/sec</p>
+                        <p>Range: ${item.data.range} units</p>
                         <p>Press E to pick up</p>
                     `;
                 }
@@ -174,6 +177,13 @@ export class UI {
                             <p style="color: #88FF88; margin: 5px 0;">Press E to buy</p>
                         </div>
                     `;
+                    this.popup.innerHTML = content;
+                    this.popup.style.right = '20px';
+                    this.popup.style.left = 'auto';
+                    this.popup.style.top = '50%';
+                    this.popup.style.transform = 'translateY(-50%)';
+                    this.popup.style.display = 'block';
+                    return;
                 } else {
                     // Dropped relic
                     content = `
@@ -196,10 +206,12 @@ export class UI {
                 break;
         }
         
-        // Update popup content and position
+        // Default positioning for non-shop items
         this.popup.innerHTML = content;
         this.popup.style.left = `${x}px`;
         this.popup.style.top = `${y}px`;
+        this.popup.style.right = 'auto';
+        this.popup.style.transform = 'none';
         this.popup.style.display = 'block';
     }
     
@@ -247,6 +259,9 @@ export class UI {
         const calculatedDamage = player.calculateDamage();
         document.getElementById('current-weapon-damage').textContent = calculatedDamage;
         document.getElementById('current-weapon-fire-rate').textContent = `${player.fireRate}`;
+        
+        // Update range display with specific weapon range
+        document.getElementById('current-weapon-range').textContent = `${player.weaponRange}`;
 
         // Force immediate update
         document.getElementById('current-weapon-damage').style.display = 'none';
