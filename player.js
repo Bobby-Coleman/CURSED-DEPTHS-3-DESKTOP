@@ -8,8 +8,9 @@ export class Player {
         this.ammo = 300;
         this.maxAmmo = 300;
         this.speed = 5;
-        this.baseDamage = this.generateRandomDamage();
-        this.fireRate = this.generateRandomFireRate();
+        this.baseDamage = 3;  // Fixed starting damage
+        this.fireRate = 5;    // Fixed starting fire rate
+        this.weaponRange = 200;  // Fixed starting range
         this.lastShotTime = 0;
         this.relics = [];
         
@@ -67,23 +68,15 @@ export class Player {
     }
     
     generateRandomDamage() {
-        // 70% chance for 1-3 damage, 30% chance for 4-5 damage
-        const roll = Math.random();
-        if (roll < 0.7) {
-            return Math.floor(Math.random() * 3) + 1; // 1-3 damage
-        } else {
-            return Math.floor(Math.random() * 2) + 4; // 4-5 damage
-        }
+        return 3; // Fixed damage of 3
     }
     
     generateRandomFireRate() {
-        // 70% chance for 1-10 bullets/second, 30% chance for 11-20 bullets/second
-        const roll = Math.random();
-        if (roll < 0.7) {
-            return Math.floor(Math.random() * 10) + 1; // 1-10 fire rate
-        } else {
-            return Math.floor(Math.random() * 10) + 11; // 11-20 fire rate
-        }
+        return 5; // Fixed fire rate of 5/s
+    }
+    
+    generateRandomRange() {
+        return 200; // Fixed range of 200
     }
     
     setupAnimationFrames() {
@@ -225,7 +218,9 @@ export class Player {
             this.bullets.push({
                 mesh: bullet,
                 velocity: { x: velocityX, y: velocityY },
-                damage: bulletDamage
+                damage: bulletDamage,
+                range: this.weaponRange,
+                distanceTraveled: 0
             });
             
             // Update last shot time and ammo
@@ -285,6 +280,19 @@ export class Player {
             // Update bullet position
             bullet.mesh.position.x += bullet.velocity.x;
             bullet.mesh.position.y += bullet.velocity.y;
+            
+            // Update distance traveled
+            bullet.distanceTraveled += Math.sqrt(
+                bullet.velocity.x * bullet.velocity.x + 
+                bullet.velocity.y * bullet.velocity.y
+            );
+            
+            // Check if bullet has exceeded its range
+            if (bullet.distanceTraveled >= bullet.range) {
+                this.scene.remove(bullet.mesh);
+                this.bullets.splice(i, 1);
+                continue;
+            }
             
             // Check if bullet is out of bounds
             const roomSize = 800;
