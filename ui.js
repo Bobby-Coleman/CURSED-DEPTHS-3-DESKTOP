@@ -30,26 +30,32 @@ export class UI {
         this.tooltip.style.whiteSpace = 'pre-line';
         document.body.appendChild(this.tooltip);
 
-        // Create weapon stats container
-        this.weaponStats = document.createElement('div');
-        this.weaponStats.style.position = 'absolute';
-        this.weaponStats.style.top = '10px';
-        this.weaponStats.style.left = '150px';
-        this.weaponStats.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        this.weaponStats.style.color = 'white';
-        this.weaponStats.style.padding = '10px';
-        this.weaponStats.style.borderRadius = '5px';
-        this.weaponStats.style.fontFamily = 'Arial, sans-serif';
-        this.weaponStats.style.zIndex = '100';
-        this.weaponStats.innerHTML = `
-            <div style="border-bottom: 1px solid #666; margin-bottom: 5px; padding-bottom: 5px;">
-                <span style="color: #FFA500;">Current Weapon</span>
-            </div>
-            <div>Damage: <span id="current-weapon-damage">0</span></div>
-            <div>Fire Rate: <span id="current-weapon-fire-rate">0</span> bullets/sec</div>
-        `;
-        
-        document.body.appendChild(this.weaponStats);
+        // Create weapon stats container if it doesn't exist
+        const existingWeaponStats = document.getElementById('weapon-stats-container');
+        if (!existingWeaponStats) {
+            this.weaponStats = document.createElement('div');
+            this.weaponStats.id = 'weapon-stats-container';
+            this.weaponStats.style.position = 'absolute';
+            this.weaponStats.style.top = '10px';
+            this.weaponStats.style.left = '150px';
+            this.weaponStats.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            this.weaponStats.style.color = 'white';
+            this.weaponStats.style.padding = '10px';
+            this.weaponStats.style.borderRadius = '5px';
+            this.weaponStats.style.fontFamily = 'Arial, sans-serif';
+            this.weaponStats.style.zIndex = '100';
+            this.weaponStats.innerHTML = `
+                <div style="border-bottom: 1px solid #666; margin-bottom: 5px; padding-bottom: 5px;">
+                    <span style="color: #FFA500;">Current Weapon</span>
+                </div>
+                <div>Damage: <span id="current-weapon-damage">0</span></div>
+                <div>Fire Rate: <span id="current-weapon-fire-rate">0</span> bullets/sec</div>
+            `;
+            
+            document.body.appendChild(this.weaponStats);
+        } else {
+            this.weaponStats = existingWeaponStats;
+        }
 
         // Create relic slots container
         this.relicSlotsContainer = document.createElement('div');
@@ -238,8 +244,14 @@ export class UI {
         document.getElementById('relics').textContent = player.relics.length;
 
         // Update weapon stats with calculated values
-        document.getElementById('current-weapon-damage').textContent = `${player.calculateDamage()}`;
+        const calculatedDamage = player.calculateDamage();
+        document.getElementById('current-weapon-damage').textContent = calculatedDamage;
         document.getElementById('current-weapon-fire-rate').textContent = `${player.fireRate}`;
+
+        // Force immediate update
+        document.getElementById('current-weapon-damage').style.display = 'none';
+        document.getElementById('current-weapon-damage').offsetHeight;
+        document.getElementById('current-weapon-damage').style.display = '';
 
         // Update relic slots
         for (let i = 0; i < 5; i++) {

@@ -111,12 +111,15 @@ export class Player {
             const velocityX = Math.cos(this.mesh.rotation.z) * speed;
             const velocityY = Math.sin(this.mesh.rotation.z) * speed;
             
+            // Calculate damage for this bullet
+            const bulletDamage = this.calculateDamage();
+            
             // Add bullet to scene and tracking array
             this.scene.add(bullet);
             this.bullets.push({
                 mesh: bullet,
                 velocity: { x: velocityX, y: velocityY },
-                damage: this.calculateDamage()
+                damage: bulletDamage
             });
             
             // Update last shot time and ammo
@@ -128,6 +131,8 @@ export class Player {
     calculateDamage() {
         // Start with base damage
         let damage = this.baseDamage;
+        console.log('Starting base damage:', damage);
+        console.log('Current kill streak:', window.gameState?.killStreak);
         
         // First apply additive bonuses
         for (const relic of this.relics) {
@@ -138,17 +143,31 @@ export class Player {
         }
         
         // Then apply multiplicative effects
+        let multiplier = 1;
         for (const relic of this.relics) {
+            console.log('Checking relic:', relic.id);
             if (relic.id === 'hemoclawCharm') {
                 const missingHP = this.maxHp - this.hp;
-                damage *= (1 + (missingHP * 0.25)); // Multiply by (1 + 0.25 per missing HP)
+                multiplier *= (1 + (missingHP * 0.25)); // Multiply by (1 + 0.25 per missing HP)
             }
             if (relic.id === 'infernalCore') {
                 // +25% damage per equipped relic (including this one)
-                damage *= (1 + (this.relics.length * 0.25));
+                multiplier *= (1 + (this.relics.length * 0.25));
+            }
+            if (relic.id === 'executionersSeal') {
+                console.log('Found Executioners Seal');
+                if (window.gameState && window.gameState.killStreak > 20) {
+                    console.log('Kill streak > 20, applying 3x multiplier');
+                    multiplier *= 3; // Triple damage when kill streak > 20
+                }
             }
             // Add other multiplicative relic effects here
         }
+        
+        // Apply final multiplier
+        console.log('Final multiplier:', multiplier);
+        damage *= multiplier;
+        console.log('Final damage after multiplier:', damage);
         
         return Math.floor(damage); // Round down to nearest integer
     }
@@ -200,10 +219,9 @@ export class Player {
         
         this.hp -= amount;
         
-        // Reset kill streak and damage bonus if hit
+        // Reset kill streak if hit
         if (window.gameState) {
             window.gameState.killStreak = 0;
-            this.baseDamage = this.generateRandomDamage(); // Reset to original base damage
         }
     }
     
