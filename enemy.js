@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export class Enemy {
     constructor(scene, x, y, type, level) {
         this.scene = scene;
-        this.type = type; // 0: basic, 1: shooter, 2: fast, 3: bomber
+        this.type = type; // 0: basic, 1: shooter, 2: fast, 3: bomber, 4: charger
         this.level = level;
         
         // Enemy stats scaled by level (1.1x per level)
@@ -91,6 +91,27 @@ export class Enemy {
             this.explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
             this.explosionMesh.visible = false;
             scene.add(this.explosionMesh);
+            
+        } else if (type === 4) { // Charger
+            this.baseHp = 15;
+            this.speed = 2;
+            this.attackDamage = 2;
+            this.attackRange = 30;
+            this.chargeSpeed = 8;
+            this.isCharging = false;
+            this.chargeCooldown = 5000; // 5 seconds between charges
+            this.lastChargeTime = 0;
+            this.chargeDirection = { x: 0, y: 0 }; // Store charge direction
+            this.randomMoveTimer = 0;
+            this.randomMoveInterval = 3000; // Change direction every 3 seconds
+            this.randomDirection = { x: 0, y: 0 };
+            
+            const geometry = new THREE.CircleGeometry(16, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x800080, // Purple
+                transparent: true
+            });
+            this.mesh = new THREE.Mesh(geometry, material);
             
         } else { // Fast monster
             this.baseHp = 6;
@@ -300,7 +321,50 @@ export class Enemy {
         
         // Only take action if aggro
         if (this.isAggro) {
-            if (this.type === 1) {
+            if (this.type === 4) { // Charger
+                // Face player
+                this.mesh.rotation.z = Math.atan2(dy, dx);
+                
+                if (this.isCharging) {
+                    // Continue charge in the stored direction
+                    this.mesh.position.x += this.chargeDirection.x * this.chargeSpeed;
+                    this.mesh.position.y += this.chargeDirection.y * this.chargeSpeed;
+                    
+                    // Check if we hit the player
+                    if (distanceToPlayer <= this.attackRange) {
+                        player.takeDamage(this.attackDamage);
+                        this.isCharging = false;
+                        this.lastChargeTime = currentTime;
+                    }
+                    
+                    // End charge after 1 second regardless of hit
+                    if (currentTime - this.lastChargeTime > 1000) {
+                        this.isCharging = false;
+                        this.lastChargeTime = currentTime;
+                    }
+                } else {
+                    // Check if we should start charging (only if in aggro range)
+                    if (distanceToPlayer <= this.aggroRange && currentTime - this.lastChargeTime > this.chargeCooldown) {
+                        this.isCharging = true;
+                        this.lastChargeTime = currentTime;
+                        // Store the charge direction when starting the charge
+                        this.chargeDirection = {
+                            x: dx / distanceToPlayer,
+                            y: dy / distanceToPlayer
+                        };
+                    } else {
+                        // Random movement when not charging
+                        if (currentTime - this.randomMoveTimer > this.randomMoveInterval) {
+                            this.setNewRandomDirection();
+                            this.randomMoveTimer = currentTime;
+                        }
+                        
+                        // Move in random direction at normal speed
+                        this.mesh.position.x += this.randomDirection.x * this.speed;
+                        this.mesh.position.y += this.randomDirection.y * this.speed;
+                    }
+                }
+            } else if (this.type === 1) {
                 // Move to maintain distance if too close or too far
                 const optimalRange = 150;
                 if (distanceToPlayer < optimalRange - 30) {
@@ -385,7 +449,7 @@ export class Enemy {
                     this.attack(player);
                 }
             }
-        } else if (this.type === 0 || this.type === 2) { // Random movement for non-aggro basic monster and yellow monster
+        } else if (this.type === 0 || this.type === 2 || this.type === 4) { // Random movement for non-aggro basic monster, yellow monster, and charger
             // Update random movement direction
             if (currentTime - this.randomMoveTimer > this.randomMoveInterval) {
                 this.setNewRandomDirection();
@@ -465,32 +529,39 @@ export class Enemy {
         
         if (this.type === 1) { // Regular shooter
             if (currentTime - this.lastShotTime > this.shootCooldown) {
+                // Shoot four times quickly
+                for (let i = 0; i < 4; i++) {
+                    setTimeout(() => {
+                        // Create bullet
+                        const bullet = {
+                            mesh: new THREE.Mesh(this.bulletGeometry, this.bulletMaterial),
+                            dx: 0,
+                            dy: 0,
+                            speed: 5,
+                            damage: this.attackDamage
+                        };
+                        
+                        // Position bullet at enemy
+                        bullet.mesh.position.copy(this.mesh.position);
+                        
+                        // Calculate direction to player
+                        const dx = player.mesh.position.x - this.mesh.position.x;
+                        const dy = player.mesh.position.y - this.mesh.position.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Set bullet velocity
+                        bullet.dx = (dx / distance) * bullet.speed;
+                        bullet.dy = (dy / distance) * bullet.speed;
+                        
+                        // Add to scene and bullets array
+                        this.scene.add(bullet.mesh);
+                        this.bullets.push(bullet);
+                    }, i * 100); // Shoot every 100ms
+                }
+                
+                // Update last shot time with the 3.5 second cooldown
                 this.lastShotTime = currentTime;
-                
-                // Create bullet
-                const bullet = {
-                    mesh: new THREE.Mesh(this.bulletGeometry, this.bulletMaterial),
-                    dx: 0,
-                    dy: 0,
-                    speed: 5,
-                    damage: this.attackDamage
-                };
-                
-                // Position bullet at enemy
-                bullet.mesh.position.copy(this.mesh.position);
-                
-                // Calculate direction to player
-                const dx = player.mesh.position.x - this.mesh.position.x;
-                const dy = player.mesh.position.y - this.mesh.position.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // Set bullet velocity
-                bullet.dx = (dx / distance) * bullet.speed;
-                bullet.dy = (dy / distance) * bullet.speed;
-                
-                // Add to scene and bullets array
-                this.scene.add(bullet.mesh);
-                this.bullets.push(bullet);
+                this.shootCooldown = 3500; // 3.5 seconds
             }
         } else if (this.type === 3) { // Bomber
             if (currentTime - this.lastShotTime > this.shootCooldown) {
@@ -544,6 +615,18 @@ export class Enemy {
                     bullet.mesh.position.y < -roomSize/2 + boundaryPadding || 
                     bullet.mesh.position.y > roomSize/2 - boundaryPadding) {
                     // Remove bullet
+                    this.scene.remove(bullet.mesh);
+                    this.bullets.splice(i, 1);
+                    continue;
+                }
+
+                // Check for collision with player
+                const dx = player.mesh.position.x - bullet.mesh.position.x;
+                const dy = player.mesh.position.y - bullet.mesh.position.y;
+                const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distanceToPlayer < 20) { // Simple circle collision
+                    player.takeDamage(bullet.damage);
                     this.scene.remove(bullet.mesh);
                     this.bullets.splice(i, 1);
                     continue;
