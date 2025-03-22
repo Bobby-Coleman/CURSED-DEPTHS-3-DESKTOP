@@ -159,10 +159,10 @@ function spawnEnemies() {
         do {
             enemyX = Math.random() * ROOM_SIZE - ROOM_SIZE / 2;
             enemyY = Math.random() * ROOM_SIZE - ROOM_SIZE / 2;
-        } while (Math.sqrt(enemyX * enemyX + enemyY * enemyY) < 100);
+        } while (Math.sqrt(enemyX * enemyX + enemyY * enemyY) < 250); // Increased from 100 to 250 (aggro range is 200)
         
         // Create enemy based on type
-        const enemyType = Math.floor(Math.random() * 3); // 0: basic, 1: shooter, 2: fast
+        const enemyType = Math.floor(Math.random() * 5); // 0: basic, 1: shooter, 2: fast, 3: bomber, 4: charger
         const enemy = new Enemy(scene, enemyX, enemyY, enemyType, gameState.level);
         enemies.push(enemy);
     }

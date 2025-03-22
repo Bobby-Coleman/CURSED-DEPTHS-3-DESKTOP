@@ -171,7 +171,7 @@ export class RelicSystem {
                 case 'bloodPact':
                     const ammoBonus = Math.ceil(player.maxAmmo * 0.05);
                     player.maxAmmo += ammoBonus;
-                    player.ammo += ammoBonus;
+                    player.ammo = Math.min(player.maxAmmo, player.ammo + ammoBonus);
                     break;
                 case 'ragingHeart':
                     player.baseDamage += 2;
@@ -189,9 +189,7 @@ export class RelicSystem {
                 case 'bloodPact':
                     const ammoReduction = Math.ceil(player.maxAmmo * 0.1);
                     player.maxAmmo -= ammoReduction;
-                    if (player.ammo > player.maxAmmo) {
-                        player.ammo = player.maxAmmo;
-                    }
+                    player.ammo = Math.min(player.maxAmmo, player.ammo);
                     break;
                 case 'ragingHeart':
                     player.baseDamage = Math.max(1, player.baseDamage - 10);
