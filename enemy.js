@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export class Enemy {
     constructor(scene, x, y, type, level) {
         this.scene = scene;
-        this.type = type; // 0: basic, 1: shooter, 2: fast
+        this.type = type; // 0: basic, 1: shooter, 2: fast, 3: bomber
         this.level = level;
         
         // Enemy stats scaled by level (1.1x per level)
@@ -64,6 +64,33 @@ export class Enemy {
                 transparent: true
             });
             this.mesh = new THREE.Mesh(geometry, material);
+            
+        } else if (type === 3) { // Bomber
+            this.baseHp = 12;
+            this.speed = 1.5;
+            this.attackDamage = 1;
+            this.explosionDamage = 3;
+            this.attackRange = 250;
+            this.shootCooldown = 4000;
+            this.lastShotTime = 0;
+            
+            const geometry = new THREE.CircleGeometry(20, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xFF6600,
+                transparent: true
+            });
+            this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Create explosion effect mesh
+            const explosionGeometry = new THREE.CircleGeometry(50, 32);
+            const explosionMaterial = new THREE.MeshBasicMaterial({
+                color: 0xFF0000,
+                transparent: true,
+                opacity: 0.5
+            });
+            this.explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
+            this.explosionMesh.visible = false;
+            scene.add(this.explosionMesh);
             
         } else { // Fast monster
             this.baseHp = 6;
@@ -293,6 +320,26 @@ export class Enemy {
                 if (distanceToPlayer <= this.attackRange) {
                     this.shoot(player);
                 }
+            } else if (this.type === 3) { // Bomber
+                // Move to maintain distance if too close or too far
+                const optimalRange = 200;
+                if (distanceToPlayer < optimalRange - 50) {
+                    // Move away from player
+                    this.mesh.position.x -= (dx / distanceToPlayer) * this.speed;
+                    this.mesh.position.y -= (dy / distanceToPlayer) * this.speed;
+                } else if (distanceToPlayer > optimalRange + 50) {
+                    // Move toward player
+                    this.mesh.position.x += (dx / distanceToPlayer) * this.speed;
+                    this.mesh.position.y += (dy / distanceToPlayer) * this.speed;
+                }
+                
+                // Face player
+                this.mesh.rotation.z = Math.atan2(dy, dx);
+                
+                // Shoot bombs at player if in range
+                if (distanceToPlayer <= this.attackRange) {
+                    this.shoot(player);
+                }
             } else { // Melee types (basic and fast)
                 // Move toward player if not in attack range
                 if (distanceToPlayer > this.attackRange) {
@@ -338,19 +385,20 @@ export class Enemy {
                     this.attack(player);
                 }
             }
-        } else if (this.type === 0) { // Random movement for non-aggro basic monster
+        } else if (this.type === 0 || this.type === 2) { // Random movement for non-aggro basic monster and yellow monster
             // Update random movement direction
             if (currentTime - this.randomMoveTimer > this.randomMoveInterval) {
                 this.setNewRandomDirection();
                 this.randomMoveTimer = currentTime;
             }
             
-            // Move in random direction at half speed
-            this.mesh.position.x += this.randomDirection.x * (this.speed * 0.5);
-            this.mesh.position.y += this.randomDirection.y * (this.speed * 0.5);
+            // Move in random direction at half speed (quarter speed for yellow monster when not aggro'd)
+            const nonAggroSpeed = this.type === 2 ? this.speed * 0.15 : this.speed * 0.5;
+            this.mesh.position.x += this.randomDirection.x * nonAggroSpeed;
+            this.mesh.position.y += this.randomDirection.y * nonAggroSpeed;
             
-            // Update animation based on random movement
-            if (currentTime - this.frameTime > this.animationSpeed) {
+            // Update animation based on random movement (only for basic monster)
+            if (this.type === 0 && currentTime - this.frameTime > this.animationSpeed) {
                 this.frameTime = currentTime;
                 this.currentFrame = (this.currentFrame + 1) % 4;
                 
@@ -371,17 +419,26 @@ export class Enemy {
                 
                 this.updateUVs(direction * 4 + this.currentFrame);
             }
+        }
+        
+        // Keep enemies within bounds (assuming room size of 800)
+        const roomSize = 800;
+        const boundaryPadding = 50;
+        if (this.mesh.position.x < -roomSize/2 + boundaryPadding || 
+            this.mesh.position.x > roomSize/2 - boundaryPadding ||
+            this.mesh.position.y < -roomSize/2 + boundaryPadding || 
+            this.mesh.position.y > roomSize/2 - boundaryPadding) {
             
-            // Keep enemies within bounds (assuming room size of 800)
-            const roomSize = 800;
-            const boundaryPadding = 50;
-            if (this.mesh.position.x < -roomSize/2 + boundaryPadding || 
-                this.mesh.position.x > roomSize/2 - boundaryPadding ||
-                this.mesh.position.y < -roomSize/2 + boundaryPadding || 
-                this.mesh.position.y > roomSize/2 - boundaryPadding) {
-                // If near boundary, choose a new random direction
+            // If near boundary, keep the enemy inside
+            this.mesh.position.x = Math.max(-roomSize/2 + boundaryPadding, 
+                Math.min(roomSize/2 - boundaryPadding, this.mesh.position.x));
+            this.mesh.position.y = Math.max(-roomSize/2 + boundaryPadding, 
+                Math.min(roomSize/2 - boundaryPadding, this.mesh.position.y));
+            
+            if (!this.isAggro) {
+                // Only change random direction if not aggro'd
                 this.setNewRandomDirection();
-                this.randomMoveTimer = currentTime; // Reset the timer
+                this.randomMoveTimer = currentTime;
                 
                 // Ensure the new direction points away from the boundary
                 if (this.mesh.position.x < -roomSize/2 + boundaryPadding && this.randomDirection.x < 0) {
@@ -406,65 +463,153 @@ export class Enemy {
     shoot(player) {
         const currentTime = performance.now();
         
-        if (currentTime - this.lastShotTime >= this.shootCooldown) {
-            // Create new bullet
-            const bullet = new THREE.Mesh(this.bulletGeometry, this.bulletMaterial);
-            
-            // Set bullet position and direction
-            bullet.position.copy(this.mesh.position);
-            bullet.rotation.copy(this.mesh.rotation);
-            
-            // Calculate velocity based on enemy's rotation
-            const speed = 5;
-            const velocityX = Math.cos(this.mesh.rotation.z) * speed;
-            const velocityY = Math.sin(this.mesh.rotation.z) * speed;
-            
-            // Add bullet to scene and tracking array
-            this.scene.add(bullet);
-            this.bullets.push({
-                mesh: bullet,
-                velocity: { x: velocityX, y: velocityY }
-            });
-            
-            // Update last shot time
-            this.lastShotTime = currentTime;
+        if (this.type === 1) { // Regular shooter
+            if (currentTime - this.lastShotTime > this.shootCooldown) {
+                this.lastShotTime = currentTime;
+                
+                // Create bullet
+                const bullet = {
+                    mesh: new THREE.Mesh(this.bulletGeometry, this.bulletMaterial),
+                    dx: 0,
+                    dy: 0,
+                    speed: 5,
+                    damage: this.attackDamage
+                };
+                
+                // Position bullet at enemy
+                bullet.mesh.position.copy(this.mesh.position);
+                
+                // Calculate direction to player
+                const dx = player.mesh.position.x - this.mesh.position.x;
+                const dy = player.mesh.position.y - this.mesh.position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Set bullet velocity
+                bullet.dx = (dx / distance) * bullet.speed;
+                bullet.dy = (dy / distance) * bullet.speed;
+                
+                // Add to scene and bullets array
+                this.scene.add(bullet.mesh);
+                this.bullets.push(bullet);
+            }
+        } else if (this.type === 3) { // Bomber
+            if (currentTime - this.lastShotTime > this.shootCooldown) {
+                this.lastShotTime = currentTime;
+                
+                // Create bomb
+                const bomb = {
+                    mesh: new THREE.Mesh(this.bulletGeometry, this.bulletMaterial),
+                    dx: 0,
+                    dy: 0,
+                    speed: 3,
+                    damage: this.attackDamage,
+                    explosionDamage: this.explosionDamage,
+                    timeCreated: currentTime
+                };
+                
+                // Position bomb at enemy
+                bomb.mesh.position.copy(this.mesh.position);
+                
+                // Calculate direction to player
+                const dx = player.mesh.position.x - this.mesh.position.x;
+                const dy = player.mesh.position.y - this.mesh.position.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Set bomb velocity
+                bomb.dx = (dx / distance) * bomb.speed;
+                bomb.dy = (dy / distance) * bomb.speed;
+                
+                // Add to scene and bullets array
+                this.scene.add(bomb.mesh);
+                this.bullets.push(bomb);
+            }
         }
     }
     
     updateBullets(player) {
+        const roomSize = 800;
+        const boundaryPadding = 50;
+        
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const bullet = this.bullets[i];
             
-            // Update bullet position
-            bullet.mesh.position.x += bullet.velocity.x;
-            bullet.mesh.position.y += bullet.velocity.y;
+            // Move bullet
+            bullet.mesh.position.x += bullet.dx;
+            bullet.mesh.position.y += bullet.dy;
             
-            // Check if bullet is out of bounds
-            const roomSize = 800;
-            if (
-                bullet.mesh.position.x < -roomSize / 2 || 
-                bullet.mesh.position.x > roomSize / 2 ||
-                bullet.mesh.position.y < -roomSize / 2 || 
-                bullet.mesh.position.y > roomSize / 2
-            ) {
-                this.scene.remove(bullet.mesh);
-                this.bullets.splice(i, 1);
-                continue;
-            }
-            
-            // Check for collision with player
-            const dx = bullet.mesh.position.x - player.mesh.position.x;
-            const dy = bullet.mesh.position.y - player.mesh.position.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            // Collision detected (simple circle collision)
-            if (distance < 20) {
-                // Apply damage to player
-                player.takeDamage(this.attackDamage);
+            if (this.type === 1) { // Regular shooter bullets
+                // Check if bullet hits boundary
+                if (bullet.mesh.position.x < -roomSize/2 + boundaryPadding || 
+                    bullet.mesh.position.x > roomSize/2 - boundaryPadding ||
+                    bullet.mesh.position.y < -roomSize/2 + boundaryPadding || 
+                    bullet.mesh.position.y > roomSize/2 - boundaryPadding) {
+                    // Remove bullet
+                    this.scene.remove(bullet.mesh);
+                    this.bullets.splice(i, 1);
+                    continue;
+                }
+            } else if (this.type === 3) { // Bomber's bombs
+                const currentTime = performance.now();
                 
-                // Remove bullet
-                this.scene.remove(bullet.mesh);
-                this.bullets.splice(i, 1);
+                // Check if bomb should stop (after 2 seconds of movement)
+                const shouldStop = currentTime - bullet.timeCreated > 2000;
+                
+                // Check if bomb hits wall and should bounce
+                const hitLeftWall = bullet.mesh.position.x < -roomSize/2 + boundaryPadding;
+                const hitRightWall = bullet.mesh.position.x > roomSize/2 - boundaryPadding;
+                const hitTopWall = bullet.mesh.position.y > roomSize/2 - boundaryPadding;
+                const hitBottomWall = bullet.mesh.position.y < -roomSize/2 + boundaryPadding;
+                
+                // Bounce off walls if still moving
+                if (!bullet.timeStopped) {
+                    if (hitLeftWall || hitRightWall) {
+                        bullet.dx *= -1;
+                    }
+                    if (hitTopWall || hitBottomWall) {
+                        bullet.dy *= -1;
+                    }
+                    
+                    // Keep bomb in bounds
+                    bullet.mesh.position.x = Math.max(-roomSize/2 + boundaryPadding, 
+                        Math.min(roomSize/2 - boundaryPadding, bullet.mesh.position.x));
+                    bullet.mesh.position.y = Math.max(-roomSize/2 + boundaryPadding, 
+                        Math.min(roomSize/2 - boundaryPadding, bullet.mesh.position.y));
+                }
+                
+                // Stop the bomb after 2 seconds of movement
+                if (shouldStop && !bullet.timeStopped) {
+                    bullet.dx = 0;
+                    bullet.dy = 0;
+                    bullet.timeStopped = currentTime;
+                }
+                
+                // Explode only after stopping and waiting 2 seconds
+                if (bullet.timeStopped && currentTime - bullet.timeStopped > 2000) {
+                    // Show explosion effect
+                    this.explosionMesh.position.copy(bullet.mesh.position);
+                    this.explosionMesh.visible = true;
+                    
+                    // Check for player in explosion radius
+                    const dx = player.mesh.position.x - bullet.mesh.position.x;
+                    const dy = player.mesh.position.y - bullet.mesh.position.y;
+                    const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distanceToPlayer < 50) {
+                        player.takeDamage(3);
+                        console.log("BOOM! Player took explosion damage!");
+                    }
+                    
+                    // Remove bomb
+                    this.scene.remove(bullet.mesh);
+                    this.bullets.splice(i, 1);
+                    
+                    // Hide explosion effect after 200ms
+                    setTimeout(() => {
+                        this.explosionMesh.visible = false;
+                    }, 200);
+                    
+                    continue;
+                }
             }
         }
     }
