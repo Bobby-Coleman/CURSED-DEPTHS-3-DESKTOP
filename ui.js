@@ -129,7 +129,7 @@ export class UI {
                             <p style="margin: 5px 0;">Damage: ${item.data.damage}</p>
                             <p style="margin: 5px 0;">Fire Rate: ${item.data.fireRate} bullets/sec</p>
                             <p style="margin: 5px 0;">Range: ${item.data.range} units</p>
-                            <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} Gold</p>
+                            <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} HP</p>
                             <p style="color: #88FF88; margin: 5px 0;">Press E to buy</p>
                         </div>
                     `;
@@ -153,8 +153,8 @@ export class UI {
                 break;
             case 'gold':
                 content = `
-                    <h3>Gold</h3>
-                    <p>+3 Gold Coins</p>
+                    <h3>HP</h3>
+                    <p>+3 HP</p>
                     <p>Press E to pick up</p>
                 `;
                 break;
@@ -173,7 +173,7 @@ export class UI {
                             <h3 style="color: #${item.data.color.toString(16).padStart(6, '0')}; margin: 0 0 5px 0;">${item.data.name}</h3>
                             <p style="margin: 5px 0;">Blessing: ${item.data.blessing}</p>
                             ${item.data.curse ? `<p style="margin: 5px 0;">Curse: ${item.data.curse}</p>` : ''}
-                            <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} Gold</p>
+                            <p style="color: #FF0000; margin: 5px 0;">Price: ${item.price} HP</p>
                             <p style="color: #88FF88; margin: 5px 0;">Press E to buy</p>
                         </div>
                     `;
@@ -190,7 +190,7 @@ export class UI {
                         <h3>${item.data.name}</h3>
                         <p>Blessing: ${item.data.blessing}</p>
                         ${item.data.curse ? `<p>Curse: ${item.data.curse}</p>` : ''}
-                        <p style="color: #FFD700;">Cost: 4 Gold</p>
+                        <p style="color: #FFD700;">Cost: 4 HP</p>
                         <p>Press E to pick up</p>
                     `;
                 }
@@ -200,7 +200,7 @@ export class UI {
                     <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 5px;">
                         <h3 style="color: #FFD700; margin: 0 0 5px 0;">Curse Removal Shrine</h3>
                         <p style="margin: 5px 0;">25% chance to remove a random curse</p>
-                        <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} Gold</p>
+                        <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} HP</p>
                         <p style="color: #88FF88; margin: 5px 0;">Press E to attempt curse removal</p>
                     </div>
                 `;
@@ -252,7 +252,6 @@ export class UI {
         document.getElementById('ammo').textContent = player.ammo;
         document.getElementById('max-ammo').textContent = player.maxAmmo;
         document.getElementById('level').textContent = gameState.level;
-        document.getElementById('gold').textContent = gameState.gold;
         document.getElementById('kill-streak').textContent = gameState.killStreak;
         document.getElementById('relics').textContent = player.relics.length;
 
@@ -286,7 +285,7 @@ export class UI {
                         <div style="color: ${color};">${relic.name}</div>
                         <div>Blessing: ${relic.blessing}</div>
                         ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
-                        <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>
+                        <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>
                     `;
                     this.tooltip.style.display = 'block';
                 };
@@ -322,5 +321,25 @@ export class UI {
         setTimeout(() => {
             this.messageContainer.style.display = 'none';
         }, 2000);
+    }
+
+    updateRelics(relics) {
+        // Update relic slots with the current relics
+        for (let i = 0; i < 5; i++) {
+            const slot = this.relicSlots[i];
+            const relic = relics[i];
+            
+            if (relic) {
+                const color = '#' + relic.color.toString(16).padStart(6, '0');
+                slot.style.backgroundColor = color;
+                slot.style.border = '2px solid #888';
+            } else {
+                slot.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                slot.style.border = '2px solid #666';
+            }
+        }
+        
+        // Update relics count
+        document.getElementById('relics').textContent = relics.length;
     }
 }

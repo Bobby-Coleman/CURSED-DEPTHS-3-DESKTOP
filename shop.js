@@ -64,13 +64,15 @@ export class Shop {
     }
     
     buyItem(player, item, gameState) {
-        if (gameState.gold < item.price) {
+        // Check if player has enough HP
+        if (player.hp <= item.price) {
             return {
                 success: false,
-                message: "Not enough gold!"
+                message: "Not enough HP!"
             };
         }
         
+        // Check if player has max relics
         if (player.relics.length >= 5) {
             return {
                 success: false,
@@ -78,12 +80,11 @@ export class Shop {
             };
         }
         
-        // Purchase the relic
-        player.relics.push(item.data);
-        item.data.apply(player);
-        gameState.gold -= item.price;
+        // Add relic to player and deduct HP
+        player.addRelic(item.data);
+        player.hp -= item.price;
         
-        // Remove from shop
+        // Remove item from shop
         this.scene.remove(item.mesh);
         const index = this.items.indexOf(item);
         if (index > -1) {
