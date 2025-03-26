@@ -51,9 +51,13 @@ export class Dialog {
         // Create background image
         this.background = document.createElement('img');
         this.background.src = 'assets/sprites/background.png';
-        this.background.style.maxWidth = '80%';
-        this.background.style.maxHeight = '60%';
-        this.background.style.marginBottom = '20px';
+        this.background.style.position = 'fixed';
+        this.background.style.top = '0';
+        this.background.style.left = '0';
+        this.background.style.width = '100%';
+        this.background.style.height = '100%';
+        this.background.style.objectFit = 'cover';
+        this.background.style.zIndex = '-1';
         this.container.appendChild(this.background);
         
         // Create dialog box
@@ -67,6 +71,10 @@ export class Dialog {
         this.dialogBox.style.fontFamily = 'Arial';
         this.dialogBox.style.fontSize = '18px';
         this.dialogBox.style.lineHeight = '1.5';
+        this.dialogBox.style.position = 'fixed';
+        this.dialogBox.style.bottom = '10%';
+        this.dialogBox.style.left = '50%';
+        this.dialogBox.style.transform = 'translateX(-50%)';
         this.container.appendChild(this.dialogBox);
         
         // Create next button
@@ -76,10 +84,14 @@ export class Dialog {
         this.nextButton.style.padding = '10px 20px';
         this.nextButton.style.fontSize = '16px';
         this.nextButton.style.cursor = 'pointer';
-        this.nextButton.style.backgroundColor = '#4CAF50';
+        this.nextButton.style.backgroundColor = '#FF0000';
         this.nextButton.style.color = 'white';
         this.nextButton.style.border = 'none';
         this.nextButton.style.borderRadius = '5px';
+        this.nextButton.style.position = 'fixed';
+        this.nextButton.style.bottom = '5%';
+        this.nextButton.style.left = '50%';
+        this.nextButton.style.transform = 'translateX(-50%)';
         this.container.appendChild(this.nextButton);
         
         // Create enter hell button (initially hidden)
@@ -94,6 +106,10 @@ export class Dialog {
         this.enterHellButton.style.border = 'none';
         this.enterHellButton.style.borderRadius = '5px';
         this.enterHellButton.style.display = 'none';
+        this.enterHellButton.style.position = 'fixed';
+        this.enterHellButton.style.bottom = '5%';
+        this.enterHellButton.style.left = '50%';
+        this.enterHellButton.style.transform = 'translateX(-50%)';
         this.container.appendChild(this.enterHellButton);
         
         // Add event listeners
