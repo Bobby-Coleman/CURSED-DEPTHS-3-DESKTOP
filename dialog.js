@@ -1,5 +1,6 @@
 export class Dialog {
     constructor() {
+        // Dialog system for the game's introduction
         this.currentLine = 0;
         this.lines = [
             "Hey man. You're probably wondering where you are right now.",
