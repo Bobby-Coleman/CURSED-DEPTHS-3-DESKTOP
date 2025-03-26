@@ -6,6 +6,7 @@ import { UI } from './ui.js';
 import { LootSystem } from './loot.js';
 import { RelicSystem } from './relics.js';
 import { Shop } from './shop.js';
+import { Dialog } from './dialog.js';
 
 // Game constants
 const ROOM_SIZE = 800;
@@ -13,7 +14,6 @@ const ROOM_SIZE = 800;
 // Game state
 let gameState = {
     level: 1,
-    gold: 20,
     killStreak: 0,
     gameOver: false,
     isShopLevel: false,
@@ -87,18 +87,26 @@ let enemies = [];
 let lootSystem;
 let relicSystem;
 let shop;
+let dialog;
+
+function startGame() {
+    init();
+    animate();
+}
+
+// Make startGame globally accessible
+window.startGame = startGame;
 
 function init() {
     // Reset game state
     gameState = {
         level: 1,
-        gold: 20,
         killStreak: 0,
         gameOver: false,
         isShopLevel: false,
         currentPickup: null,
         hoveredRelicIndex: -1,
-        lastRelicSellTime: 0  // Add this to track last sell time
+        lastRelicSellTime: 0
     };
     
     // Clear previous game objects
@@ -159,7 +167,7 @@ function spawnEnemies() {
         do {
             enemyX = Math.random() * ROOM_SIZE - ROOM_SIZE / 2;
             enemyY = Math.random() * ROOM_SIZE - ROOM_SIZE / 2;
-        } while (Math.sqrt(enemyX * enemyX + enemyY * enemyY) < 250); // Increased from 100 to 250 (aggro range is 200)
+        } while (Math.sqrt(enemyX * enemyX + enemyY * enemyY) < 350); // Increased to match new aggro range
         
         // Create enemy based on type
         const enemyType = Math.floor(Math.random() * 5); // 0: basic, 1: shooter, 2: fast, 3: bomber, 4: charger
@@ -305,24 +313,6 @@ function animate() {
                 }
             }
             
-            // Handle relic selling
-            if (keys.r && !keys.wasR && gameState.hoveredRelicIndex !== -1) {
-                const currentTime = Date.now();
-                // Add 500ms cooldown between sells
-                if (currentTime - gameState.lastRelicSellTime > 500) {
-                    // Try to sell the relic
-                    if (relicSystem.canSellRelic(player, player.relics[gameState.hoveredRelicIndex])) {
-                        if (relicSystem.sellRelic(player, gameState.hoveredRelicIndex)) {
-                            gameState.gold += 5;
-                            gameState.lastRelicSellTime = currentTime;  // Update last sell time
-                            ui.updateStats(player, gameState);
-                            ui.showMessage("Relic sold for 5 gold!");
-                        }
-                    } else {
-                        ui.showMessage("This relic cannot be sold yet!");
-                    }
-                }
-            }
         } else {
             // Shop level logic
             // Check for shop item interaction
@@ -372,6 +362,32 @@ window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() in keys) {
         keys[e.key.toLowerCase()] = true;
     }
+    
+    // Handle relic selling
+    if ((e.key === 'r' || e.key === 'R') && gameState.hoveredRelicIndex >= 0) {
+        const currentTime = Date.now();
+        // Add 500ms cooldown between sells
+        if (currentTime - gameState.lastRelicSellTime > 500) {
+            const relic = player.relics[gameState.hoveredRelicIndex];
+            
+            // Check if the relic has a selling restriction
+            if (relic.canSell === false) {
+                ui.showMessage("This relic cannot be sold due to its curse!");
+            } else {
+                // Remove the relic and add HP
+                player.relics.splice(gameState.hoveredRelicIndex, 1);
+                player.hp = Math.min(player.maxHp, player.hp + 5);
+                
+                // Update UI
+                ui.updateRelics(player.relics);
+                ui.showMessage("Relic sold for 5 HP!");
+                
+                // Reset hovered relic
+                gameState.hoveredRelicIndex = -1;
+                gameState.lastRelicSellTime = currentTime;
+            }
+        }
+    }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -409,5 +425,5 @@ document.getElementById('restart-button').addEventListener('click', () => {
 });
 
 // Initialize and start the game
-init();
-animate();
+dialog = new Dialog();
+dialog.show();
