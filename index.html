@@ -52,7 +52,19 @@
     <script>
         // Check if coming directly to this page, if so, redirect to driving game
         if (!sessionStorage.getItem('fromDrivingGame')) {
-            window.location.href = 'driving-game/start.html';
+            // Get full repository path for GitHub Pages
+            const fullPath = window.location.pathname;
+            const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
+            let basePath = '';
+            
+            // Check if we're on GitHub Pages or local
+            if (window.location.hostname.includes('github.io')) {
+                // We're on GitHub Pages
+                basePath = '/' + repoName;
+            }
+            
+            // Redirect to driving game start
+            window.location.href = basePath + '/driving-game/start.html';
         } else {
             // Clear the flag once redirected back to main game
             sessionStorage.removeItem('fromDrivingGame');
@@ -61,8 +73,20 @@
             if (!sessionStorage.getItem('dialogComplete')) {
                 // Set a flag to track that we're heading to the dialog scene
                 sessionStorage.setItem('goingToDialog', 'true');
+                
+                // Get full repository path for GitHub Pages
+                const fullPath = window.location.pathname;
+                const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
+                let basePath = '';
+                
+                // Check if we're on GitHub Pages or local
+                if (window.location.hostname.includes('github.io')) {
+                    // We're on GitHub Pages
+                    basePath = '/' + repoName;
+                }
+                
                 // Show dialog scene before main game
-                window.location.href = 'scenes/dialog.html';
+                window.location.href = basePath + '/scenes/dialog.html';
             } else {
                 // Clear the dialog complete flag for next playthrough
                 sessionStorage.removeItem('dialogComplete');

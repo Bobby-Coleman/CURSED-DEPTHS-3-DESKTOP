@@ -778,38 +778,44 @@ class DrivingGame {
         // Set a flag in sessionStorage to indicate we're coming from the driving game
         sessionStorage.setItem('fromDrivingGame', 'true');
         
-        // Get the path to the root of the project
-        // This handles both local and GitHub Pages deployments
-        const path = window.location.pathname;
+        // Get full repository path for GitHub Pages
+        const fullPath = window.location.pathname;
+        const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
         let basePath = '';
         
-        // If we're in the driving-game directory
-        if (path.includes('/driving-game/')) {
-            // Extract the path up to the project root
-            basePath = path.substring(0, path.indexOf('/driving-game'));
+        // Check if we're on GitHub Pages or local
+        if (window.location.hostname.includes('github.io')) {
+            // We're on GitHub Pages
+            basePath = '/' + repoName;
+        } else if (fullPath.includes('/driving-game/')) {
+            // We're on localhost
+            basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
         }
         
-        // Navigate to the main index
-        window.location.href = basePath + '/index.html';
+        // Go directly to dialog scene instead of index.html
+        window.location.href = basePath + '/scenes/dialog.html';
     }
 }
 
 // Initialize game once the page is loaded
 window.onload = function() {
     window.startMainGame = function() {
-        // Get the path to the root of the project
-        // This handles both local and GitHub Pages deployments
-        const path = window.location.pathname;
+        // Get full repository path for GitHub Pages
+        const fullPath = window.location.pathname;
+        const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
         let basePath = '';
         
-        // If we're in the driving-game directory
-        if (path.includes('/driving-game/')) {
-            // Extract the path up to the project root
-            basePath = path.substring(0, path.indexOf('/driving-game'));
+        // Check if we're on GitHub Pages or local
+        if (window.location.hostname.includes('github.io')) {
+            // We're on GitHub Pages
+            basePath = '/' + repoName;
+        } else if (fullPath.includes('/driving-game/')) {
+            // We're on localhost
+            basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
         }
         
-        // Navigate to the main index
-        window.location.href = basePath + '/index.html';
+        // Go directly to dialog scene instead of index.html
+        window.location.href = basePath + '/scenes/dialog.html';
     };
     
     // Start the driving game

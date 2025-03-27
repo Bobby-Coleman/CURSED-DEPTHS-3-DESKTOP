@@ -68,32 +68,39 @@
             sessionStorage.setItem('dialogComplete', 'true');
             sessionStorage.removeItem('goingToDialog');
             
-            // Get the path to the root of the project
-            // This handles both local and GitHub Pages deployments
-            const path = window.location.pathname;
+            // Get full repository path for GitHub Pages
+            const fullPath = window.location.pathname;
+            const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
             let basePath = '';
             
-            // If we're in the scenes directory
-            if (path.includes('/scenes/')) {
-                // Extract the path up to the project root
-                basePath = path.substring(0, path.indexOf('/scenes'));
+            // Check if we're on GitHub Pages or local
+            if (window.location.hostname.includes('github.io')) {
+                // We're on GitHub Pages
+                basePath = '/' + repoName;
+            } else if (fullPath.includes('/scenes/')) {
+                // We're on localhost
+                basePath = fullPath.substring(0, fullPath.indexOf('/scenes'));
             }
             
-            // Navigate to the main index
+            // Navigate to the main game
             window.location.href = basePath + '/index.html';
         }
         
         // Check if we're supposed to be here
         if (!sessionStorage.getItem('fromDrivingGame') && !sessionStorage.getItem('goingToDialog')) {
             // If not coming from driving game or redirected from index, redirect to the start
-            // Get the path to the root of the project
-            const path = window.location.pathname;
+            // Get full repository path for GitHub Pages
+            const fullPath = window.location.pathname;
+            const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
             let basePath = '';
             
-            // If we're in the scenes directory
-            if (path.includes('/scenes/')) {
-                // Extract the path up to the project root
-                basePath = path.substring(0, path.indexOf('/scenes'));
+            // Check if we're on GitHub Pages or local
+            if (window.location.hostname.includes('github.io')) {
+                // We're on GitHub Pages
+                basePath = '/' + repoName;
+            } else if (fullPath.includes('/scenes/')) {
+                // We're on localhost
+                basePath = fullPath.substring(0, fullPath.indexOf('/scenes'));
             }
             
             // Redirect to start
