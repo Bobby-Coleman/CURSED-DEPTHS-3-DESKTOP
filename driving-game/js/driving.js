@@ -13,11 +13,14 @@ class DrivingGame {
             roadWidth: 20, // Increased from 15 to accommodate 4 lanes
             roadLength: 300,
             carSpeed: 1.2,
+            baseCarSpeed: 1.2, // Store the original car speed for reference
             obstacleSpeed: 0.4,
             cameraHeight: 7,
             cameraDistance: 12,
             buildingCount: 20,
-            maxObstacles: 10
+            maxObstacles: 17, // Increased by 1/3 again from 13 to 17
+            turnSensitivity: 1.0, // Base turn sensitivity (modifier)
+            maxBeers: 5 // Maximum number of beers on screen
         };
 
         // Game state
@@ -28,6 +31,9 @@ class DrivingGame {
         this.headlights = [];
         this.boundaryWalls = []; // Store boundary walls
         this.collisionSparks = []; // Store collision spark particles
+        this.beers = []; // Store beer power-ups
+        this.fogPatches = []; // Store fog patches on screen
+        this.beersCollected = 0; // Count of beers collected
         this.gameOver = false;
         this.moveLeft = false;
         this.moveRight = false;
@@ -35,6 +41,7 @@ class DrivingGame {
         this.distance = 0; // Total distance traveled
         this.time = 0; // For animation timing
         this.laneCounter = 0;
+        this.carsSpawned = false; // Track if cars have started appearing
         
         // Road curve variables
         this.roadCurve = 0; // Current road curve amount (positive = right, negative = left)
@@ -52,6 +59,9 @@ class DrivingGame {
         this.createPlayerCar();
         this.createBuildings();
         this.setupControls();
+        
+        // Load beer texture
+        this.beerTexture = new THREE.TextureLoader().load('assets/sprites/beer.png');
         
         // Start the animation loop
         this.animate();
@@ -73,6 +83,12 @@ class DrivingGame {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(this.renderer.domElement);
+        
+        // Create speed indicator
+        this.createSpeedIndicator();
+        
+        // Create beer counter
+        this.createBeerCounter();
         
         // Handle window resize
         window.addEventListener('resize', () => {
@@ -132,8 +148,8 @@ class DrivingGame {
                 
                 const laneMark = new THREE.Mesh(
                     markGeometry,
-                    new THREE.MeshBasicMaterial({ color: 0xffffff })
-                );
+                new THREE.MeshBasicMaterial({ color: 0xffffff })
+            );
                 
                 laneMark.position.y = 0.01;
                 laneMark.position.x = xPos;
@@ -409,7 +425,8 @@ class DrivingGame {
         if (this.obstacles.length >= this.settings.maxObstacles) return;
         
         // Only spawn a new obstacle with a higher probability for more frequent spawning
-        if (Math.random() > 0.25) return;
+        // Increased spawn probability by 1/3 (from 0.33 to 0.44)
+        if (Math.random() > 0.44) return;
         
         // Get all current obstacle lane positions at a similar distance
         const farDistance = -this.settings.roadLength * 0.4; // Spawn much closer to player
@@ -466,7 +483,7 @@ class DrivingGame {
         
         // Check if there's enough space in this lane
         let canSpawn = true;
-        const minSafeDistance = 30; // Doubled from 15 to provide much more space between cars
+        const minSafeDistance = 25; // Reduced from 30 to accommodate more cars while keeping gameplay reasonable
         
         // Apply road curve to the spawn position
         const distanceFactor = (farDistance + this.settings.roadLength) / this.settings.roadLength;
@@ -599,7 +616,7 @@ class DrivingGame {
     
     updatePlayerPosition() {
         // Update player's horizontal position based on input
-        const moveSpeed = 0.15;
+        const moveSpeed = 0.15; // Turn sensitivity removed - always use base value
         
         // Calculate road curve at player position
         const playerCurveAmount = this.roadCurve * 40;
@@ -881,6 +898,34 @@ class DrivingGame {
         const box1 = new THREE.Box3().setFromObject(obj1);
         const box2 = new THREE.Box3().setFromObject(obj2);
         
+        // For player car (obj1), reduce the hitbox by half
+        if (obj1 === this.playerCar) {
+            // Get the current size
+            const size = new THREE.Vector3();
+            box1.getSize(size);
+            
+            // Calculate the center of the box
+            const center = new THREE.Vector3();
+            box1.getCenter(center);
+            
+            // Create a new box that's half the size
+            const halfWidth = size.x * 0.5;
+            const halfHeight = size.y * 0.5;
+            const halfDepth = size.z * 0.5;
+            
+            box1.min.set(
+                center.x - halfWidth * 0.5,
+                center.y - halfHeight * 0.5,
+                center.z - halfDepth * 0.5
+            );
+            
+            box1.max.set(
+                center.x + halfWidth * 0.5,
+                center.y + halfHeight * 0.5,
+                center.z + halfDepth * 0.5
+            );
+        }
+        
         return box1.intersectsBox(box2);
     }
     
@@ -898,6 +943,8 @@ class DrivingGame {
         this.updateObstacles();
         this.updateVisualEffects();
         this.updateCollisionSparks(); // Update collision spark effects
+        this.updateBeers(); // Update beer power-ups
+        this.updateSpeedIndicator(); // Update speed display
         
         // Render the scene
         this.renderer.render(this.scene, this.camera);
@@ -1008,13 +1055,73 @@ class DrivingGame {
                 subText.style.zIndex = '1001';
                 document.body.appendChild(subText);
                 
+                // Add the restart button
+                const restartButton = document.createElement('button');
+                restartButton.textContent = 'Want to start this life over?';
+                restartButton.style.position = 'fixed';
+                restartButton.style.top = '70%';
+                restartButton.style.left = '50%';
+                restartButton.style.transform = 'translate(-50%, -50%)';
+                restartButton.style.padding = '10px 20px';
+                restartButton.style.fontSize = '24px';
+                restartButton.style.fontFamily = 'Arial, sans-serif';
+                restartButton.style.backgroundColor = '#444';
+                restartButton.style.color = 'white';
+                restartButton.style.border = 'none';
+                restartButton.style.borderRadius = '5px';
+                restartButton.style.cursor = 'pointer';
+                restartButton.style.opacity = '0';
+                restartButton.style.transition = 'opacity 0.5s ease-in-out';
+                restartButton.style.zIndex = '1001';
+                document.body.appendChild(restartButton);
+                
                 setTimeout(() => {
                     subText.style.opacity = '1';
+                    restartButton.style.opacity = '1';
                     
-                    // After a delay, end the game
+                    // Add click handler for the restart button
+                    restartButton.addEventListener('click', () => {
+                        // Hide the current elements
+                        crashText.style.opacity = '0';
+                        subText.style.opacity = '0';
+                        restartButton.style.opacity = '0';
+                        
+                        // Create a new message
+                        const messageText = document.createElement('div');
+                        messageText.textContent = "Yeah, don't we all. Well too bad, that's not how life works...";
+                        messageText.style.position = 'fixed';
+                        messageText.style.top = '50%';
+                        messageText.style.left = '50%';
+                        messageText.style.width = '80%';
+                        messageText.style.transform = 'translate(-50%, -50%)';
+                        messageText.style.color = 'black';
+                        messageText.style.fontSize = '28px';
+                        messageText.style.fontWeight = 'bold';
+                        messageText.style.fontFamily = 'Arial, sans-serif';
+                        messageText.style.textAlign = 'center';
+                        messageText.style.opacity = '0';
+                        messageText.style.transition = 'opacity 0.5s ease-in-out';
+                        messageText.style.zIndex = '1002';
+                        document.body.appendChild(messageText);
+                        
+                        // Show the message with a typing effect
+                        setTimeout(() => {
+                            messageText.style.opacity = '1';
+                            
+                            // After the message is shown, end the game as normal
+                            setTimeout(() => {
+                                this.endGame();
+                            }, 3000);
+                        }, 500);
+                    });
+                    
+                    // After a delay, end the game if button isn't clicked
                     setTimeout(() => {
-                        this.endGame();
-                    }, 2000);
+                        // Only end if the restart button is still visible (hasn't been clicked)
+                        if (restartButton.style.opacity !== '0') {
+                            this.endGame();
+                        }
+                    }, 8000);
                 }, 500);
             }, 100);
         }, 50);
@@ -1166,6 +1273,11 @@ class DrivingGame {
         
         // Spawn new obstacles
         this.spawnObstacle();
+        
+        // Set carsSpawned to true once we have cars on the road
+        if (!this.carsSpawned && this.obstacles.length > 0) {
+            this.carsSpawned = true;
+        }
     }
     
     // Add blinkers to a car obstacle
@@ -1193,6 +1305,25 @@ class DrivingGame {
         // Cleanup
         document.body.removeChild(this.renderer.domElement);
         
+        // Remove speed indicator
+        if (this.speedIndicator && this.speedIndicator.parentNode) {
+            this.speedIndicator.parentNode.removeChild(this.speedIndicator);
+        }
+        
+        // Remove beer counter
+        if (this.beerCounter && this.beerCounter.parentNode) {
+            this.beerCounter.parentNode.removeChild(this.beerCounter);
+        }
+        
+        // Clean up fog patches
+        this.fogPatches.forEach(patch => {
+            clearTimeout(patch.timeoutId);
+            if (patch.element && patch.element.parentNode) {
+                patch.element.parentNode.removeChild(patch.element);
+            }
+        });
+        this.fogPatches = [];
+        
         // Set a flag in sessionStorage to indicate we're coming from the driving game
         sessionStorage.setItem('fromDrivingGame', 'true');
         
@@ -1212,6 +1343,295 @@ class DrivingGame {
         
         // Navigate directly to the main index - no dialog scene
         window.location.href = basePath + '/index.html';
+    }
+    
+    createBeer() {
+        // Check if we already have too many beers
+        if (this.beers.length >= this.settings.maxBeers) return;
+        
+        // Only spawn beers after cars have started appearing
+        if (!this.carsSpawned) return;
+        
+        // Double the beer spawn rate again (0.96 instead of 0.48)
+        if (Math.random() > 0.96) return;
+        
+        // Choose a random lane for the beer (-1.5, -0.5, 0.5, 1.5)
+        const lanes = [-1.5, -0.5, 0.5, 1.5];
+        const lane = lanes[Math.floor(Math.random() * lanes.length)];
+        
+        // Create a beer sprite
+        const beerMaterial = new THREE.SpriteMaterial({ 
+            map: this.beerTexture,
+            color: 0xffffff,
+            transparent: true
+        });
+        
+        const beer = new THREE.Sprite(beerMaterial);
+        beer.scale.set(2, 2, 1); // Size of the beer
+        
+        // Position at a truly random distance down the road (full range)
+        const randomDistance = -20 - (Math.random() * this.settings.roadLength * 0.9);
+        
+        // Apply road curve to the spawn position
+        const distanceFactor = (randomDistance + this.settings.roadLength) / this.settings.roadLength;
+        const curveAmount = this.roadCurve * distanceFactor * 40;
+        
+        // Position the beer, floating slightly above the road with random offset
+        beer.position.set((lane * 4) + curveAmount, 1.5, randomDistance);
+        
+        // Store the lane for updates
+        beer.userData = { lane: lane };
+        
+        // Add to scene and beer array
+        this.scene.add(beer);
+        this.beers.push(beer);
+    }
+    
+    updateBeers() {
+        // Spawn new beers
+        this.createBeer();
+        
+        // Update existing beers
+        for (let i = this.beers.length - 1; i >= 0; i--) {
+            const beer = this.beers[i];
+            
+            // Move beer forward relative to player
+            beer.position.z += this.settings.carSpeed;
+            
+            // Apply road curve to beer
+            const distanceFactor = (beer.position.z + this.settings.roadLength) / this.settings.roadLength;
+            const curveAmount = this.roadCurve * distanceFactor * 40;
+            
+            // Update x position based on lane and curve
+            beer.position.x = (beer.userData.lane * 4) + curveAmount;
+            
+            // Make beer float up and down slightly
+            beer.position.y = 1.5 + Math.sin(this.time * 2 + i) * 0.2;
+            
+            // Rotate the beer around y-axis for visual effect
+            beer.material.rotation += 0.02;
+            
+            // Check if player collected the beer
+            if (this.checkBeerCollision(beer)) {
+                // Apply beer effect (change turn sensitivity and add fog)
+                this.applyBeerEffect();
+                
+                // Remove beer from scene and array
+                this.scene.remove(beer);
+                this.beers.splice(i, 1);
+                continue;
+            }
+            
+            // Remove beers that are behind the player
+            if (beer.position.z > 10) {
+                this.scene.remove(beer);
+                this.beers.splice(i, 1);
+            }
+        }
+    }
+    
+    checkBeerCollision(beer) {
+        // Simple distance-based collision detection
+        const playerPos = this.playerCar.position;
+        const beerPos = beer.position;
+        
+        // Using original beer hitbox size
+        const xDistance = Math.abs(playerPos.x - beerPos.x);
+        const yDistance = Math.abs(playerPos.y - beerPos.y);
+        const zDistance = Math.abs(playerPos.z - beerPos.z);
+        
+        // If the player is close enough to the beer, collect it
+        return xDistance < 2 && yDistance < 2 && zDistance < 2;
+    }
+    
+    applyBeerEffect() {
+        // Increment beer counter
+        this.beersCollected++;
+        
+        // Update the beer counter display
+        this.updateBeerCounter();
+        
+        // Play sound effect for beer collection
+        // this.playBeerSound(); // Uncomment if you add a sound effect
+        
+        // Turning sensitivity effect removed
+        
+        // Apply speed effect - 85% chance to increase (up from 60%), 15% chance to decrease
+        if (Math.random() < 0.85) {
+            // Increase speed by 10%
+            this.settings.carSpeed *= 1.1;
+            console.log("Speed increased: " + this.settings.carSpeed.toFixed(2));
+            
+            // Add a visual cue for speed increase
+            this.createSpeedVisualEffect(true);
+        } else {
+            // Decrease speed by 10%
+            this.settings.carSpeed *= 0.9;
+            console.log("Speed decreased: " + this.settings.carSpeed.toFixed(2));
+            
+            // Add a visual cue for speed decrease
+            this.createSpeedVisualEffect(false);
+        }
+        
+        // Limit the speed range to avoid extremes
+        // Min: 50% of base speed, Max: 250% of base speed
+        const minSpeed = this.settings.baseCarSpeed * 0.5;
+        const maxSpeed = this.settings.baseCarSpeed * 2.5;
+        this.settings.carSpeed = Math.max(minSpeed, Math.min(maxSpeed, this.settings.carSpeed));
+        
+        // Add only ONE fog patch per beer collected
+        this.createFogPatch(this.beersCollected);
+    }
+    
+    createSpeedVisualEffect(isSpeedUp) {
+        // Create a simple speed indicator at the bottom of the screen
+        const indicator = document.createElement('div');
+        
+        // Position in the center of the screen
+        indicator.style.position = 'fixed';
+        indicator.style.top = '50%';
+        indicator.style.left = '50%';
+        indicator.style.transform = 'translate(-50%, -50%)';
+        indicator.style.width = '50%'; // Take up half the screen width
+        indicator.style.textAlign = 'center';
+        indicator.style.padding = '20px';
+        indicator.style.borderRadius = '10px';
+        indicator.style.fontSize = '64px'; // Much larger text
+        indicator.style.fontWeight = 'bold';
+        indicator.style.zIndex = '1002';
+        
+        // Style based on speed change (no background, just text color)
+        if (isSpeedUp) {
+            indicator.textContent = 'SPEED UP!';
+            indicator.style.color = 'lime';
+            indicator.style.textShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+        } else {
+            indicator.textContent = 'SPEED DOWN!';
+            indicator.style.color = 'red';
+            indicator.style.textShadow = '0 0 10px rgba(255, 0, 0, 0.7)';
+        }
+        
+        // Add to DOM
+        document.body.appendChild(indicator);
+        
+        // Remove after a short delay
+        setTimeout(() => {
+            // Fade out
+            indicator.style.transition = 'opacity 0.5s ease-out';
+            indicator.style.opacity = '0';
+            
+            // Remove from DOM after fade
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    document.body.removeChild(indicator);
+                }
+            }, 500);
+        }, 1500);
+    }
+    
+    createFogPatch(beerCount = 1) {
+        // Create a DOM element for the fog patch
+        const fogPatch = document.createElement('div');
+        
+        // Fill the entire screen
+        fogPatch.style.position = 'fixed';
+        fogPatch.style.top = '0';
+        fogPatch.style.left = '0';
+        fogPatch.style.width = '100%';
+        fogPatch.style.height = '100%';
+        fogPatch.style.borderRadius = '0';
+        
+        // Simple semi-transparent white overlay with blurred edges
+        fogPatch.style.background = 'radial-gradient(circle, rgba(255, 255, 255, 0.25) 40%, rgba(255, 255, 255, 0.15) 70%, rgba(255, 255, 255, 0.1) 100%)';
+        
+        // No box shadow, no backdrop filter, no borders
+        fogPatch.style.boxShadow = 'none';
+        fogPatch.style.border = 'none';
+        
+        fogPatch.style.zIndex = '1000';
+        fogPatch.style.pointerEvents = 'none'; // Don't interfere with controls
+        
+        // Add to DOM
+        document.body.appendChild(fogPatch);
+        
+        // Make effect last 6x as long (doubled from previous 3x)
+        const duration = (Math.max(2000 - (beerCount * 300), 1000) + (Math.random() * 500)) * 6;
+        
+        // Store reference in fogPatches array with timeout info
+        const timeoutId = setTimeout(() => {
+            // Fast fade out
+            fogPatch.style.transition = 'opacity 0.3s ease-out';
+            fogPatch.style.opacity = '0';
+            
+            // Quick removal
+            setTimeout(() => {
+                if (fogPatch.parentNode) {
+                    document.body.removeChild(fogPatch);
+                }
+                
+                // Remove from array
+                const index = this.fogPatches.findIndex(p => p.element === fogPatch);
+                if (index !== -1) {
+                    this.fogPatches.splice(index, 1);
+                }
+            }, 300);
+        }, duration);
+        
+        this.fogPatches.push({ element: fogPatch, timeoutId });
+    }
+    
+    createSpeedIndicator() {
+        // Create a speed indicator at the top of the screen (smaller)
+        this.speedIndicator = document.createElement('div');
+        this.speedIndicator.style.position = 'fixed';
+        this.speedIndicator.style.top = '10px';
+        this.speedIndicator.style.right = '10px';
+        this.speedIndicator.style.padding = '4px 8px';
+        this.speedIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        this.speedIndicator.style.color = 'white';
+        this.speedIndicator.style.fontFamily = 'Arial, sans-serif';
+        this.speedIndicator.style.fontSize = '12px';
+        this.speedIndicator.style.borderRadius = '3px';
+        this.speedIndicator.style.zIndex = '1001';
+        this.updateSpeedIndicator();
+        document.body.appendChild(this.speedIndicator);
+    }
+    
+    updateSpeedIndicator() {
+        // Calculate speed as percentage of base speed
+        const speedPercentage = Math.round((this.settings.carSpeed / this.settings.baseCarSpeed) * 100);
+        this.speedIndicator.textContent = `Speed: ${speedPercentage}%`;
+        
+        // Color-code based on speed
+        if (speedPercentage > 120) {
+            this.speedIndicator.style.color = '#ff5555'; // Red for high speed
+        } else if (speedPercentage > 100) {
+            this.speedIndicator.style.color = '#55ff55'; // Green for above normal
+        } else if (speedPercentage < 80) {
+            this.speedIndicator.style.color = '#5555ff'; // Blue for low speed
+        } else {
+            this.speedIndicator.style.color = 'white'; // White for normal
+        }
+    }
+    
+    createBeerCounter() {
+        // Create a beer counter at the center top of the screen
+        this.beerCounter = document.createElement('div');
+        this.beerCounter.style.position = 'fixed';
+        this.beerCounter.style.top = '10px';
+        this.beerCounter.style.left = '50%';
+        this.beerCounter.style.transform = 'translateX(-50%)';
+        this.beerCounter.style.color = 'white';
+        this.beerCounter.style.fontFamily = 'Arial, sans-serif';
+        this.beerCounter.style.fontSize = '22px';
+        this.beerCounter.style.fontWeight = 'bold';
+        this.beerCounter.style.zIndex = '1001';
+        this.updateBeerCounter();
+        document.body.appendChild(this.beerCounter);
+    }
+    
+    updateBeerCounter() {
+        this.beerCounter.textContent = `BEERS: ${this.beersCollected}`;
     }
 }
 
