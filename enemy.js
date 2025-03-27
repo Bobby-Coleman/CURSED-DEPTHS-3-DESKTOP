@@ -54,8 +54,9 @@ export class Enemy {
             this.baseHp = 9;
             this.speed = 1;
             this.attackDamage = 1;
-            this.attackRange = 200;
-            this.shootCooldown = 3000; // 3 seconds
+            this.attackRange = 800; // Entire screen width
+            // Randomize the initial shoot cooldown between 1000-3000ms (1-3 seconds)
+            this.shootCooldown = 1000 + Math.floor(Math.random() * 2000);
             this.lastShotTime = 0;
             
             const geometry = new THREE.CircleGeometry(16, 32);
@@ -311,7 +312,11 @@ export class Enemy {
         
         // Set aggro if player is within range, or de-aggro if player is too far
         const deAggroRange = this.aggroRange * 1.5; // De-aggro at 1.5x aggro range
-        if (distanceToPlayer <= this.aggroRange) {
+        
+        // For shooter monsters, always aggro regardless of distance
+        if (this.type === 1) {
+            this.isAggro = true;
+        } else if (distanceToPlayer <= this.aggroRange) {
             this.isAggro = true;
         } else if (distanceToPlayer > deAggroRange) {
             this.isAggro = false;
@@ -366,12 +371,12 @@ export class Enemy {
                 }
             } else if (this.type === 1) {
                 // Move to maintain distance if too close or too far
-                const optimalRange = 150;
-                if (distanceToPlayer < optimalRange - 30) {
+                const optimalRange = 400; // Half screen distance (typical screen is ~800 units)
+                if (distanceToPlayer < optimalRange - 50) {
                     // Move away from player
                     this.mesh.position.x -= (dx / distanceToPlayer) * this.speed * 0.5;
                     this.mesh.position.y -= (dy / distanceToPlayer) * this.speed * 0.5;
-                } else if (distanceToPlayer > optimalRange + 30) {
+                } else if (distanceToPlayer > optimalRange + 50) {
                     // Move toward player
                     this.mesh.position.x += (dx / distanceToPlayer) * this.speed * 0.5;
                     this.mesh.position.y += (dy / distanceToPlayer) * this.speed * 0.5;
@@ -559,9 +564,9 @@ export class Enemy {
                     }, i * 100); // Shoot every 100ms
                 }
                 
-                // Update last shot time with the 3.5 second cooldown
+                // Update last shot time with a randomized cooldown between 1-3 seconds
                 this.lastShotTime = currentTime;
-                this.shootCooldown = 3500; // 3.5 seconds
+                this.shootCooldown = 1000 + Math.floor(Math.random() * 2000); // Random between 1000-3000ms
             }
         } else if (this.type === 3) { // Bomber
             if (currentTime - this.lastShotTime > this.shootCooldown) {
