@@ -11,6 +11,9 @@ import { Dialog } from './dialog.js';
 // Game constants
 const ROOM_SIZE = 800;
 
+// Create crosshair mesh
+let crosshair;
+
 // Game state
 let gameState = {
     level: 1,
@@ -21,7 +24,9 @@ let gameState = {
     hoveredRelicIndex: -1,
     lastRelicSellTime: 0,  // Add this to track last sell time
     tutorialShown: false,
-    isPaused: false // Add flag to track if game is paused during tutorial
+    isPaused: false, // Add flag to track if game is paused during tutorial
+    blood: 0, // Add blood counter
+    enemies: [] // Reference to enemies array
 };
 
 // Initialize Three.js
@@ -94,6 +99,7 @@ let lootSystem;
 let relicSystem;
 let shop;
 let dialog;
+let lastTime = 0; // For deltaTime calculation
 
 function startGame() {
     init();
@@ -114,7 +120,9 @@ function init() {
         hoveredRelicIndex: -1,
         lastRelicSellTime: 0,
         tutorialShown: false,
-        isPaused: false
+        isPaused: false,
+        blood: 0, // Initialize blood counter
+        enemies: [] // Reference to enemies array
     };
     
     // Clear previous game objects
@@ -123,6 +131,9 @@ function init() {
     }
     
     enemies = [];
+    
+    // Create crosshair
+    createCrosshair();
     
     // Initialize systems
     relicSystem = new RelicSystem();
@@ -159,16 +170,19 @@ function init() {
     // Make gameState globally accessible for relic effects
     window.gameState = gameState;
     
-    // Initialize UI after player is created
-    ui = new UI();
-    
-    // Decide if first level is a shop (20% chance)
-    if (Math.random() < 0.2) {
-        createShopLevel();
+    // Reset UI elements instead of recreating them 
+    if (ui) {
+        ui.resetUIElements();
+        ui.updateRequiredBlood(currentLevel.bloodRequired);
     } else {
-        // Spawn enemies for the current level
-        spawnEnemies();
+        // Initialize UI after player is created if it doesn't exist
+        ui = new UI();
+        ui.updateRequiredBlood(currentLevel.bloodRequired);
     }
+    
+    // Always start with a combat level (level 1)
+    // Spawn enemies for the current level
+    spawnEnemies();
     
     // Show level message and update UI after everything is initialized
     ui.showLevelMessage(gameState.level);
@@ -306,14 +320,17 @@ function nextLevel() {
         }
     }
     
+    // Reset blood to zero when moving to a new level
+    gameState.blood = 0;
+    
     // Increment level
     gameState.level++;
     
     // Apply relic effects on room change
     relicSystem.onRoomChange(player);
     
-    // Decide if next level is a shop (20% chance after level 2, or guaranteed every 5 levels)
-    if ((gameState.level % 5 === 0) || (gameState.level > 2 && Math.random() < 0.2)) {
+    // Alternate between combat and shop levels (even levels are shops)
+    if (gameState.level % 2 === 0) {
         // Create shop level
         gameState.isShopLevel = true;
         
@@ -342,6 +359,9 @@ function nextLevel() {
         // Create new level
         currentLevel = new Level(scene, ROOM_SIZE, gameState.level);
         
+        // Display the required blood amount
+        ui.updateRequiredBlood(currentLevel.bloodRequired);
+        
         // Position player at the hatch
         player.mesh.position.x = ROOM_SIZE/2 - 80;
         player.mesh.position.y = -ROOM_SIZE/2 + 80;
@@ -357,8 +377,17 @@ function nextLevel() {
         spawnEnemies();
     }
     
+    // Reset UI blood displays
+    ui.resetUIElements();
+    
+    // Update required blood display
+    if (!gameState.isShopLevel) {
+        ui.updateRequiredBlood(currentLevel.bloodRequired);
+    }
+    
     // Show level message
     ui.showLevelMessage(gameState.level);
+    ui.updateStats(player, gameState);
 }
 
 function checkGameOver() {
@@ -383,9 +412,17 @@ function updateUI() {
 function animate() {
     requestAnimationFrame(animate);
     
+    // Keep enemies reference updated in gameState for use by other components
+    gameState.enemies = enemies;
+    
     if (!gameState.gameOver) {
         // Only update player and enemies if game is not paused
         if (!gameState.isPaused) {
+            // Calculate delta time for animations
+            const currentTime = performance.now();
+            const deltaTime = currentTime - (lastTime || currentTime);
+            lastTime = currentTime;
+            
             // Store player's previous position for collision rollback
             const prevPlayerPosX = player.mesh.position.x;
             const prevPlayerPosY = player.mesh.position.y;
@@ -466,7 +503,7 @@ function animate() {
                     
                     // Check if enemy is dead
                     if (enemies[i].hp <= 0) {
-                        // Generate loot drop
+                        // Generate loot drop (including blood)
                         const dropX = enemies[i].mesh.position.x;
                         const dropY = enemies[i].mesh.position.y;
                         lootSystem.generateDrop(dropX, dropY);
@@ -480,10 +517,22 @@ function animate() {
                     }
                 }
                 
-                // Check if all enemies are defeated
-                if (enemies.length === 0 && !currentLevel.portalActive) {
-                    currentLevel.activatePortal();
+                // Update blood drops animation
+                lootSystem.updateBloodDrops();
+                
+                // Check for blood pickups
+                lootSystem.checkBloodPickup(player);
+                
+                // Check if all enemies are defeated - activate tomb but don't open portal automatically
+                if (enemies.length === 0 && !currentLevel.tombActive) {
+                    currentLevel.activateTomb();
                 }
+                
+                // Update tomb glow effect
+                currentLevel.updateTombGlow(deltaTime);
+                
+                // Check for blood offering at tomb
+                currentLevel.checkBloodOffering(player, gameState, ui);
                 
                 // Check for portal collision
                 if (currentLevel.portalActive && currentLevel.checkPortalCollision(player)) {
@@ -554,6 +603,12 @@ function animate() {
         updateUI();
     }
     
+    // Update crosshair position to follow mouse
+    if (crosshair) {
+        crosshair.position.x = mouse.x;
+        crosshair.position.y = mouse.y;
+    }
+    
     renderer.render(scene, camera);
 }
 
@@ -618,6 +673,18 @@ window.addEventListener('mouseup', () => {
     mouse.isDown = false;
 });
 
+window.addEventListener('mouseout', () => {
+    // Show cursor when mouse leaves the game window
+    renderer.domElement.style.cursor = 'default';
+    if (crosshair) crosshair.visible = false;
+});
+
+window.addEventListener('mouseover', () => {
+    // Hide cursor when mouse enters the game window
+    renderer.domElement.style.cursor = 'none';
+    if (crosshair) crosshair.visible = true;
+});
+
 // Restart button event listener
 document.getElementById('restart-button').addEventListener('click', () => {
     document.getElementById('game-over').style.display = 'none';
@@ -626,17 +693,19 @@ document.getElementById('restart-button').addEventListener('click', () => {
 
 // Function to restart game from level 2
 function restartGame() {
-    // Reset game state but start at level 2
+    // Reset game state but start at level 2 (to skip tutorial but maintain level patterns)
     gameState = {
-        level: 2, // Start at level 2 instead of 1
+        level: 2, // Start at level 2 (an even number, but we'll set isShopLevel to false)
         killStreak: 0,
         gameOver: false,
-        isShopLevel: false,
+        isShopLevel: false, // Force this to be a combat level, not a shop
         currentPickup: null,
         hoveredRelicIndex: -1,
         lastRelicSellTime: 0,
         tutorialShown: true, // Mark tutorial as already shown
-        isPaused: false
+        isPaused: false,
+        blood: 0, // Initialize blood counter
+        enemies: [] // Reference to enemies array
     };
     
     // Clear previous game objects
@@ -645,6 +714,9 @@ function restartGame() {
     }
     
     enemies = [];
+    
+    // Create crosshair
+    createCrosshair();
     
     // Initialize systems
     relicSystem = new RelicSystem();
@@ -669,10 +741,17 @@ function restartGame() {
     // Make gameState globally accessible for relic effects
     window.gameState = gameState;
     
-    // Initialize UI after player is created
-    ui = new UI();
+    // Reset UI elements instead of recreating them
+    if (ui) {
+        ui.resetUIElements();
+        ui.updateRequiredBlood(currentLevel.bloodRequired);
+    } else {
+        // Initialize UI after player is created if it doesn't exist
+        ui = new UI();
+        ui.updateRequiredBlood(currentLevel.bloodRequired);
+    }
     
-    // Spawn enemies for the level (always regular level since we're starting at level 2)
+    // Spawn enemies for the level (always combat level since we're forcing isShopLevel to false)
     spawnEnemies();
     
     // Show level message and update UI after everything is initialized
@@ -717,8 +796,12 @@ function showControlsTutorial() {
     line2.style.height = '30px';
     
     const line3 = document.createElement('div');
-    line3.style.marginBottom = '40px';
+    line3.style.marginBottom = '20px';
     line3.style.height = '30px';
+    
+    const line4 = document.createElement('div');
+    line4.style.marginBottom = '40px';
+    line4.style.height = '30px';
     
     // Create Good Luck button
     const goodLuckButton = document.createElement('button');
@@ -757,6 +840,7 @@ function showControlsTutorial() {
     tutorialOverlay.appendChild(line1);
     tutorialOverlay.appendChild(line2);
     tutorialOverlay.appendChild(line3);
+    tutorialOverlay.appendChild(line4);
     tutorialOverlay.appendChild(goodLuckButton);
     
     document.body.appendChild(tutorialOverlay);
@@ -764,10 +848,13 @@ function showControlsTutorial() {
     // Type out text animation
     const text1 = "Controls: Use WASD to move";
     const text2 = "Point and click to shoot in that direction";
-    const text3 = "Kill demons to collect blood. Bring enough blood to the altar to progress";
+    const text3 = "Kill demons and collect enough blood before it disappears";
+    const text4 = "Bring the amount required for the sacrifice to the altar to progress";
+    
     let charIndex1 = 0;
     let charIndex2 = 0;
     let charIndex3 = 0;
+    let charIndex4 = 0;
     
     // Type first line
     const typeFirstLine = setInterval(() => {
@@ -790,8 +877,17 @@ function showControlsTutorial() {
                             charIndex3++;
                         } else {
                             clearInterval(typeThirdLine);
-                            // Make button visible after all text is displayed
-                            goodLuckButton.style.display = 'block';
+                            // Start typing fourth line after third is complete
+                            const typeFourthLine = setInterval(() => {
+                                if (charIndex4 < text4.length) {
+                                    line4.textContent += text4.charAt(charIndex4);
+                                    charIndex4++;
+                                } else {
+                                    clearInterval(typeFourthLine);
+                                    // Make button visible after all text is displayed
+                                    goodLuckButton.style.display = 'block';
+                                }
+                            }, 30);
                         }
                     }, 30);
                 }
@@ -804,4 +900,63 @@ function showControlsTutorial() {
     
     // Set flag that tutorial has been shown
     gameState.tutorialShown = true;
+}
+
+// Create a crosshair that follows the mouse
+function createCrosshair() {
+    // Create a group to hold the crosshair elements
+    crosshair = new THREE.Group();
+    
+    // Create crosshair lines
+    const lineThickness = 2;
+    const lineLength = 12;
+    const gapSize = 4;
+    
+    // Horizontal line (left and right parts)
+    const horizontalLeft = new THREE.Mesh(
+        new THREE.PlaneGeometry(lineLength, lineThickness),
+        new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    horizontalLeft.position.x = -gapSize - lineLength/2;
+    
+    const horizontalRight = new THREE.Mesh(
+        new THREE.PlaneGeometry(lineLength, lineThickness),
+        new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    horizontalRight.position.x = gapSize + lineLength/2;
+    
+    // Vertical line (top and bottom parts)
+    const verticalTop = new THREE.Mesh(
+        new THREE.PlaneGeometry(lineThickness, lineLength),
+        new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    verticalTop.position.y = gapSize + lineLength/2;
+    
+    const verticalBottom = new THREE.Mesh(
+        new THREE.PlaneGeometry(lineThickness, lineLength),
+        new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    verticalBottom.position.y = -gapSize - lineLength/2;
+    
+    // Center dot
+    const centerDot = new THREE.Mesh(
+        new THREE.CircleGeometry(2, 8),
+        new THREE.MeshBasicMaterial({ color: 0xFF0000 })
+    );
+    
+    // Add all parts to the crosshair group
+    crosshair.add(horizontalLeft);
+    crosshair.add(horizontalRight);
+    crosshair.add(verticalTop);
+    crosshair.add(verticalBottom);
+    crosshair.add(centerDot);
+    
+    // Set crosshair position in front of everything
+    crosshair.position.z = 5;
+    
+    // Add to scene
+    scene.add(crosshair);
+    
+    // Only hide cursor on the canvas, not the entire page
+    renderer.domElement.style.cursor = 'none';
 }

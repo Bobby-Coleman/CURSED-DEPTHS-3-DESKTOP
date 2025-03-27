@@ -60,12 +60,37 @@ export class Enemy {
             this.shootCooldown = 1000 + Math.floor(Math.random() * 2000);
             this.lastShotTime = 0;
             
-            const geometry = new THREE.CircleGeometry(16, 32);
+            // Create mesh with sprite sheet
+            const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0x0000FF,
-                transparent: true
+                color: 0xFFFFFF, // White color to show sprite properly
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Load shooter enemy sprite sheet
+            const texture = new THREE.TextureLoader().load('assets/sprites/shooter_enemy.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Shooter enemy sprite sheet loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading shooter enemy sprite sheet:', error);
+                    this.mesh.material.color.setHex(0x0000FF); // Fallback to blue if sprite fails to load
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames
+            this.setupAnimationFrames();
             
         } else if (type === 3) { // Bomber
             this.baseHp = 12;
@@ -577,8 +602,17 @@ export class Enemy {
                     }
                 }
             } else if (this.type === 1) {
-                // Remove rotation - use animation frames if sprite sheet exists
-                // this.mesh.rotation.z = Math.atan2(dy, dx);
+                // Update animation based on player direction for shooter enemy
+                if (currentTime - this.frameTime > this.animationSpeed) {
+                    this.frameTime = currentTime;
+                    this.currentFrame = (this.currentFrame + 1) % 4;
+                    
+                    // Calculate direction based on player position
+                    const directionFrame = this.getDirectionFrame(dx, dy);
+                    
+                    // Update sprite frame with correct direction
+                    this.updateUVs(directionFrame * 4 + this.currentFrame);
+                }
                 
                 // Move to maintain distance if too close or too far
                 const optimalRange = 400; // Half screen distance (typical screen is ~800 units)
@@ -1017,6 +1051,15 @@ export class Enemy {
             );
         } else if (this.type === 6) { // Small nest enemy
             new THREE.TextureLoader().load('assets/sprites/nest_enemy.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else if (this.type === 1) { // Shooter enemy
+            new THREE.TextureLoader().load('assets/sprites/shooter_enemy.png', 
                 (texture) => {
                     texture.magFilter = THREE.NearestFilter;
                     texture.minFilter = THREE.NearestFilter;

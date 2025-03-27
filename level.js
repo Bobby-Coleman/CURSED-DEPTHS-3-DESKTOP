@@ -6,6 +6,8 @@ export class Level {
         this.roomSize = roomSize;
         this.levelNumber = levelNumber;
         this.portalActive = false;
+        this.bloodRequired = this.calculateRequiredBlood();
+        this.tombActive = false; // Track if the tomb is active/glowing
         
         // Create room
         this.createRoom();
@@ -13,8 +15,52 @@ export class Level {
         // Add obstacles
         this.createObstacles();
         
-        // Add tomb in the center
-        this.createTomb();
+        // Add tomb in the center for combat levels (determined by isShopLevel flag)
+        if (!window.gameState || !window.gameState.isShopLevel) {
+            this.createTomb();
+        }
+    }
+    
+    // Calculate required blood based on level number
+    calculateRequiredBlood() {
+        // Get the effective combat level (ignoring shop levels)
+        const combatLevel = Math.ceil(this.levelNumber / 2);
+        
+        // Level 1: 20 blood
+        // Level 2: 40 blood (would be combat level 1)
+        // Level 3: 150 blood (would be combat level 2)
+        // Level 4+: 50% more blood than previous combat level
+        switch (combatLevel) {
+            case 1: return 20;
+            case 2: return 40;
+            case 3: return 150;
+            default:
+                // For level 4 and above, increase by 50% from previous level
+                const prevCombatLevel = combatLevel - 1;
+                const prevLevelBlood = this.calculateRequiredBloodForCombatLevel(prevCombatLevel);
+                return Math.ceil(prevLevelBlood * 1.5);
+        }
+    }
+    
+    // Helper method to calculate blood for any combat level (used for progression calculation)
+    calculateRequiredBloodForCombatLevel(combatLevel) {
+        switch (combatLevel) {
+            case 1: return 20;
+            case 2: return 40;
+            case 3: return 150;
+            default:
+                // Recursively calculate from previous levels
+                const prevCombatLevel = combatLevel - 1;
+                const prevLevelBlood = this.calculateRequiredBloodForCombatLevel(prevCombatLevel);
+                return Math.ceil(prevLevelBlood * 1.5);
+        }
+    }
+    
+    // Method used by calculateRequiredBlood
+    calculateRequiredBloodForLevel(level) {
+        // Convert to combat level first
+        const combatLevel = Math.ceil(level / 2);
+        return this.calculateRequiredBloodForCombatLevel(combatLevel);
     }
     
     createRoom() {
@@ -268,26 +314,104 @@ export class Level {
     }
     
     activateTomb() {
-        // Change tomb texture to glowing eyes version when portal is activated
-        const glowTexture = new THREE.TextureLoader().load('assets/sprites/tomb_eye_glow.png');
+        if (this.tombActive) return; // Already active
         
-        // Update both parts of the tomb
-        this.tombTop.material.map = glowTexture;
-        this.tombTop.material.needsUpdate = true;
+        this.tombActive = true;
         
-        this.tombBase.material.map = glowTexture;
-        this.tombBase.material.needsUpdate = true;
+        // Create a multi-layered glow for more diffused effect
+        // Layer 1: Larger, more transparent outer glow
+        const outerGlowGeometry = new THREE.CircleGeometry(100, 32);
+        const outerGlowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xAA0000, // Blood red
+            transparent: true,
+            opacity: 0.2,
+            blending: THREE.AdditiveBlending, // Use additive blending for light-like effect
+        });
+        this.outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+        this.outerGlow.position.set(0, 0, 0.4); // Below inner glow
+        this.scene.add(this.outerGlow);
         
-        // Update shadow texture as well
-        this.tombShadow.material.map = glowTexture;
-        this.tombShadow.material.needsUpdate = true;
+        // Layer 2: Medium middle glow
+        const midGlowGeometry = new THREE.CircleGeometry(70, 32);
+        const midGlowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xCC0000, // Slightly brighter red
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending
+        });
+        this.midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial);
+        this.midGlow.position.set(0, 0, 0.5); // Between outer and inner
+        this.scene.add(this.midGlow);
+        
+        // Layer 3: Small, brighter inner glow
+        const innerGlowGeometry = new THREE.CircleGeometry(40, 32);
+        const innerGlowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFF0000, // Bright red
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending
+        });
+        this.innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
+        this.innerGlow.position.set(0, 0, 0.6); // Above other layers
+        this.scene.add(this.innerGlow);
+        
+        // Initialize animation values
+        this.glowTime = 0;
+        this.glowPhase = {
+            outer: 0,
+            mid: Math.PI / 3, // Offset phase for more natural effect
+            inner: Math.PI / 1.5 // Different offset
+        };
+    }
+    
+    updateTombGlow(deltaTime) {
+        if (!this.tombActive) return;
+        
+        // Update time value
+        this.glowTime += deltaTime;
+        
+        // Create subtle, varied pulsing for each layer
+        if (this.outerGlow) {
+            const outerPulse = 0.9 + Math.sin(this.glowTime * 0.0015 + this.glowPhase.outer) * 0.15;
+            this.outerGlow.scale.set(outerPulse, outerPulse, 1);
+            
+            // Slowly rotate the outer glow for subtle movement
+            this.outerGlow.rotation.z += deltaTime * 0.0001;
+        }
+        
+        if (this.midGlow) {
+            const midPulse = 0.85 + Math.sin(this.glowTime * 0.002 + this.glowPhase.mid) * 0.2;
+            this.midGlow.scale.set(midPulse, midPulse, 1);
+            
+            // Rotate in opposite direction
+            this.midGlow.rotation.z -= deltaTime * 0.00015;
+        }
+        
+        if (this.innerGlow) {
+            const innerPulse = 0.8 + Math.sin(this.glowTime * 0.0025 + this.glowPhase.inner) * 0.25;
+            this.innerGlow.scale.set(innerPulse, innerPulse, 1);
+        }
     }
     
     activatePortal(x, y) {
         this.portalActive = true;
         
-        // Change tomb appearance
-        this.activateTomb();
+        // Only update tomb textures if they exist (in combat levels)
+        if (this.tombTop && this.tombBase && this.tombShadow) {
+            // Change tomb texture to glowing eyes version
+            const glowTexture = new THREE.TextureLoader().load('assets/sprites/statue_eyes_glow.png');
+            
+            // Update both parts of the tomb
+            this.tombTop.material.map = glowTexture;
+            this.tombTop.material.needsUpdate = true;
+            
+            this.tombBase.material.map = glowTexture;
+            this.tombBase.material.needsUpdate = true;
+            
+            // Update shadow texture as well
+            this.tombShadow.material.map = glowTexture;
+            this.tombShadow.material.needsUpdate = true;
+        }
         
         // Remove the closed hatch
         if (this.closedHatch) {
@@ -413,6 +537,48 @@ export class Level {
         return false;
     }
     
+    // Check if player has offered enough blood to activate the portal
+    checkBloodOffering(player, gameState, ui) {
+        if (this.portalActive) return false; // Already active
+        
+        // Check if player is close to tomb and has enough blood
+        if (this.checkTombProximity(player)) {
+            // Only accept blood offerings when all enemies are dead
+            const allEnemiesDead = window.gameState && window.gameState.enemies && window.gameState.enemies.length === 0;
+            
+            if (allEnemiesDead) {
+                if (gameState.blood >= this.bloodRequired) {
+                    // Activate portal
+                    this.activatePortal();
+                    // Remove the blood from player's total
+                    gameState.blood -= this.bloodRequired;
+                    return true;
+                } else {
+                    // Not enough blood, show message and kill player
+                    ui.showNotEnoughBloodMessage();
+                    // Delay player death by 1 second to let them see the message first
+                    setTimeout(() => {
+                        player.hp = 0; // Kill the player
+                    }, 1000);
+                    return false;
+                }
+            } else if (gameState.blood >= this.bloodRequired) {
+                // If they have enough blood but enemies remain, just show a message
+                ui.showMessage("Defeat all enemies first!");
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    // Check if player is close to the tomb (for blood offering)
+    checkTombProximity(player) {
+        const dx = player.mesh.position.x;
+        const dy = player.mesh.position.y;
+        // Tomb is at (0,0) - check if player is within 50 units
+        return Math.sqrt(dx * dx + dy * dy) < 70;
+    }
+    
     cleanup() {
         // Remove all level objects from scene
         this.scene.remove(this.floor);
@@ -444,6 +610,22 @@ export class Level {
         
         if (this.closedHatch) {
             this.scene.remove(this.closedHatch);
+        }
+        
+        // Remove tomb glow if it exists
+        if (this.outerGlow) {
+            this.scene.remove(this.outerGlow);
+            this.outerGlow = null;
+        }
+        
+        if (this.midGlow) {
+            this.scene.remove(this.midGlow);
+            this.midGlow = null;
+        }
+        
+        if (this.innerGlow) {
+            this.scene.remove(this.innerGlow);
+            this.innerGlow = null;
         }
         
         // Remove all obstacles and other level objects

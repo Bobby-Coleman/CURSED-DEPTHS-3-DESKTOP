@@ -1,5 +1,17 @@
+// Static instance tracker
+let uiInstance = null;
+
 export class UI {
     constructor() {
+        // Check if UI instance already exists
+        if (uiInstance) {
+            // Return the existing instance
+            return uiInstance;
+        }
+        
+        // Store this instance
+        uiInstance = this;
+        
         // Create popup container
         this.popup = document.createElement('div');
         this.popup.style.position = 'absolute';
@@ -113,6 +125,40 @@ export class UI {
         this.messageContainer.style.fontFamily = 'Arial, sans-serif';
         
         document.body.appendChild(this.messageContainer);
+
+        // Create required blood indicator at the top center
+        this.requiredBlood = document.createElement('div');
+        this.requiredBlood.id = 'required-blood';
+        this.requiredBlood.style.position = 'absolute';
+        this.requiredBlood.style.top = '45px';
+        this.requiredBlood.style.left = '50%';
+        this.requiredBlood.style.transform = 'translateX(-50%)';
+        this.requiredBlood.style.fontSize = '24px';
+        this.requiredBlood.style.fontWeight = 'bold';
+        this.requiredBlood.style.color = '#FFFFFF';
+        this.requiredBlood.style.textShadow = '2px 2px 0 #AA0000';
+        this.requiredBlood.style.fontFamily = 'Arial, sans-serif';
+        this.requiredBlood.style.zIndex = '100';
+        this.requiredBlood.innerHTML = 'REQUIRED BLOOD: 0';
+        
+        document.body.appendChild(this.requiredBlood);
+        
+        // Create blood counter display - moved to center under required blood
+        this.bloodCounter = document.createElement('div');
+        this.bloodCounter.id = 'blood-counter';
+        this.bloodCounter.style.position = 'absolute';
+        this.bloodCounter.style.top = '75px';
+        this.bloodCounter.style.left = '50%';
+        this.bloodCounter.style.transform = 'translateX(-50%)';
+        this.bloodCounter.style.fontSize = '32px';
+        this.bloodCounter.style.fontWeight = 'bold';
+        this.bloodCounter.style.color = '#FFFFFF';
+        this.bloodCounter.style.textShadow = '2px 2px 0 #AA0000';
+        this.bloodCounter.style.fontFamily = 'Arial, sans-serif';
+        this.bloodCounter.style.zIndex = '100';
+        this.bloodCounter.innerHTML = 'BLOOD: 0';
+        
+        document.body.appendChild(this.bloodCounter);
     }
     
     showItemPopup(item, x, y) {
@@ -255,6 +301,11 @@ export class UI {
         document.getElementById('kill-streak').textContent = gameState.killStreak;
         document.getElementById('relics').textContent = player.relics.length;
 
+        // Update blood counter
+        if (this.bloodCounter) {
+            this.bloodCounter.innerHTML = `BLOOD: ${gameState.blood || 0}`;
+        }
+        
         // Update weapon stats with calculated values
         const calculatedDamage = player.calculateDamage();
         document.getElementById('current-weapon-damage').textContent = calculatedDamage;
@@ -311,6 +362,11 @@ export class UI {
                 };
             }
         }
+
+        // Update remaining enemies if on a combat level
+        if (enemies && document.getElementById('enemies-remaining')) {
+            document.getElementById('enemies-remaining').textContent = enemies.length;
+        }
     }
 
     showMessage(text) {
@@ -341,5 +397,49 @@ export class UI {
         
         // Update relics count
         document.getElementById('relics').textContent = relics.length;
+    }
+
+    showNotEnoughBloodMessage() {
+        // Create "NOT ENOUGH BLOOD" message
+        const bloodMessage = document.createElement('div');
+        bloodMessage.style.position = 'absolute';
+        bloodMessage.style.top = '50%';
+        bloodMessage.style.left = '50%';
+        bloodMessage.style.transform = 'translate(-50%, -50%)';
+        bloodMessage.style.color = '#FF0000';
+        bloodMessage.style.fontSize = '48px';
+        bloodMessage.style.fontWeight = 'bold';
+        bloodMessage.style.textShadow = '2px 2px 4px #000';
+        bloodMessage.style.fontFamily = 'Arial, sans-serif';
+        bloodMessage.style.zIndex = '200';
+        bloodMessage.innerHTML = 'NOT ENOUGH BLOOD';
+        
+        document.body.appendChild(bloodMessage);
+        
+        // Fade out and remove after 2 seconds
+        setTimeout(() => {
+            bloodMessage.style.transition = 'opacity 1s';
+            bloodMessage.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(bloodMessage);
+            }, 1000);
+        }, 2000);
+    }
+
+    // Update the required blood display
+    updateRequiredBlood(amount) {
+        if (this.requiredBlood) {
+            this.requiredBlood.innerHTML = `REQUIRED BLOOD: ${amount}`;
+        }
+    }
+    
+    // Reset UI elements when restarting or moving to a new level
+    resetUIElements() {
+        // Reset blood counter value only
+        if (this.bloodCounter) {
+            this.bloodCounter.innerHTML = 'BLOOD: 0';
+        }
+        
+        // Don't reset required blood - it will be set separately
     }
 }
