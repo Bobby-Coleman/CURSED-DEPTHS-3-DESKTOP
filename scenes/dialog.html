@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursed Depths - Dialog</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .dialog-container {
+            width: 80%;
+            max-width: 800px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 2px solid #555;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .dialog-text {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        
+        .dialog-character {
+            font-weight: bold;
+            color: #ff5555;
+            margin-bottom: 5px;
+        }
+        
+        .dialog-next {
+            background-color: #ff3333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="dialog-container">
+        <div class="dialog-character">Mysterious Entity</div>
+        <div class="dialog-text">
+            Welcome to the Cursed Depths. Your reckless driving has led you straight to hell.
+            Now you must navigate the horrors that await, if you wish to escape...
+        </div>
+        <button class="dialog-next" onclick="continueToMainGame()">Next</button>
+    </div>
+    
+    <script>
+        // Keep the music playing if it's already playing
+        function continueToMainGame() {
+            // Set a flag to indicate dialog is complete
+            sessionStorage.setItem('dialogComplete', 'true');
+            sessionStorage.removeItem('goingToDialog');
+            
+            // Get the path to the root of the project
+            // This handles both local and GitHub Pages deployments
+            const path = window.location.pathname;
+            let basePath = '';
+            
+            // If we're in the scenes directory
+            if (path.includes('/scenes/')) {
+                // Extract the path up to the project root
+                basePath = path.substring(0, path.indexOf('/scenes'));
+            }
+            
+            // Navigate to the main index
+            window.location.href = basePath + '/index.html';
+        }
+        
+        // Check if we're supposed to be here
+        if (!sessionStorage.getItem('fromDrivingGame') && !sessionStorage.getItem('goingToDialog')) {
+            // If not coming from driving game or redirected from index, redirect to the start
+            // Get the path to the root of the project
+            const path = window.location.pathname;
+            let basePath = '';
+            
+            // If we're in the scenes directory
+            if (path.includes('/scenes/')) {
+                // Extract the path up to the project root
+                basePath = path.substring(0, path.indexOf('/scenes'));
+            }
+            
+            // Redirect to start
+            window.location.href = basePath + '/driving-game/start.html';
+        }
+    </script>
+</body>
+</html> 

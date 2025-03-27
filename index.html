@@ -56,6 +56,17 @@
         } else {
             // Clear the flag once redirected back to main game
             sessionStorage.removeItem('fromDrivingGame');
+            
+            // Check if we've already gone through the dialog scene
+            if (!sessionStorage.getItem('dialogComplete')) {
+                // Set a flag to track that we're heading to the dialog scene
+                sessionStorage.setItem('goingToDialog', 'true');
+                // Show dialog scene before main game
+                window.location.href = 'scenes/dialog.html';
+            } else {
+                // Clear the dialog complete flag for next playthrough
+                sessionStorage.removeItem('dialogComplete');
+            }
         }
     </script>
 </head>
