@@ -778,22 +778,16 @@ class DrivingGame {
         // Set a flag in sessionStorage to indicate we're coming from the driving game
         sessionStorage.setItem('fromDrivingGame', 'true');
         
-        // Get the root URL of the current server
-        const rootUrl = window.location.origin;
-        const targetUrl = rootUrl + '/index.html';
-        
-        // Directly use the calculated URL without showing an alert
-        window.location.href = targetUrl;
+        // Use relative path instead of absolute path for GitHub Pages compatibility
+        window.location.href = '../../index.html';
     }
 }
 
 // Initialize game once the page is loaded
 window.onload = function() {
     window.startMainGame = function() {
-        // Get the root URL of the current server
-        const rootUrl = window.location.origin;
-        // Load the main game (dialog scene) with absolute server path
-        window.location.href = rootUrl + '/index.html';
+        // Use relative path instead of absolute path for GitHub Pages compatibility
+        window.location.href = '../../index.html';
     };
     
     // Start the driving game
