@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+// Play background music at the start of the game
+const backgroundMusic = new Audio('assets/audio/background_music_enter.wav');
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.7;
+backgroundMusic.play();
+
 class DrivingGame {
     constructor() {
         // Game settings

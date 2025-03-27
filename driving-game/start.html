@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Highway to Hell - Start</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .background {
+            width: 100%;
+            height: 100vh;
+            background-image: url('assets/sprites/driving_start_menu.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 50px;
+        }
+        
+        .start-button {
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio element that will be played -->
+    <audio id="backgroundMusic" src="assets/audio/background_music_enter.wav" loop></audio>
+    
+    <div class="background">
+        <button class="start-button" onclick="startDriving()">START DRIVING</button>
+    </div>
+    
+    <script>
+        function startDriving() {
+            // Navigate to the driving game with a parameter to start music
+            window.location.href = 'driving.html?playMusic=true';
+        }
+    </script>
+</body>
+</html> 
