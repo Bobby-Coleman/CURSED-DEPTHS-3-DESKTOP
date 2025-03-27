@@ -30,6 +30,20 @@ export class Dialog {
         this.container.style.alignItems = 'center';
         this.container.style.justifyContent = 'center';
         this.container.style.zIndex = '1000';
+        this.container.style.opacity = '0'; // Start with 0 opacity
+        
+        // Create fog overlay
+        this.fogOverlay = document.createElement('div');
+        this.fogOverlay.style.position = 'fixed';
+        this.fogOverlay.style.top = '0';
+        this.fogOverlay.style.left = '0';
+        this.fogOverlay.style.width = '100%';
+        this.fogOverlay.style.height = '100%';
+        this.fogOverlay.style.backgroundColor = '#000';
+        this.fogOverlay.style.opacity = '1';
+        this.fogOverlay.style.zIndex = '999';
+        this.fogOverlay.style.transition = 'opacity 5s ease-in-out';
+        document.body.appendChild(this.fogOverlay);
         
         // Create background image
         this.background = document.createElement('img');
@@ -219,5 +233,20 @@ export class Dialog {
     
     show() {
         document.body.appendChild(this.container);
+        
+        // Start the fog reveal effect
+        setTimeout(() => {
+            // Fade out the fog overlay
+            this.fogOverlay.style.opacity = '0';
+            
+            // Fade in the dialog container
+            this.container.style.opacity = '1';
+            this.container.style.transition = 'opacity 5s ease-in-out';
+            
+            // Remove the fog overlay after the transition
+            setTimeout(() => {
+                document.body.removeChild(this.fogOverlay);
+            }, 5000);
+        }, 100);
     }
 } 
