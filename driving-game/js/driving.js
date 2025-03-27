@@ -792,8 +792,8 @@ class DrivingGame {
             basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
         }
         
-        // Go directly to dialog scene instead of index.html
-        window.location.href = basePath + '/scenes/dialog.html';
+        // Navigate directly to the main index - no dialog scene
+        window.location.href = basePath + '/index.html';
     }
 }
 
@@ -814,8 +814,8 @@ window.onload = function() {
             basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
         }
         
-        // Go directly to dialog scene instead of index.html
-        window.location.href = basePath + '/scenes/dialog.html';
+        // Navigate directly to the main index - no dialog scene
+        window.location.href = basePath + '/index.html';
     };
     
     // Start the driving game

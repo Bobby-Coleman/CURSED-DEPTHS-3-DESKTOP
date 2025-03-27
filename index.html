@@ -68,29 +68,7 @@
         } else {
             // Clear the flag once redirected back to main game
             sessionStorage.removeItem('fromDrivingGame');
-            
-            // Check if we've already gone through the dialog scene
-            if (!sessionStorage.getItem('dialogComplete')) {
-                // Set a flag to track that we're heading to the dialog scene
-                sessionStorage.setItem('goingToDialog', 'true');
-                
-                // Get full repository path for GitHub Pages
-                const fullPath = window.location.pathname;
-                const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
-                let basePath = '';
-                
-                // Check if we're on GitHub Pages or local
-                if (window.location.hostname.includes('github.io')) {
-                    // We're on GitHub Pages
-                    basePath = '/' + repoName;
-                }
-                
-                // Show dialog scene before main game
-                window.location.href = basePath + '/scenes/dialog.html';
-            } else {
-                // Clear the dialog complete flag for next playthrough
-                sessionStorage.removeItem('dialogComplete');
-            }
+            // Start the main game directly - no dialog scene
         }
     </script>
 </head>
