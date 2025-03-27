@@ -6,10 +6,10 @@ class DrivingGame {
         this.settings = {
             roadWidth: 15,
             roadLength: 300,
-            carSpeed: 0.6,
+            carSpeed: 1.2,  // Doubled from 0.6
             obstacleSpeed: 0.4,
-            cameraHeight: 5,
-            cameraDistance: 8,
+            cameraHeight: 7,        // Increased height
+            cameraDistance: 12,     // Increased distance
             buildingCount: 20,
             maxObstacles: 10
         };
@@ -26,6 +26,7 @@ class DrivingGame {
         this.playerPosition = 0; // Horizontal position on the road
         this.distance = 0; // Total distance traveled
         this.time = 0; // For animation timing
+        this.laneCounter = 0;
         
         // Initialize the scene
         this.initScene();
@@ -43,12 +44,12 @@ class DrivingGame {
         // Create scene, camera, and renderer
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x000022); // Dark blue night sky
-        this.scene.fog = new THREE.Fog(0x000022, 20, 100); // Add fog for atmosphere
+        this.scene.fog = new THREE.Fog(0x000022, 40, 130); // Extended fog distance
         
         // Set up camera
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(0, this.settings.cameraHeight, this.settings.cameraDistance);
-        this.camera.lookAt(0, 0, -20);
+        this.camera.lookAt(0, 0, -30); // Look further ahead
         
         // Create renderer
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -165,17 +166,28 @@ class DrivingGame {
             carGroup.add(headlight);
             
             // Create headlight beams
-            const spotLight = new THREE.SpotLight(0xffffcc, 1);
+            const spotLight = new THREE.SpotLight(0xffffcc, 1.5);
             spotLight.position.set(position[0], position[1], position[2]);
-            spotLight.angle = 0.3;
-            spotLight.penumbra = 0.5;
-            spotLight.distance = 30;
-            spotLight.target.position.set(position[0], 0, -30);
+            spotLight.angle = 0.5; // Wider angle
+            spotLight.penumbra = 0.7;
+            spotLight.distance = 50; // Increased visibility distance
+            spotLight.target.position.set(position[0], 0, -50);
             spotLight.castShadow = true;
             carGroup.add(spotLight);
             carGroup.add(spotLight.target);
             this.headlights.push(spotLight);
         });
+        
+        // Add a higher spotlight to see further ahead
+        const highBeamLight = new THREE.SpotLight(0xaaaaff, 0.7);
+        highBeamLight.position.set(0, 3, 0);
+        highBeamLight.angle = 0.6;
+        highBeamLight.penumbra = 0.5;
+        highBeamLight.distance = 80;
+        highBeamLight.target.position.set(0, 0, -80);
+        carGroup.add(highBeamLight);
+        carGroup.add(highBeamLight.target);
+        this.headlights.push(highBeamLight);
         
         // Position the car
         carGroup.position.y = 0.5;
@@ -215,8 +227,8 @@ class DrivingGame {
                     // Add simple windows (just a pattern on the building)
                     if (Math.random() > 0.3) {
                         const windowPattern = this.createWindowPattern(width, height, depth);
-                        windowPattern.position.copy(building.position);
-                        this.scene.add(windowPattern);
+                        // Add as child of building instead of separate object
+                        building.add(windowPattern);
                     }
                 }
             }
@@ -272,8 +284,36 @@ class DrivingGame {
     spawnObstacle() {
         if (this.obstacles.length >= this.settings.maxObstacles) return;
         
-        // Only spawn a new obstacle with a certain probability (increased for more action)
-        if (Math.random() > 0.05) return;
+        // Only spawn a new obstacle with a higher probability for more frequent spawning
+        if (Math.random() > 0.25) return;
+        
+        // Get all current obstacle lane positions at a similar distance
+        const farDistance = -this.settings.roadLength * 0.4; // Spawn much closer to player
+        
+        // Biased lane selection - double chance for center lane
+        const laneOptions = [-1, 0, 0, 1]; // Center lane (0) appears twice for double probability
+        const lane = laneOptions[Math.floor(Math.random() * laneOptions.length)];
+        
+        // Check if there's enough space in this lane
+        let canSpawn = true;
+        const minSafeDistance = 30; // Doubled from 15 to provide much more space between cars
+        
+        // Check if there's enough space around this potential new car
+        this.obstacles.forEach(obstacle => {
+            const zDistance = Math.abs(obstacle.position.z - farDistance);
+            const xDistance = Math.abs(obstacle.position.x - (lane * 4));
+            
+            // If another car is too close (in any direction), don't spawn in this lane
+            if (zDistance < minSafeDistance && xDistance < 6) {
+                canSpawn = false;
+            }
+        });
+        
+        // If we can't spawn safely, try again later
+        if (!canSpawn) return;
+        
+        // Debug log
+        console.log("Spawning car in lane:", lane, "(-1=left, 0=center, 1=right)");
         
         // Create a simple car as an obstacle
         const obstacleGroup = new THREE.Group();
@@ -327,18 +367,23 @@ class DrivingGame {
         rightBrakeLight.position.set(0.6, 0.7, 1.9);
         obstacleGroup.add(rightBrakeLight);
         
-        // Position the obstacle with random lane
-        const lane = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-        obstacleGroup.position.set(lane * 4, 0.5, -this.settings.roadLength * 0.9);
+        // Position the obstacle with some random variation in distance
+        obstacleGroup.position.set(lane * 4, 0.5, farDistance - (Math.random() * 10));
         obstacleGroup.rotation.y = Math.PI; // Face toward player
         
-        // Add some random movement behavior
+        // Add some random movement behavior - most cars won't change lanes
         obstacleGroup.userData = {
             lane: lane,
             speed: this.settings.obstacleSpeed * (0.7 + Math.random() * 0.6), // Random speed variation
             changeLaneCounter: 0,
-            changeLaneInterval: Math.floor(Math.random() * 300) + 100 // Random interval for lane changes
+            changeLaneInterval: Math.floor(Math.random() * 300) + 100, // Random interval for lane changes
+            isBlinking: false,
+            // Only 15% of cars can change lanes to ensure plenty of clear paths
+            canChangeLane: Math.random() > 0.85
         };
+        
+        // Add blinkers to the car
+        this.addBlinkers(obstacleGroup);
         
         this.scene.add(obstacleGroup);
         this.obstacles.push(obstacleGroup);
@@ -355,16 +400,6 @@ class DrivingGame {
                 case 'd':
                 case 'arrowright':
                     this.moveRight = true;
-                    break;
-                case 'w':
-                case 'arrowup':
-                    // Increase speed slightly when pressing forward
-                    this.settings.carSpeed = Math.min(1.2, this.settings.carSpeed + 0.1);
-                    break;
-                case 's':
-                case 'arrowdown':
-                    // Decrease speed slightly when pressing back
-                    this.settings.carSpeed = Math.max(0.3, this.settings.carSpeed - 0.1);
                     break;
             }
         });
@@ -458,11 +493,10 @@ class DrivingGame {
                     this.buildings[index] = newBuilding;
                 }
                 
-                // Add windows to new building
+                // Add windows to new building (as child)
                 if (Math.random() > 0.3) {
                     const windowPattern = this.createWindowPattern(width, height, depth);
-                    windowPattern.position.copy(newBuilding.position);
-                    this.scene.add(windowPattern);
+                    newBuilding.add(windowPattern);
                 }
             }
         });
@@ -592,16 +626,100 @@ class DrivingGame {
             // Move obstacle forward relative to player
             obstacle.position.z += this.settings.carSpeed - userData.speed;
             
-            // Random lane changing for some obstacles
-            userData.changeLaneCounter++;
-            if (userData.changeLaneCounter >= userData.changeLaneInterval) {
-                userData.changeLaneCounter = 0;
+            // Only allow lane changes for isolated cars and ensure there's always a clear path
+            if (userData.canChangeLane) {
+                userData.changeLaneCounter++;
+                if (userData.changeLaneCounter >= userData.changeLaneInterval) {
+                    userData.changeLaneCounter = 0;
+                    
+                    // Decide whether to change lanes
+                    if (Math.random() > 0.7) {
+                        // Choose a new lane (-1, 0, 1)
+                        const currentLane = userData.lane;
+                        const possibleLanes = [-1, 0, 1].filter(l => l !== currentLane);
+                        const newLane = possibleLanes[Math.floor(Math.random() * possibleLanes.length)];
+                        
+                        // Check if this car is isolated (no other cars nearby)
+                        let isIsolated = true;
+                        let willBlockAllPaths = false;
+                        const nearZ = obstacle.position.z;
+                        
+                        // Get all occupied lanes at similar Z positions
+                        const occupiedLanes = new Set();
+                        
+                        this.obstacles.forEach(otherObstacle => {
+                            if (otherObstacle === obstacle) return;
+                            
+                            // Check for nearby cars (in any direction)
+                            const zDistance = Math.abs(otherObstacle.position.z - nearZ);
+                            if (zDistance < 12) {
+                                // There's another car nearby
+                                isIsolated = false;
+                                
+                                // Track occupied lanes
+                                const otherLane = Math.round(otherObstacle.position.x / 4);
+                                if (otherLane >= -1 && otherLane <= 1) {
+                                    occupiedLanes.add(otherLane);
+                                }
+                            }
+                        });
+                        
+                        // Check if switching lanes would block all paths
+                        occupiedLanes.add(newLane);
+                        if (occupiedLanes.size === 3) {
+                            willBlockAllPaths = true;
+                        }
+                        
+                        // Only change lanes if the car is isolated AND won't block all paths
+                        if (isIsolated && !willBlockAllPaths) {
+                            // Start blinking before changing lanes
+                            userData.isBlinking = true;
+                            userData.blinkStartTime = this.time;
+                            userData.blinkDuration = 1.5; // seconds
+                            userData.targetLane = newLane;
+                            
+                            // Add blinker lights if they don't exist
+                            if (!userData.leftBlinker || !userData.rightBlinker) {
+                                this.addBlinkers(obstacle);
+                            }
+                            
+                            // Activate the correct blinker
+                            if (newLane < currentLane) {
+                                // Turning left
+                                userData.leftBlinker.visible = true;
+                                userData.rightBlinker.visible = false;
+                            } else {
+                                // Turning right
+                                userData.leftBlinker.visible = false;
+                                userData.rightBlinker.visible = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Handle lane changing animation if blinking
+            if (userData.isBlinking) {
+                // Blink the turn signal
+                const blinkPhase = Math.sin(this.time * 10) > 0;
                 
-                // Decide whether to change lanes
-                if (Math.random() > 0.7) {
-                    // Choose a new lane (-1, 0, 1)
-                    const possibleLanes = [-1, 0, 1].filter(l => l !== userData.lane);
-                    userData.lane = possibleLanes[Math.floor(Math.random() * possibleLanes.length)];
+                if (userData.leftBlinker) {
+                    userData.leftBlinker.visible = userData.leftBlinker.visible && blinkPhase;
+                }
+                if (userData.rightBlinker) {
+                    userData.rightBlinker.visible = userData.rightBlinker.visible && blinkPhase;
+                }
+                
+                // Check if blink time is over
+                const elapsedTime = this.time - userData.blinkStartTime;
+                if (elapsedTime >= userData.blinkDuration) {
+                    // Stop blinking and execute the lane change
+                    userData.isBlinking = false;
+                    userData.lane = userData.targetLane;
+                    
+                    // Turn off blinkers
+                    if (userData.leftBlinker) userData.leftBlinker.visible = false;
+                    if (userData.rightBlinker) userData.rightBlinker.visible = false;
                 }
             }
             
@@ -624,6 +742,27 @@ class DrivingGame {
         
         // Spawn new obstacles
         this.spawnObstacle();
+    }
+    
+    // Add blinkers to a car obstacle
+    addBlinkers(carObstacle) {
+        const userData = carObstacle.userData;
+        
+        // Create blinker lights (left)
+        const leftBlinkerGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.1);
+        const blinkerMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const leftBlinker = new THREE.Mesh(leftBlinkerGeometry, blinkerMaterial);
+        leftBlinker.position.set(-1.1, 0.7, -2);
+        leftBlinker.visible = false;
+        carObstacle.add(leftBlinker);
+        userData.leftBlinker = leftBlinker;
+        
+        // Create blinker lights (right)
+        const rightBlinker = new THREE.Mesh(leftBlinkerGeometry, blinkerMaterial);
+        rightBlinker.position.set(1.1, 0.7, -2);
+        rightBlinker.visible = false;
+        carObstacle.add(rightBlinker);
+        userData.rightBlinker = rightBlinker;
     }
     
     endGame() {
