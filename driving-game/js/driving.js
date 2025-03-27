@@ -42,6 +42,7 @@ class DrivingGame {
         this.time = 0; // For animation timing
         this.laneCounter = 0;
         this.carsSpawned = false; // Track if cars have started appearing
+        this.startMessageShown = false; // Track if start message has been shown
         
         // Road curve variables
         this.roadCurve = 0; // Current road curve amount (positive = right, negative = left)
@@ -427,6 +428,9 @@ class DrivingGame {
         // Only spawn a new obstacle with a higher probability for more frequent spawning
         // Increased spawn probability by 1/3 (from 0.33 to 0.44)
         if (Math.random() > 0.44) return;
+        
+        // Add a delay before spawning the first car - only generate obstacles after 2 seconds
+        if (this.time < 2) return;
         
         // Get all current obstacle lane positions at a similar distance
         const farDistance = -this.settings.roadLength * 0.4; // Spawn much closer to player
@@ -937,6 +941,12 @@ class DrivingGame {
         // Update time counter
         this.time += 0.016; // Roughly 60fps
         
+        // Show start message if not already shown
+        if (!this.startMessageShown) {
+            this.showStartMessage();
+            this.startMessageShown = true;
+        }
+        
         // Update game elements
         this.updatePlayerPosition();
         this.updateRoad();
@@ -948,6 +958,38 @@ class DrivingGame {
         
         // Render the scene
         this.renderer.render(this.scene, this.camera);
+    }
+    
+    showStartMessage() {
+        // Create start message text
+        const startText = document.createElement('div');
+        startText.textContent = 'AVOID THE CARS! GET HOME SAFE!';
+        startText.style.position = 'fixed';
+        startText.style.top = '50%';
+        startText.style.left = '50%';
+        startText.style.transform = 'translate(-50%, -50%)';
+        startText.style.color = 'white';
+        startText.style.fontSize = '48px';
+        startText.style.fontWeight = 'bold';
+        startText.style.fontFamily = 'Arial, sans-serif';
+        startText.style.textAlign = 'center';
+        startText.style.textShadow = '0 0 10px rgba(0, 0, 0, 0.7)';
+        startText.style.zIndex = '1001';
+        startText.style.opacity = '1';
+        startText.style.transition = 'opacity 1s ease-out';
+        document.body.appendChild(startText);
+        
+        // Fade out the message after 3 seconds
+        setTimeout(() => {
+            startText.style.opacity = '0';
+            
+            // Remove from DOM after fade out
+            setTimeout(() => {
+                if (startText.parentNode) {
+                    document.body.removeChild(startText);
+                }
+            }, 1000);
+        }, 3000);
     }
     
     updateCollisionSparks() {
@@ -1108,21 +1150,44 @@ class DrivingGame {
                         setTimeout(() => {
                             messageText.style.opacity = '1';
                             
-                            // After the message is shown, end the game as normal
+                            // Add a "Move On" button
+                            const moveOnButton = document.createElement('button');
+                            moveOnButton.textContent = 'Move On';
+                            moveOnButton.style.position = 'fixed';
+                            moveOnButton.style.top = '70%';
+                            moveOnButton.style.left = '50%';
+                            moveOnButton.style.transform = 'translate(-50%, -50%)';
+                            moveOnButton.style.padding = '10px 20px';
+                            moveOnButton.style.fontSize = '24px';
+                            moveOnButton.style.fontFamily = 'Arial, sans-serif';
+                            moveOnButton.style.backgroundColor = '#444';
+                            moveOnButton.style.color = 'white';
+                            moveOnButton.style.border = 'none';
+                            moveOnButton.style.borderRadius = '5px';
+                            moveOnButton.style.cursor = 'pointer';
+                            moveOnButton.style.opacity = '0';
+                            moveOnButton.style.transition = 'opacity 0.5s ease-in-out';
+                            moveOnButton.style.zIndex = '1002';
+                            document.body.appendChild(moveOnButton);
+                            
                             setTimeout(() => {
-                                this.endGame();
-                            }, 3000);
+                                moveOnButton.style.opacity = '1';
+                                
+                                // Add click handler for the move on button
+                                moveOnButton.addEventListener('click', () => {
+                                    this.endGame();
+                                });
+                            }, 500);
+                            
+                            // After the message is shown, if button isn't clicked, end the game
+                            setTimeout(() => {
+                                if (moveOnButton.style.opacity !== '0') {
+                                    this.endGame();
+                                }
+                            }, 8000);
                         }, 500);
                     });
-                    
-                    // After a delay, end the game if button isn't clicked
-                    setTimeout(() => {
-                        // Only end if the restart button is still visible (hasn't been clicked)
-                        if (restartButton.style.opacity !== '0') {
-                            this.endGame();
-                        }
-                    }, 8000);
-                }, 500);
+                }, 100);
             }, 100);
         }, 50);
     }
@@ -1623,7 +1688,7 @@ class DrivingGame {
         this.beerCounter.style.transform = 'translateX(-50%)';
         this.beerCounter.style.color = 'white';
         this.beerCounter.style.fontFamily = 'Arial, sans-serif';
-        this.beerCounter.style.fontSize = '22px';
+        this.beerCounter.style.fontSize = '44px'; // Twice as big
         this.beerCounter.style.fontWeight = 'bold';
         this.beerCounter.style.zIndex = '1001';
         this.updateBeerCounter();
