@@ -28,37 +28,143 @@ export class Level {
         this.floor.position.z = 0;
         this.scene.add(this.floor);
         
-        // Create walls
-        const wallThickness = 20;
-        const wallColor = 0x654321; // Brown
+        // Create closed hatch in the lower right corner
+        const hatchGeometry = new THREE.PlaneGeometry(80, 80);
+        const hatchMaterial = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('assets/sprites/hatch.png'),
+            transparent: true
+        });
+        this.closedHatch = new THREE.Mesh(hatchGeometry, hatchMaterial);
+        // Position in the lower right corner
+        this.closedHatch.position.set(this.roomSize/2 - 80, -this.roomSize/2 + 80, 0.9);
+        this.scene.add(this.closedHatch);
         
-        // Top wall
-        const topWallGeometry = new THREE.PlaneGeometry(this.roomSize + wallThickness * 2, wallThickness);
-        const topWallMaterial = new THREE.MeshBasicMaterial({ color: wallColor });
-        this.topWall = new THREE.Mesh(topWallGeometry, topWallMaterial);
-        this.topWall.position.set(0, this.roomSize / 2 + wallThickness / 2, 1);
-        this.scene.add(this.topWall);
+        // Create tiled walls
+        this.createTiledWalls();
+    }
+    
+    createTiledWalls() {
+        // Load wall_tile.png for top wall
+        const wallTexture = new THREE.TextureLoader().load('assets/sprites/wall_tile.png', 
+            // Success callback
+            (loadedTexture) => {
+                console.log('Wall tile texture loaded successfully');
+            },
+            // Progress callback
+            undefined,
+            // Error callback
+            (error) => {
+                console.error('Error loading wall tile texture:', error);
+            }
+        );
         
-        // Bottom wall
-        const bottomWallGeometry = new THREE.PlaneGeometry(this.roomSize + wallThickness * 2, wallThickness);
-        const bottomWallMaterial = new THREE.MeshBasicMaterial({ color: wallColor });
-        this.bottomWall = new THREE.Mesh(bottomWallGeometry, bottomWallMaterial);
-        this.bottomWall.position.set(0, -this.roomSize / 2 - wallThickness / 2, 1);
-        this.scene.add(this.bottomWall);
+        // Load grass_tile.png for other walls
+        const grassTexture = new THREE.TextureLoader().load('assets/sprites/grass_tile.png', 
+            // Success callback
+            (loadedTexture) => {
+                console.log('Grass tile texture loaded successfully');
+            },
+            // Progress callback
+            undefined,
+            // Error callback
+            (error) => {
+                console.error('Error loading grass tile texture:', error);
+            }
+        );
         
-        // Left wall
-        const leftWallGeometry = new THREE.PlaneGeometry(wallThickness, this.roomSize);
-        const leftWallMaterial = new THREE.MeshBasicMaterial({ color: wallColor });
-        this.leftWall = new THREE.Mesh(leftWallGeometry, leftWallMaterial);
-        this.leftWall.position.set(-this.roomSize / 2 - wallThickness / 2, 0, 1);
-        this.scene.add(this.leftWall);
+        // Configure textures
+        wallTexture.wrapS = THREE.RepeatWrapping;
+        wallTexture.wrapT = THREE.RepeatWrapping;
+        wallTexture.magFilter = THREE.NearestFilter;
+        wallTexture.minFilter = THREE.NearestFilter;
         
-        // Right wall
-        const rightWallGeometry = new THREE.PlaneGeometry(wallThickness, this.roomSize);
-        const rightWallMaterial = new THREE.MeshBasicMaterial({ color: wallColor });
-        this.rightWall = new THREE.Mesh(rightWallGeometry, rightWallMaterial);
-        this.rightWall.position.set(this.roomSize / 2 + wallThickness / 2, 0, 1);
-        this.scene.add(this.rightWall);
+        grassTexture.wrapS = THREE.RepeatWrapping;
+        grassTexture.wrapT = THREE.RepeatWrapping;
+        grassTexture.magFilter = THREE.NearestFilter;
+        grassTexture.minFilter = THREE.NearestFilter;
+        
+        // Wall dimensions - SMALLER walls (60px instead of 80px)
+        const wallHeight = 60;
+        const wallTileWidth = 60;
+        const halfRoomSize = this.roomSize / 2;
+        
+        // Calculate how many tiles needed for exact fit
+        const fullTileCount = Math.floor(this.roomSize / wallTileWidth);
+        // Calculate any remaining space to distribute evenly
+        const remainingSpace = this.roomSize - (fullTileCount * wallTileWidth);
+        const tileOverlap = remainingSpace / (fullTileCount - 1); // Distribute overlap among tiles
+        const adjustedTileSpacing = wallTileWidth + tileOverlap;
+        
+        // Create arrays to store wall meshes
+        this.wallTiles = [];
+        // Store wall boundary info for collision detection
+        this.wallBoundaries = {
+            left: -halfRoomSize,
+            right: halfRoomSize,
+            top: halfRoomSize,
+            bottom: -halfRoomSize
+        };
+        
+        // Bottom wall - use grass_tile.png - should be in front of player
+        const bottomZDepth = 1.2; // Higher z-value (in front of player)
+        for (let i = 0; i < fullTileCount; i++) {
+            const bottomWallTile = this.createWallTile(grassTexture, wallTileWidth, wallHeight);
+            // Position evenly across the bottom
+            const xPos = -halfRoomSize + (wallTileWidth/2) + (i * adjustedTileSpacing);
+            bottomWallTile.position.set(xPos, -halfRoomSize, bottomZDepth);
+            this.scene.add(bottomWallTile);
+            this.wallTiles.push(bottomWallTile);
+        }
+        
+        // Top wall - use wall_tile.png - should be behind player
+        const topZDepth = 0.8; // Lower z-value (behind player)
+        for (let i = 0; i < fullTileCount; i++) {
+            const topWallTile = this.createWallTile(wallTexture, wallTileWidth, wallHeight);
+            // Position evenly across the top
+            const xPos = -halfRoomSize + (wallTileWidth/2) + (i * adjustedTileSpacing);
+            topWallTile.position.set(xPos, halfRoomSize, topZDepth);
+            this.scene.add(topWallTile);
+            this.wallTiles.push(topWallTile);
+        }
+        
+        // For side walls, use grass_tile.png
+        const sideZDepth = 1.0; // Mid z-value for sides
+        
+        // Left wall - use grass_tile.png
+        for (let i = 0; i < fullTileCount; i++) {
+            const leftWallTile = this.createWallTile(grassTexture, wallTileWidth, wallHeight);
+            // Rotate the left wall tiles
+            leftWallTile.rotation.z = Math.PI / 2;
+            // Position evenly along the left side
+            const yPos = -halfRoomSize + (wallTileWidth/2) + (i * adjustedTileSpacing);
+            leftWallTile.position.set(-halfRoomSize, yPos, sideZDepth);
+            this.scene.add(leftWallTile);
+            this.wallTiles.push(leftWallTile);
+        }
+        
+        // Right wall - use grass_tile.png
+        for (let i = 0; i < fullTileCount; i++) {
+            const rightWallTile = this.createWallTile(grassTexture, wallTileWidth, wallHeight);
+            // Rotate the right wall tiles
+            rightWallTile.rotation.z = Math.PI / 2;
+            // Position evenly along the right side
+            const yPos = -halfRoomSize + (wallTileWidth/2) + (i * adjustedTileSpacing);
+            rightWallTile.position.set(halfRoomSize, yPos, sideZDepth);
+            this.scene.add(rightWallTile);
+            this.wallTiles.push(rightWallTile);
+        }
+    }
+    
+    createWallTile(texture, width, height) {
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            side: THREE.DoubleSide,
+            alphaTest: 0.1,
+            color: 0xFFFFFF // Ensure the texture is displayed with full brightness
+        });
+        return new THREE.Mesh(geometry, material);
     }
     
     createObstacles() {
@@ -177,19 +283,33 @@ export class Level {
         this.tombShadow.material.needsUpdate = true;
     }
     
-    activatePortal(x = 200, y = 0) {
+    activatePortal(x, y) {
         this.portalActive = true;
         
         // Change tomb appearance
         this.activateTomb();
         
-        // Create portal mesh
-        const portalGeometry = new THREE.CircleGeometry(30, 32);
-        const portalMaterial = new THREE.MeshBasicMaterial({ color: 0x800080 }); // Purple
-        this.portal = new THREE.Mesh(portalGeometry, portalMaterial);
+        // Remove the closed hatch
+        if (this.closedHatch) {
+            this.scene.remove(this.closedHatch);
+        }
         
-        // Position portal (default is now at player spawn position)
-        this.portal.position.set(x, y, 1);
+        // Create hatch (portal) using hatch_open.png
+        const hatchGeometry = new THREE.PlaneGeometry(100, 100);
+        const hatchMaterial = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('assets/sprites/hatch_open.png'),
+            transparent: true
+        });
+        this.portal = new THREE.Mesh(hatchGeometry, hatchMaterial);
+        
+        // If no specific position provided, use the same position as the closed hatch
+        if (x === undefined || y === undefined) {
+            // Use the same position as the closed hatch was in
+            this.portal.position.set(this.roomSize/2 - 80, -this.roomSize/2 + 80, 0.9);
+        } else {
+            // Position portal at provided coordinates
+            this.portal.position.set(x, y, 0.9);
+        }
         
         this.scene.add(this.portal);
     }
@@ -258,13 +378,51 @@ export class Level {
         return this.checkObjectCollision(character);
     }
     
+    // Add method to check wall collisions
+    checkWallCollision(character) {
+        if (!this.wallBoundaries) return false;
+        
+        // Get character center position
+        const characterX = character.mesh.position.x;
+        const characterY = character.mesh.position.y;
+        
+        // Get character dimensions
+        const characterWidth = character.mesh.geometry.parameters.width / 2;
+        const characterHeight = character.mesh.geometry.parameters.height / 2;
+        
+        // Character boundary box
+        const characterLeft = characterX - characterWidth;
+        const characterRight = characterX + characterWidth;
+        const characterTop = characterY + characterHeight;
+        const characterBottom = characterY - characterHeight;
+        
+        // Check collision with wall boundaries
+        if (characterLeft <= this.wallBoundaries.left) {
+            return { axis: 'x', direction: 'left' };
+        }
+        if (characterRight >= this.wallBoundaries.right) {
+            return { axis: 'x', direction: 'right' };
+        }
+        if (characterTop >= this.wallBoundaries.top) {
+            return { axis: 'y', direction: 'top' };
+        }
+        if (characterBottom <= this.wallBoundaries.bottom) {
+            return { axis: 'y', direction: 'bottom' };
+        }
+        
+        return false;
+    }
+    
     cleanup() {
         // Remove all level objects from scene
         this.scene.remove(this.floor);
-        this.scene.remove(this.topWall);
-        this.scene.remove(this.bottomWall);
-        this.scene.remove(this.leftWall);
-        this.scene.remove(this.rightWall);
+        
+        // Remove wall tiles
+        if (this.wallTiles) {
+            this.wallTiles.forEach(tile => {
+                this.scene.remove(tile);
+            });
+        }
         
         // Remove tomb and shadow
         if (this.tombTop) {
@@ -279,8 +437,13 @@ export class Level {
             this.scene.remove(this.tombShadow);
         }
         
+        // Remove portal (open hatch) and closed hatch
         if (this.portal) {
             this.scene.remove(this.portal);
+        }
+        
+        if (this.closedHatch) {
+            this.scene.remove(this.closedHatch);
         }
         
         // Remove all obstacles and other level objects
