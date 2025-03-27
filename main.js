@@ -123,6 +123,15 @@ function init() {
     // Initialize player first
     player = new Player(scene);
     
+    // Position player to the right of the tomb
+    player.mesh.position.x = 200; // Move player 200 units to the right
+    
+    // Update shadow position if it exists
+    if (player.shadow) {
+        player.shadow.position.x = player.mesh.position.x + 12;
+        player.shadow.position.y = player.mesh.position.y + 12;
+    }
+    
     // Add Executioner's Seal for testing
     player.relics.push({
         id: 'executionersSeal',
@@ -257,13 +266,47 @@ function animate() {
     requestAnimationFrame(animate);
     
     if (!gameState.gameOver) {
+        // Store player's position before updates for collision resolution
+        const prevPlayerPosX = player.mesh.position.x;
+        const prevPlayerPosY = player.mesh.position.y;
+        
         // Update player
         player.update(keys, mouse, enemies);
+        
+        // Check for tomb collision and resolve if needed
+        if (currentLevel.checkTombCollision(player)) {
+            // Collision occurred, revert player position
+            player.mesh.position.x = prevPlayerPosX;
+            player.mesh.position.y = prevPlayerPosY;
+            
+            // Also update shadow position
+            if (player.shadow) {
+                player.shadow.position.x = prevPlayerPosX + 12;
+                player.shadow.position.y = prevPlayerPosY + 12;
+            }
+        }
         
         if (!gameState.isShopLevel) {
             // Update enemies
             for (let i = enemies.length - 1; i >= 0; i--) {
+                // Store enemy's position before updates
+                const prevEnemyPosX = enemies[i].mesh.position.x;
+                const prevEnemyPosY = enemies[i].mesh.position.y;
+                
                 enemies[i].update(player);
+                
+                // Check for tomb collision for enemies too
+                if (currentLevel.checkTombCollision(enemies[i])) {
+                    // Collision occurred, revert enemy position
+                    enemies[i].mesh.position.x = prevEnemyPosX;
+                    enemies[i].mesh.position.y = prevEnemyPosY;
+                    
+                    // Update shadow position if it exists
+                    if (enemies[i].shadow) {
+                        enemies[i].shadow.position.x = prevEnemyPosX + 12;
+                        enemies[i].shadow.position.y = prevEnemyPosY + 12;
+                    }
+                }
                 
                 // Check if enemy is dead
                 if (enemies[i].hp <= 0) {

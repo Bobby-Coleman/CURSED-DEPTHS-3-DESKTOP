@@ -35,6 +35,9 @@ export class Player {
                 console.log('Player sprite sheet loaded successfully');
                 this.mesh.material.map = loadedTexture;
                 this.mesh.material.needsUpdate = true;
+                
+                // Create shadow after texture is loaded
+                this.createShadow(scene, loadedTexture);
             },
             // Progress callback
             undefined,
@@ -65,6 +68,29 @@ export class Player {
         this.bulletGeometry = new THREE.CircleGeometry(3, 8);
         this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
         this.scene = scene;
+    }
+    
+    // Create a shadow for the player
+    createShadow(scene, texture) {
+        // Create a shadow mesh with the same geometry as the player
+        const shadowGeometry = new THREE.PlaneGeometry(80, 80);
+        const shadowMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.2,
+            alphaTest: 0.1,
+            side: THREE.DoubleSide
+        });
+        
+        this.shadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+        this.shadow.position.set(
+            this.mesh.position.x + 12,
+            this.mesh.position.y + 12,
+            0.5
+        );
+        
+        scene.add(this.shadow);
     }
     
     generateRandomDamage() {
@@ -119,6 +145,13 @@ export class Player {
         ];
         uvs.set(uvArray);
         uvs.needsUpdate = true;
+        
+        // Update shadow UVs to match the current frame
+        if (this.shadow && this.shadow.geometry.attributes.uv) {
+            const shadowUvs = this.shadow.geometry.attributes.uv;
+            shadowUvs.set(uvArray);
+            shadowUvs.needsUpdate = true;
+        }
     }
 
     update(keys, mouse, enemies) {
@@ -141,6 +174,13 @@ export class Player {
         // Update position
         this.mesh.position.x += moveX;
         this.mesh.position.y += moveY;
+        
+        // Update shadow position
+        if (this.shadow) {
+            this.shadow.position.x = this.mesh.position.x + 12;
+            this.shadow.position.y = this.mesh.position.y + 12;
+            this.shadow.rotation.z = this.mesh.rotation.z;
+        }
         
         // Keep player within room bounds
         const roomHalfSize = 400;
@@ -355,5 +395,24 @@ export class Player {
             return true;
         }
         return false;
+    }
+
+    // Clean up player resources when needed
+    cleanup() {
+        // Remove bullets
+        for (const bullet of this.bullets) {
+            if (bullet.mesh) {
+                this.scene.remove(bullet.mesh);
+            }
+        }
+        this.bullets = [];
+        
+        // Remove shadow
+        if (this.shadow) {
+            this.scene.remove(this.shadow);
+        }
+        
+        // Remove player mesh
+        this.scene.remove(this.mesh);
     }
 }

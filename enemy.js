@@ -132,6 +132,9 @@ export class Enemy {
         this.mesh.position.set(x, y, 1);
         scene.add(this.mesh);
         
+        // Create shadow for the enemy
+        this.createShadow();
+        
         // Apply level scaling
         this.hp = Math.ceil(this.baseHp * levelMultiplier);
         this.maxHp = this.hp;
@@ -253,6 +256,11 @@ export class Enemy {
         }
         this.bullets = [];
         
+        // Remove shadow
+        if (this.shadow) {
+            this.scene.remove(this.shadow);
+        }
+        
         // Remove enemy mesh (which will also remove health bar, background, and text)
         this.scene.remove(this.mesh);
     }
@@ -268,6 +276,13 @@ export class Enemy {
         ];
         uvs.set(uvArray);
         uvs.needsUpdate = true;
+        
+        // Update shadow UVs to match the current frame if shadow exists
+        if (this.shadow && this.shadow.geometry.attributes.uv) {
+            const shadowUvs = this.shadow.geometry.attributes.uv;
+            shadowUvs.set(uvArray);
+            shadowUvs.needsUpdate = true;
+        }
     }
 
     getDirectionFrame(dx, dy) {
@@ -304,6 +319,13 @@ export class Enemy {
         
         // Update stats display position
         this.updateHealthBar();
+        
+        // Update shadow position to follow the enemy
+        if (this.shadow) {
+            this.shadow.position.x = this.mesh.position.x + 12;
+            this.shadow.position.y = this.mesh.position.y + 12;
+            this.shadow.rotation.z = this.mesh.rotation.z;
+        }
         
         // Check aggro range
         const dx = player.mesh.position.x - this.mesh.position.x;
@@ -710,6 +732,56 @@ export class Enemy {
         if (!this.lastAttackTime || currentTime - this.lastAttackTime >= 1000) {
             player.takeDamage(this.attackDamage);
             this.lastAttackTime = currentTime;
+        }
+    }
+
+    // Create a shadow that follows the enemy
+    createShadow() {
+        // For basic monster type, the texture loads asynchronously
+        if (this.type === 0) {
+            // Create a shadow mesh with the same geometry
+            const shadowGeometry = new THREE.PlaneGeometry(64, 64);
+            const shadowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                transparent: true,
+                opacity: 0.2,
+                alphaTest: 0.1,  // Same alphaTest as the original
+                side: THREE.DoubleSide
+            });
+            
+            this.shadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+            this.shadow.position.set(
+                this.mesh.position.x + 12,
+                this.mesh.position.y + 12,
+                0.5
+            );
+            
+            this.scene.add(this.shadow);
+            
+            // Load the same texture for the shadow as the enemy
+            new THREE.TextureLoader().load('assets/sprites/basic_monster.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else {
+            // For other enemy types with simple geometries
+            this.shadow = this.mesh.clone();
+            this.shadow.material = this.shadow.material.clone();
+            this.shadow.material.color.set(0x000000);
+            this.shadow.material.opacity = 0.2;
+            this.shadow.material.transparent = true;
+            
+            this.shadow.position.set(
+                this.mesh.position.x + 12,
+                this.mesh.position.y + 12,
+                0.5
+            );
+            
+            this.scene.add(this.shadow);
         }
     }
 }
