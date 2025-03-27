@@ -1187,7 +1187,7 @@ class DrivingGame {
                             }, 8000);
                         }, 500);
                     });
-                }, 100);
+                }, 500);
             }, 100);
         }, 50);
     }
@@ -1392,22 +1392,34 @@ class DrivingGame {
         // Set a flag in sessionStorage to indicate we're coming from the driving game
         sessionStorage.setItem('fromDrivingGame', 'true');
         
-        // Get full repository path for GitHub Pages
-        const fullPath = window.location.pathname;
-        const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
-        let basePath = '';
+        // More robust GitHub Pages URL handling
+        let baseUrl = '';
         
-        // Check if we're on GitHub Pages or local
         if (window.location.hostname.includes('github.io')) {
-            // We're on GitHub Pages
-            basePath = '/' + repoName;
-        } else if (fullPath.includes('/driving-game/')) {
-            // We're on localhost
-            basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
+            // On GitHub Pages - use the full repo path
+            const pathSegments = window.location.pathname.split('/');
+            const repoName = pathSegments[1]; // This should be "CURSED-DEPTHS-3"
+            baseUrl = '/' + repoName;
+        } else {
+            // Local development - navigate relative to the root
+            const fullPath = window.location.pathname;
+            if (fullPath.includes('/driving-game/')) {
+                baseUrl = fullPath.substring(0, fullPath.indexOf('/driving-game'));
+            }
         }
         
-        // Navigate directly to the main index - no dialog scene
-        window.location.href = basePath + '/index.html';
+        // Make sure baseUrl has a leading slash but doesn't have a trailing slash
+        if (!baseUrl.startsWith('/')) {
+            baseUrl = '/' + baseUrl;
+        }
+        if (baseUrl.endsWith('/')) {
+            baseUrl = baseUrl.slice(0, -1);
+        }
+        
+        console.log('Navigating to: ' + baseUrl + '/index.html');
+        
+        // Navigate to the index page with the correct path
+        window.location.href = baseUrl + '/index.html';
     }
     
     createBeer() {
