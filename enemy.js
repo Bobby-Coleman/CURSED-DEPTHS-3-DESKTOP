@@ -145,7 +145,7 @@ export class Enemy {
         this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
         
         // Aggro state
-        this.aggroRange = 200;
+        this.aggroRange = 350;
         this.isAggro = false;
         
         // Add random movement properties

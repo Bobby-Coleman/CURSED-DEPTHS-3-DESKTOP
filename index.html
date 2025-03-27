@@ -49,13 +49,21 @@
             pointer-events: auto;
         }
     </style>
+    <script>
+        // Check if coming directly to this page, if so, redirect to driving game
+        if (!sessionStorage.getItem('fromDrivingGame')) {
+            window.location.href = 'driving-game/driving.html';
+        } else {
+            // Clear the flag once redirected back to main game
+            sessionStorage.removeItem('fromDrivingGame');
+        }
+    </script>
 </head>
 <body>
     <div id="game-ui">
         <div>HP: <span id="hp">4</span> / <span id="max-hp">4</span></div>
         <div>Ammo: <span id="ammo">300</span> / <span id="max-ammo">300</span></div>
         <div>Level: <span id="level">1</span></div>
-        <div>Gold: <span id="gold">0</span></div>
         <div>Kill Streak: <span id="kill-streak">0</span></div>
         <div>Relics: <span id="relics">0</span> / 5</div>
     </div>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script>
+        // Set a flag in sessionStorage to indicate we're coming from the driving game
+        sessionStorage.setItem('fromDrivingGame', 'true');
+        
+        // Get the root URL of the current server
+        const rootUrl = window.location.origin;
+        const targetUrl = rootUrl + '/index.html';
+        
+        // Redirect to the main game page
+        window.location.href = targetUrl;
+    </script>
+</head>
+<body>
+    <p>Redirecting to main game...</p>
+</body>
+</html> 

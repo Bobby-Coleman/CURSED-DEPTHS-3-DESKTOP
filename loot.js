@@ -177,7 +177,7 @@ export class LootSystem {
     generateRandomRange() {
         const roomSize = 800;
         const minRange = Math.floor(roomSize / 4);
-        const maxRange = roomSize;
+        const maxRange = 350; // Changed from roomSize (800) to 350 as requested
         return Math.floor(Math.random() * (maxRange - minRange) + minRange);
     }
     
@@ -244,31 +244,8 @@ export class LootSystem {
                 break;
                 
             case 'gold':
-                // Add gold
-                gameState.gold += drop.data.amount;
-                break;
-                
-            case 'relic':
-                // Check if player has room for another relic
-                if (player.relics.length >= 5) {
-                    return {
-                        success: false,
-                        message: "Cannot carry more than 5 relics!"
-                    };
-                }
-                
-                // Check if player has enough gold
-                if (gameState.gold < 4) {
-                    return {
-                        success: false,
-                        message: "Need 4 gold to pick up relic!"
-                    };
-                }
-                
-                // Deduct gold and add relic to player
-                gameState.gold -= 4;
-                player.relics.push(drop.data);
-                drop.data.apply(player);
+                // Add HP instead of gold
+                player.hp = Math.min(player.maxHp, player.hp + drop.data.amount);
                 break;
                 
             case 'ammo':
@@ -282,26 +259,40 @@ export class LootSystem {
                     };
                 }
                 break;
+                
+            case 'relic':
+                // Check if player has enough HP to pick up relic
+                if (player.hp <= 4) {
+                    return {
+                        success: false,
+                        message: "Need 4 HP to pick up relic!"
+                    };
+                }
+                
+                // Check if player has max relics already
+                if (player.relics.length >= 5) {
+                    return {
+                        success: false,
+                        message: "You already have the maximum number of relics!"
+                    };
+                }
+                
+                // Deduct HP and add relic to player
+                player.hp -= 4;
+                player.addRelic(drop.data);
+                break;
         }
         
-        // Remove drop
-        this.removeDrop(drop);
-        
-        return {
-            success: true,
-            message: `Picked up ${drop.type}!`
-        };
-    }
-    
-    removeDrop(drop) {
-        // Remove drop's mesh from scene
+        // Remove drop from scene and array
         this.scene.remove(drop.mesh);
-        
-        // Remove from drops array
-        const index = this.drops.findIndex(d => d === drop);
-        if (index !== -1) {
+        const index = this.drops.indexOf(drop);
+        if (index > -1) {
             this.drops.splice(index, 1);
         }
+        
+        return {
+            success: true
+        };
     }
     
     cleanup() {
