@@ -1034,16 +1034,29 @@ export class Enemy {
         const hatchX = roomSize/2 - 80;
         const hatchY = -roomSize/2 + 80;
         
+        // Define playable area boundaries (inside the walls)
+        const wallPadding = 60; // Match wall size
+        const playableMinX = -roomSize/2 + wallPadding;
+        const playableMaxX = roomSize/2 - wallPadding;
+        const playableMinY = -roomSize/2 + wallPadding;
+        const playableMaxY = roomSize/2 - wallPadding;
+        
         // Create a small enemy at the nest's position with slight offset
         let offsetX, offsetY;
         let spawnX, spawnY;
         
         do {
+            // Calculate random offset
             offsetX = (Math.random() - 0.5) * 40; // Random offset within 20 units
             offsetY = (Math.random() - 0.5) * 40;
             
+            // Calculate spawn position
             spawnX = this.mesh.position.x + offsetX;
             spawnY = this.mesh.position.y + offsetY;
+            
+            // Ensure spawn position is within playable area
+            spawnX = Math.max(playableMinX, Math.min(playableMaxX, spawnX));
+            spawnY = Math.max(playableMinY, Math.min(playableMaxY, spawnY));
             
             // Calculate distance to hatch
             const distanceToHatch = Math.sqrt(

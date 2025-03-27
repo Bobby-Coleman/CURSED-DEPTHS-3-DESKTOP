@@ -194,13 +194,26 @@ function spawnEnemies() {
         const hatchX = ROOM_SIZE/2 - 80;
         const hatchY = -ROOM_SIZE/2 + 80;
         
+        // Calculate wall boundaries to keep enemies inside the playable area
+        const wallPadding = 60; // Match wall size to ensure enemies don't spawn in walls
+        const playableMinX = -ROOM_SIZE/2 + wallPadding;
+        const playableMaxX = ROOM_SIZE/2 - wallPadding;
+        const playableMinY = -ROOM_SIZE/2 + wallPadding;
+        const playableMaxY = ROOM_SIZE/2 - wallPadding;
+        
         // Always add one nest enemy for variety
         let nestX, nestY;
         do {
             // Higher chance of spawning on left side (70% chance of negative X)
             const leftSideBias = Math.random() < 0.7 ? -1 : 1;
-            nestX = leftSideBias * (Math.random() * ROOM_SIZE / 2);
-            nestY = (Math.random() * ROOM_SIZE - ROOM_SIZE / 2);
+            // Keep within playable area
+            nestX = playableMinX + Math.random() * (playableMaxX - playableMinX);
+            nestY = playableMinY + Math.random() * (playableMaxY - playableMinY);
+            
+            // Apply left side bias
+            if (leftSideBias < 0) {
+                nestX = Math.min(nestX, 0);
+            }
             
             // Calculate distance to hatch
             const distanceToHatch = Math.sqrt(
@@ -222,8 +235,14 @@ function spawnEnemies() {
             do {
                 // Higher chance of spawning on left side (70% chance of negative X)
                 const leftSideBias = Math.random() < 0.7 ? -1 : 1;
-                enemyX = leftSideBias * (Math.random() * ROOM_SIZE / 2);
-                enemyY = (Math.random() * ROOM_SIZE - ROOM_SIZE / 2);
+                // Keep within playable area
+                enemyX = playableMinX + Math.random() * (playableMaxX - playableMinX);
+                enemyY = playableMinY + Math.random() * (playableMaxY - playableMinY);
+                
+                // Apply left side bias
+                if (leftSideBias < 0) {
+                    enemyX = Math.min(enemyX, 0);
+                }
                 
                 // Calculate distance to hatch
                 const distanceToHatch = Math.sqrt(
