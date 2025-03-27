@@ -14,6 +14,11 @@ export class Player {
         this.lastShotTime = 0;
         this.relics = [];
         
+        // Invulnerability tracking
+        this.isInvulnerable = false;
+        this.invulnerabilityTime = 250; // 0.25 seconds in milliseconds (reduced from 1 second)
+        this.lastDamageTime = 0;
+        
         // Create player mesh with sprite sheet
         const geometry = new THREE.PlaneGeometry(80, 80);
         const material = new THREE.MeshBasicMaterial({
@@ -35,6 +40,9 @@ export class Player {
                 console.log('Player sprite sheet loaded successfully');
                 this.mesh.material.map = loadedTexture;
                 this.mesh.material.needsUpdate = true;
+                
+                // Create shadow after texture is loaded
+                this.createShadow(scene, loadedTexture);
             },
             // Progress callback
             undefined,
@@ -65,6 +73,29 @@ export class Player {
         this.bulletGeometry = new THREE.CircleGeometry(3, 8);
         this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
         this.scene = scene;
+    }
+    
+    // Create a shadow for the player
+    createShadow(scene, texture) {
+        // Create a shadow mesh with the same geometry as the player
+        const shadowGeometry = new THREE.PlaneGeometry(80, 80);
+        const shadowMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.2,
+            alphaTest: 0.1,
+            side: THREE.DoubleSide
+        });
+        
+        this.shadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+        this.shadow.position.set(
+            this.mesh.position.x + 12,
+            this.mesh.position.y + 12,
+            0.5
+        );
+        
+        scene.add(this.shadow);
     }
     
     generateRandomDamage() {
@@ -119,9 +150,32 @@ export class Player {
         ];
         uvs.set(uvArray);
         uvs.needsUpdate = true;
+        
+        // Update shadow UVs to match the current frame
+        if (this.shadow && this.shadow.geometry.attributes.uv) {
+            const shadowUvs = this.shadow.geometry.attributes.uv;
+            shadowUvs.set(uvArray);
+            shadowUvs.needsUpdate = true;
+        }
     }
 
     update(keys, mouse, enemies) {
+        // Check if invulnerability has expired
+        if (this.isInvulnerable) {
+            const currentTime = performance.now();
+            if (currentTime - this.lastDamageTime > this.invulnerabilityTime) {
+                this.isInvulnerable = false;
+            } else {
+                // Flash the player sprite during invulnerability (every 100ms)
+                const flashInterval = 100;
+                const flashPhase = Math.floor((currentTime - this.lastDamageTime) / flashInterval) % 2;
+                this.mesh.visible = flashPhase === 0; // Toggle visibility for flashing effect
+            }
+        } else {
+            // Ensure player is visible when not invulnerable
+            this.mesh.visible = true;
+        }
+        
         // Movement
         let moveX = 0;
         let moveY = 0;
@@ -142,10 +196,14 @@ export class Player {
         this.mesh.position.x += moveX;
         this.mesh.position.y += moveY;
         
-        // Keep player within room bounds
-        const roomHalfSize = 400;
-        this.mesh.position.x = Math.max(-roomHalfSize, Math.min(roomHalfSize, this.mesh.position.x));
-        this.mesh.position.y = Math.max(-roomHalfSize, Math.min(roomHalfSize, this.mesh.position.y));
+        // Update shadow position
+        if (this.shadow) {
+            this.shadow.position.x = this.mesh.position.x + 12;
+            this.shadow.position.y = this.mesh.position.y + 12;
+            this.shadow.rotation.z = this.mesh.rotation.z;
+        }
+        
+        // Room boundary checks are now handled in main.js animation loop
         
         // Calculate aim angle once for both animation and shooting
         const dx = mouse.x - this.mesh.position.x;
@@ -328,6 +386,11 @@ export class Player {
     }
     
     takeDamage(amount) {
+        // Check if player is currently invulnerable
+        if (this.isInvulnerable) {
+            return; // Skip damage if invulnerable
+        }
+        
         // Calculate total damage multiplier from curses
         let damageMultiplier = 1;
         for (const relic of this.relics) {
@@ -341,11 +404,24 @@ export class Player {
 
         // Apply multiplied damage
         this.hp -= Math.ceil(amount * damageMultiplier);
+        this.hp = Math.max(0, this.hp); // Ensure HP doesn't go below 0
         
         // Reset kill streak if hit
         if (window.gameState) {
             window.gameState.killStreak = 0;
         }
+        
+        // Visual damage effect - turn red
+        this.mesh.material.color.set(0xFF0000); // Set to red
+        
+        // Reset color after a short delay
+        setTimeout(() => {
+            this.mesh.material.color.set(0xFFFFFF); // Reset to white
+        }, 200);
+        
+        // Set invulnerability
+        this.isInvulnerable = true;
+        this.lastDamageTime = performance.now();
     }
     
     addRelic(relic) {
@@ -355,5 +431,24 @@ export class Player {
             return true;
         }
         return false;
+    }
+
+    // Clean up player resources when needed
+    cleanup() {
+        // Remove bullets
+        for (const bullet of this.bullets) {
+            if (bullet.mesh) {
+                this.scene.remove(bullet.mesh);
+            }
+        }
+        this.bullets = [];
+        
+        // Remove shadow
+        if (this.shadow) {
+            this.scene.remove(this.shadow);
+        }
+        
+        // Remove player mesh
+        this.scene.remove(this.mesh);
     }
 }

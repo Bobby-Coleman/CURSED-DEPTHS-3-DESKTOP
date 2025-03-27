@@ -3,8 +3,9 @@ import * as THREE from 'three';
 export class Enemy {
     constructor(scene, x, y, type, level) {
         this.scene = scene;
-        this.type = type; // 0: basic, 1: shooter, 2: fast, 3: bomber, 4: charger
+        this.type = type; // 0: basic, 1: shooter, 2: fast, 3: bomber, 4: charger, 5: nest, 6: small nest
         this.level = level;
+        this.isDead = false; // Flag to track if enemy is dead
         
         // Enemy stats scaled by level (1.1x per level)
         const levelMultiplier = Math.pow(1.1, level - 1);
@@ -59,12 +60,37 @@ export class Enemy {
             this.shootCooldown = 1000 + Math.floor(Math.random() * 2000);
             this.lastShotTime = 0;
             
-            const geometry = new THREE.CircleGeometry(16, 32);
+            // Create mesh with sprite sheet
+            const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0x0000FF,
-                transparent: true
+                color: 0xFFFFFF, // White color to show sprite properly
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Load shooter enemy sprite sheet
+            const texture = new THREE.TextureLoader().load('assets/sprites/shooter_enemy.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Shooter enemy sprite sheet loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading shooter enemy sprite sheet:', error);
+                    this.mesh.material.color.setHex(0x0000FF); // Fallback to blue if sprite fails to load
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames
+            this.setupAnimationFrames();
             
         } else if (type === 3) { // Bomber
             this.baseHp = 12;
@@ -107,30 +133,164 @@ export class Enemy {
             this.randomMoveInterval = 3000; // Change direction every 3 seconds
             this.randomDirection = { x: 0, y: 0 };
             
-            const geometry = new THREE.CircleGeometry(16, 32);
+            // Create mesh with sprite sheet
+            const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0x800080, // Purple
-                transparent: true
+                color: 0xFFFFFF, // White color to show sprite properly
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
             
-        } else { // Fast monster
+            // Load ram sprite sheet
+            const texture = new THREE.TextureLoader().load('assets/sprites/ram.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Ram sprite sheet loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading ram sprite sheet:', error);
+                    this.mesh.material.color.setHex(0x800080); // Fallback to purple if sprite fails to load
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames similar to basic monster
+            this.setupAnimationFrames();
+            
+        } else if (type === 5) { // Nest
+            this.baseHp = 50;
+            this.speed = 0; // Doesn't move
+            this.attackDamage = 0; // Doesn't attack directly
+            this.attackRange = 0;
+            
+            // Spawning properties
+            this.spawnCooldown = 3000; // 3 seconds between spawns
+            this.lastSpawnTime = 0;
+            this.spawnedEnemies = []; // Track spawned enemies
+            
+            // Create mesh with placeholder graphics - increased size 
+            const geometry = new THREE.PlaneGeometry(120, 120); // Increased from 100x100
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x8B4513, // Brown color for placeholder
+                transparent: true,
+                alphaTest: 0.01, // Lower alphaTest to show more of the texture
+                side: THREE.DoubleSide
+            });
+            this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Load nest sprite if available
+            const texture = new THREE.TextureLoader().load('assets/sprites/nest.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Nest sprite loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.color.setHex(0xFFFFFF); // Reset to white when texture loads
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading nest sprite:', error);
+                    // Keep placeholder color
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+        } else if (type === 6) { // Small nest enemy
+            this.baseHp = 5;
+            this.speed = 3;
+            this.attackDamage = 1;
+            this.attackRange = 30;
+            this.isSpawnedEnemy = true; // Flag to identify it's a spawned enemy
+            
+            // Create mesh with placeholder graphics
+            const geometry = new THREE.PlaneGeometry(60, 60); // Increased from 40x40
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xA52A2A, // Darker brown for placeholder
+                transparent: true,
+                alphaTest: 0.01, // Lower alphaTest to show more of the texture
+                side: THREE.DoubleSide
+            });
+            this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Load small nest enemy sprite if available
+            const texture = new THREE.TextureLoader().load('assets/sprites/nest_enemy.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Nest enemy sprite loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.color.setHex(0xFFFFFF); // Reset to white when texture loads
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading nest enemy sprite:', error);
+                    // Keep placeholder color
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames
+            this.setupAnimationFrames();
+            
+        } else { // Fast monster (type 2)
             this.baseHp = 6;
             this.speed = 4;
             this.attackDamage = 1;
             this.attackRange = 30;
             
-            const geometry = new THREE.CircleGeometry(16, 4);
+            // Create mesh with sprite sheet
+            const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0xFFFF00,
-                transparent: true
+                color: 0xFFFFFF, // White color to show sprite properly
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Load flying enemy sprite sheet
+            const texture = new THREE.TextureLoader().load('assets/sprites/flying_enemy.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Flying enemy sprite sheet loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading flying enemy sprite sheet:', error);
+                    this.mesh.material.color.setHex(0xFFFF00); // Fallback to yellow if sprite fails to load
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames
+            this.setupAnimationFrames();
         }
         
         // Position mesh
         this.mesh.position.set(x, y, 1);
         scene.add(this.mesh);
+        
+        // Create shadow for the enemy
+        this.createShadow();
         
         // Apply level scaling
         this.hp = Math.ceil(this.baseHp * levelMultiplier);
@@ -146,7 +306,7 @@ export class Enemy {
         this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
         
         // Aggro state
-        this.aggroRange = 350;
+        this.aggroRange = 350 * 0.85; // Reduced by 15%
         this.isAggro = false;
         
         // Add random movement properties
@@ -243,6 +403,9 @@ export class Enemy {
     
     takeDamage(amount) {
         this.hp -= amount;
+        if (this.hp <= 0) {
+            this.isDead = true; // Mark as dead
+        }
         this.updateHealthBar();
     }
     
@@ -252,6 +415,11 @@ export class Enemy {
             this.scene.remove(bullet.mesh);
         }
         this.bullets = [];
+        
+        // Remove shadow
+        if (this.shadow) {
+            this.scene.remove(this.shadow);
+        }
         
         // Remove enemy mesh (which will also remove health bar, background, and text)
         this.scene.remove(this.mesh);
@@ -268,6 +436,13 @@ export class Enemy {
         ];
         uvs.set(uvArray);
         uvs.needsUpdate = true;
+        
+        // Update shadow UVs to match the current frame if shadow exists
+        if (this.shadow && this.shadow.geometry.attributes.uv) {
+            const shadowUvs = this.shadow.geometry.attributes.uv;
+            shadowUvs.set(uvArray);
+            shadowUvs.needsUpdate = true;
+        }
     }
 
     getDirectionFrame(dx, dy) {
@@ -305,6 +480,35 @@ export class Enemy {
         // Update stats display position
         this.updateHealthBar();
         
+        // Update shadow position to follow the enemy
+        if (this.shadow) {
+            this.shadow.position.x = this.mesh.position.x + 12;
+            this.shadow.position.y = this.mesh.position.y + 12;
+        }
+        
+        // Nest enemy spawning logic
+        if (this.type === 5) {
+            const currentTime = performance.now();
+            if (currentTime - this.lastSpawnTime > this.spawnCooldown) {
+                this.lastSpawnTime = currentTime;
+                
+                // Only spawn if there are fewer than 5 spawned enemies from this nest
+                if (this.spawnedEnemies.filter(e => !e.isDead).length < 5) {
+                    // This just creates the enemy, it needs to be added to the main enemies array
+                    // We'll return this and let the main game loop handle it
+                    this.newSpawnedEnemy = this.spawnSmallEnemy();
+                }
+            }
+            
+            // Clean up any dead spawned enemies from our tracking array
+            this.spawnedEnemies = this.spawnedEnemies.filter(e => !e.isDead);
+            
+            // Skip the rest of the update logic for nest (it doesn't move or attack)
+            return;
+        }
+        
+        // For non-nest enemies, proceed with normal update
+        
         // Check aggro range
         const dx = player.mesh.position.x - this.mesh.position.x;
         const dy = player.mesh.position.y - this.mesh.position.y;
@@ -327,8 +531,36 @@ export class Enemy {
         // Only take action if aggro
         if (this.isAggro) {
             if (this.type === 4) { // Charger
-                // Face player
-                this.mesh.rotation.z = Math.atan2(dy, dx);
+                // Remove rotation - use animation frames instead
+                // this.mesh.rotation.z = Math.atan2(dy, dx);
+                
+                // Update animation for the ram
+                if (currentTime - this.frameTime > this.animationSpeed) {
+                    this.frameTime = currentTime;
+                    this.currentFrame = (this.currentFrame + 1) % 4;
+                    
+                    // Calculate direction based on movement or charging
+                    let direction;
+                    const angle = this.isCharging ? 
+                        Math.atan2(this.chargeDirection.y, this.chargeDirection.x) : 
+                        Math.atan2(dy, dx);
+                    const degrees = ((angle * 180 / Math.PI) + 360) % 360;
+                    
+                    // Map angles to directions (same as basic monster)
+                    if (degrees >= 225 && degrees < 315) {
+                        direction = 1; // Right (when going up)
+                    } else if (degrees >= 315 || degrees < 45) {
+                        direction = 2; // Down (when going right)
+                    } else if (degrees >= 45 && degrees < 135) {
+                        direction = 3; // Left (when going down)
+                    } else {
+                        direction = 0; // Up (when going left)
+                    }
+                    
+                    // Update sprite frame - use frame 2 & 3 during charge (faster animation)
+                    const frameOffset = this.isCharging ? (this.currentFrame % 2) + 2 : this.currentFrame;
+                    this.updateUVs(direction * 4 + frameOffset);
+                }
                 
                 if (this.isCharging) {
                     // Continue charge in the stored direction
@@ -370,6 +602,18 @@ export class Enemy {
                     }
                 }
             } else if (this.type === 1) {
+                // Update animation based on player direction for shooter enemy
+                if (currentTime - this.frameTime > this.animationSpeed) {
+                    this.frameTime = currentTime;
+                    this.currentFrame = (this.currentFrame + 1) % 4;
+                    
+                    // Calculate direction based on player position
+                    const directionFrame = this.getDirectionFrame(dx, dy);
+                    
+                    // Update sprite frame with correct direction
+                    this.updateUVs(directionFrame * 4 + this.currentFrame);
+                }
+                
                 // Move to maintain distance if too close or too far
                 const optimalRange = 400; // Half screen distance (typical screen is ~800 units)
                 if (distanceToPlayer < optimalRange - 50) {
@@ -382,14 +626,14 @@ export class Enemy {
                     this.mesh.position.y += (dy / distanceToPlayer) * this.speed * 0.5;
                 }
                 
-                // Face player
-                this.mesh.rotation.z = Math.atan2(dy, dx);
-                
                 // Shoot at player if in range and cooldown is over
                 if (distanceToPlayer <= this.attackRange) {
                     this.shoot(player);
                 }
             } else if (this.type === 3) { // Bomber
+                // Remove rotation - use animation frames if sprite sheet exists
+                // this.mesh.rotation.z = Math.atan2(dy, dx);
+                
                 // Move to maintain distance if too close or too far
                 const optimalRange = 200;
                 if (distanceToPlayer < optimalRange - 50) {
@@ -401,9 +645,6 @@ export class Enemy {
                     this.mesh.position.x += (dx / distanceToPlayer) * this.speed;
                     this.mesh.position.y += (dy / distanceToPlayer) * this.speed;
                 }
-                
-                // Face player
-                this.mesh.rotation.z = Math.atan2(dy, dx);
                 
                 // Shoot bombs at player if in range
                 if (distanceToPlayer <= this.attackRange) {
@@ -444,8 +685,32 @@ export class Enemy {
                             this.updateUVs(direction * 4 + this.currentFrame);
                         }
                     } else {
-                        // For fast monster, keep the rotation
-                        this.mesh.rotation.z = Math.atan2(dy, dx);
+                        // For fast monster, don't rotate anymore
+                        // this.mesh.rotation.z = Math.atan2(dy, dx);
+                        
+                        // Update animation for flying enemy
+                        if (this.type === 2 && currentTime - this.frameTime > this.animationSpeed) {
+                            this.frameTime = currentTime;
+                            this.currentFrame = (this.currentFrame + 1) % 4;
+                            
+                            // Calculate direction based on movement
+                            const angle = Math.atan2(dy, dx);
+                            const degrees = ((angle * 180 / Math.PI) + 360) % 360;
+                            
+                            // Map angles to directions (same as basic monster)
+                            let direction;
+                            if (degrees >= 225 && degrees < 315) {
+                                direction = 1; // Right (when going up)
+                            } else if (degrees >= 315 || degrees < 45) {
+                                direction = 2; // Down (when going right)
+                            } else if (degrees >= 45 && degrees < 135) {
+                                direction = 3; // Left (when going down)
+                            } else {
+                                direction = 0; // Up (when going left)
+                            }
+                            
+                            this.updateUVs(direction * 4 + this.currentFrame);
+                        }
                     }
                 }
                 
@@ -466,8 +731,8 @@ export class Enemy {
             this.mesh.position.x += this.randomDirection.x * nonAggroSpeed;
             this.mesh.position.y += this.randomDirection.y * nonAggroSpeed;
             
-            // Update animation based on random movement (only for basic monster)
-            if (this.type === 0 && currentTime - this.frameTime > this.animationSpeed) {
+            // Update animation based on random movement (for basic monster and charger/ram)
+            if ((this.type === 0 || this.type === 2 || this.type === 4) && currentTime - this.frameTime > this.animationSpeed) {
                 this.frameTime = currentTime;
                 this.currentFrame = (this.currentFrame + 1) % 4;
                 
@@ -492,34 +757,37 @@ export class Enemy {
         
         // Keep enemies within bounds (assuming room size of 800)
         const roomSize = 800;
-        const boundaryPadding = 50;
-        if (this.mesh.position.x < -roomSize/2 + boundaryPadding || 
-            this.mesh.position.x > roomSize/2 - boundaryPadding ||
-            this.mesh.position.y < -roomSize/2 + boundaryPadding || 
-            this.mesh.position.y > roomSize/2 - boundaryPadding) {
+        const roomHalfSize = roomSize / 2;
+        const enemyHalfWidth = this.mesh.geometry.parameters.width / 2;
+        const enemyHalfHeight = this.mesh.geometry.parameters.height / 2;
+        
+        if (this.mesh.position.x - enemyHalfWidth < -roomHalfSize || 
+            this.mesh.position.x + enemyHalfWidth > roomHalfSize ||
+            this.mesh.position.y - enemyHalfHeight < -roomHalfSize || 
+            this.mesh.position.y + enemyHalfHeight > roomHalfSize) {
             
-            // If near boundary, keep the enemy inside
-            this.mesh.position.x = Math.max(-roomSize/2 + boundaryPadding, 
-                Math.min(roomSize/2 - boundaryPadding, this.mesh.position.x));
-            this.mesh.position.y = Math.max(-roomSize/2 + boundaryPadding, 
-                Math.min(roomSize/2 - boundaryPadding, this.mesh.position.y));
+            // If near boundary, keep the enemy inside with proper offset for their size
+            this.mesh.position.x = Math.max(-roomHalfSize + enemyHalfWidth, 
+                Math.min(roomHalfSize - enemyHalfWidth, this.mesh.position.x));
+            this.mesh.position.y = Math.max(-roomHalfSize + enemyHalfHeight, 
+                Math.min(roomHalfSize - enemyHalfHeight, this.mesh.position.y));
             
             if (!this.isAggro) {
-                // Only change random direction if not aggro'd
+                // If not aggro'ed and hit boundary, set new random direction pointing away from boundary
                 this.setNewRandomDirection();
-                this.randomMoveTimer = currentTime;
+                this.randomMoveTimer = currentTime; // Reset the movement timer
                 
                 // Ensure the new direction points away from the boundary
-                if (this.mesh.position.x < -roomSize/2 + boundaryPadding && this.randomDirection.x < 0) {
+                if (this.mesh.position.x - enemyHalfWidth < -roomHalfSize && this.randomDirection.x < 0) {
                     this.randomDirection.x *= -1;
                 }
-                if (this.mesh.position.x > roomSize/2 - boundaryPadding && this.randomDirection.x > 0) {
+                if (this.mesh.position.x + enemyHalfWidth > roomHalfSize && this.randomDirection.x > 0) {
                     this.randomDirection.x *= -1;
                 }
-                if (this.mesh.position.y < -roomSize/2 + boundaryPadding && this.randomDirection.y < 0) {
+                if (this.mesh.position.y - enemyHalfHeight < -roomHalfSize && this.randomDirection.y < 0) {
                     this.randomDirection.y *= -1;
                 }
-                if (this.mesh.position.y > roomSize/2 - boundaryPadding && this.randomDirection.y > 0) {
+                if (this.mesh.position.y + enemyHalfHeight > roomHalfSize && this.randomDirection.y > 0) {
                     this.randomDirection.y *= -1;
                 }
             }
@@ -604,7 +872,7 @@ export class Enemy {
     
     updateBullets(player) {
         const roomSize = 800;
-        const boundaryPadding = 50;
+        const boundaryPadding = 70; // Same as in main.js for consistency
         
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const bullet = this.bullets[i];
@@ -711,5 +979,150 @@ export class Enemy {
             player.takeDamage(this.attackDamage);
             this.lastAttackTime = currentTime;
         }
+    }
+
+    // Create a shadow that follows the enemy
+    createShadow() {
+        // Determine the shadow size based on the enemy type
+        let shadowSize = 64;
+        
+        // Nest enemy gets a larger shadow
+        if (this.type === 5) {
+            shadowSize = 120;
+        } else if (this.type === 6) { // Small nest enemy gets a smaller shadow
+            shadowSize = 40;
+        }
+        
+        // Create a shadow mesh with the proper geometry size
+        const shadowGeometry = new THREE.PlaneGeometry(shadowSize, shadowSize);
+        const shadowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.2,
+            alphaTest: 0.01, // Lower alphaTest to show more of the texture
+            side: THREE.DoubleSide
+        });
+        
+        this.shadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+        this.shadow.position.set(
+            this.mesh.position.x + 12,
+            this.mesh.position.y + 12,
+            0.5
+        );
+        
+        this.scene.add(this.shadow);
+        
+        // If this enemy type uses a texture, load it for the shadow
+        if (this.type === 0) {
+            new THREE.TextureLoader().load('assets/sprites/basic_monster.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else if (this.type === 2) { // Fast/flying enemy
+            new THREE.TextureLoader().load('assets/sprites/flying_enemy.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else if (this.type === 4) { // Charger/ram
+            new THREE.TextureLoader().load('assets/sprites/ram.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else if (this.type === 5) { // Nest
+            new THREE.TextureLoader().load('assets/sprites/nest.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else if (this.type === 6) { // Small nest enemy
+            new THREE.TextureLoader().load('assets/sprites/nest_enemy.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        } else if (this.type === 1) { // Shooter enemy
+            new THREE.TextureLoader().load('assets/sprites/shooter_enemy.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
+        }
+    }
+
+    // Method to spawn a small enemy from the nest
+    spawnSmallEnemy() {
+        // Calculate where the hatch is (lower right corner)
+        const roomSize = 800; // Same as ROOM_SIZE in main.js
+        const hatchX = roomSize/2 - 80;
+        const hatchY = -roomSize/2 + 80;
+        
+        // Define playable area boundaries (inside the walls)
+        const wallPadding = 60; // Match wall size
+        const playableMinX = -roomSize/2 + wallPadding;
+        const playableMaxX = roomSize/2 - wallPadding;
+        const playableMinY = -roomSize/2 + wallPadding;
+        const playableMaxY = roomSize/2 - wallPadding;
+        
+        // Create a small enemy at the nest's position with slight offset
+        let offsetX, offsetY;
+        let spawnX, spawnY;
+        
+        do {
+            // Calculate random offset
+            offsetX = (Math.random() - 0.5) * 40; // Random offset within 20 units
+            offsetY = (Math.random() - 0.5) * 40;
+            
+            // Calculate spawn position
+            spawnX = this.mesh.position.x + offsetX;
+            spawnY = this.mesh.position.y + offsetY;
+            
+            // Ensure spawn position is within playable area
+            spawnX = Math.max(playableMinX, Math.min(playableMaxX, spawnX));
+            spawnY = Math.max(playableMinY, Math.min(playableMaxY, spawnY));
+            
+            // Calculate distance to hatch
+            const distanceToHatch = Math.sqrt(
+                Math.pow(spawnX - hatchX, 2) + 
+                Math.pow(spawnY - hatchY, 2)
+            );
+            
+            // Try again if too close to hatch
+        } while (distanceToHatch < 325);
+        
+        // Using a special type (6) for the small spawned enemies
+        const smallEnemy = new Enemy(
+            this.scene, 
+            spawnX,
+            spawnY,
+            6, // Type 6 - small nest enemy
+            this.level
+        );
+        
+        // Add to tracked enemies
+        this.spawnedEnemies.push(smallEnemy);
+        
+        // Return the enemy so it can be added to the main enemies array
+        return smallEnemy;
     }
 }
