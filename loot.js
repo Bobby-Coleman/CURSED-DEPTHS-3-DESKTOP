@@ -61,16 +61,33 @@ export class LootSystem {
     }
     
     createBloodDrop(x, y) {
+        // Create blood drop group to hold both the blood and glow
+        const group = new THREE.Group();
+        group.position.set(x, y, 1);
+        
+        // Create glow effect
+        const glowGeometry = new THREE.CircleGeometry(24, 32); // Larger radius for glow
+        const glowMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xFF0000, // Bright red for the glow
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending // Makes it look more like a glow
+        });
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        group.add(glowMesh);
+        
         // Create blood
-        const geometry = new THREE.CircleGeometry(12, 16);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: 0xAA0000, // Dark red
+        const bloodGeometry = new THREE.CircleGeometry(12, 16);
+        const bloodMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xAA0000, // Dark red for the blood
             transparent: true,
             opacity: 0.9
         });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, 1);
-        this.scene.add(mesh);
+        const bloodMesh = new THREE.Mesh(bloodGeometry, bloodMaterial);
+        bloodMesh.position.z = 0.1; // Slightly in front of the glow
+        group.add(bloodMesh);
+        
+        this.scene.add(group);
         
         const bloodDrop = {
             type: 'blood',
@@ -79,7 +96,9 @@ export class LootSystem {
                 creationTime: performance.now(), // Track when the blood was created
                 blinking: false
             },
-            mesh: mesh
+            mesh: group,
+            bloodMesh: bloodMesh,
+            glowMesh: glowMesh
         };
         
         this.bloodDrops.push(bloodDrop);
@@ -329,26 +348,41 @@ export class LootSystem {
     updateBloodDrops() {
         const currentTime = performance.now();
         
-        // Process each blood drop
         for (let i = this.bloodDrops.length - 1; i >= 0; i--) {
-            const bloodDrop = this.bloodDrops[i];
-            const lifespan = currentTime - bloodDrop.data.creationTime;
+            const blood = this.bloodDrops[i];
+            const age = currentTime - blood.data.creationTime;
             
-            // Start blinking after 7 seconds
-            if (lifespan > 7000 && !bloodDrop.data.blinking) {
-                bloodDrop.data.blinking = true;
+            // Start blinking when blood is about to disappear (last 2 seconds)
+            if (age > 8000 && !blood.data.blinking) {
+                blood.data.blinking = true;
             }
             
-            // Make it blink
-            if (bloodDrop.data.blinking) {
-                // Blink at 8 times per second
-                bloodDrop.mesh.visible = Math.floor(currentTime / 125) % 2 === 0;
-            }
-            
-            // Remove after 10 seconds
-            if (lifespan > 10000) {
-                this.scene.remove(bloodDrop.mesh);
+            // Remove blood after 10 seconds
+            if (age > 10000) {
+                this.scene.remove(blood.mesh);
                 this.bloodDrops.splice(i, 1);
+                continue;
+            }
+            
+            // Animate glow
+            if (blood.glowMesh) {
+                // Pulse the glow
+                const pulseSpeed = 0.003;
+                const pulseAmount = 0.2;
+                const baseOpacity = 0.4;
+                const pulseFactor = Math.sin(currentTime * pulseSpeed) * pulseAmount + baseOpacity;
+                blood.glowMesh.material.opacity = blood.data.blinking ? pulseFactor * 2 : pulseFactor;
+                
+                // Scale the glow slightly
+                const scaleBase = 1;
+                const scalePulse = Math.sin(currentTime * pulseSpeed) * 0.1 + scaleBase;
+                blood.glowMesh.scale.set(scalePulse, scalePulse, 1);
+            }
+            
+            // Blink the blood drop if it's about to disappear
+            if (blood.data.blinking) {
+                const blinkSpeed = 0.01;
+                blood.bloodMesh.material.opacity = (Math.sin(currentTime * blinkSpeed) + 1) / 2;
             }
         }
     }

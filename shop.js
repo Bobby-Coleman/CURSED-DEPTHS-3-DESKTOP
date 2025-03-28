@@ -1,15 +1,50 @@
 import * as THREE from 'three';
+import { RelicSystem } from './relics.js';
 
 export class Shop {
-    constructor(scene, relicSystem) {
+    constructor(scene, currentLevel) {
         this.scene = scene;
-        this.relicSystem = relicSystem;
+        this.currentLevel = currentLevel;
+        this.relicSystem = new RelicSystem();
+        this.drops = [];
+        this.bloodDrops = []; // Separate array to track blood drops
         this.items = [];
         this.isOpen = true;
-        this.createRelics();
+        
+        // For the first shop (level 2), only offer a free Blood Amplifier
+        if (currentLevel === 2) {
+            // Create the Blood Amplifier relic
+            const bloodAmplifier = this.relicSystem.relicDefinitions.find(r => r.id === 'bloodAmplifier');
+            
+            // Create relic mesh
+            const relicGeometry = new THREE.CircleGeometry(20, 16);
+            const relicMaterial = new THREE.MeshBasicMaterial({ 
+                color: bloodAmplifier.color,
+                transparent: true,
+                opacity: 0.8
+            });
+            const relicMesh = new THREE.Mesh(relicGeometry, relicMaterial);
+            
+            // Position the relic mesh in the scene
+            relicMesh.position.set(0, 0, 2); // Centered at origin, slightly above floor
+            this.scene.add(relicMesh);
+            
+            // Add to items array - make it free (price: 0)
+            this.items.push({
+                type: 'relic',
+                data: bloodAmplifier,
+                mesh: relicMesh,
+                position: new THREE.Vector2(0, 0),
+                price: 0, // Free
+                description: "This one's on the house!" // Special message
+            });
+        } else {
+            // For other shops, generate random items as before
+            this.generateItems();
+        }
     }
     
-    createRelics() {
+    generateItems() {
         // Create three relics in the center
         const positions = [-40, 0, 40]; // Closer together
         

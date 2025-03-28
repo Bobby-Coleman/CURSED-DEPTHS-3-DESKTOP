@@ -126,39 +126,34 @@ export class UI {
         
         document.body.appendChild(this.messageContainer);
 
-        // Create required blood indicator at the top center
-        this.requiredBlood = document.createElement('div');
-        this.requiredBlood.id = 'required-blood';
-        this.requiredBlood.style.position = 'absolute';
-        this.requiredBlood.style.top = '45px';
-        this.requiredBlood.style.left = '50%';
-        this.requiredBlood.style.transform = 'translateX(-50%)';
-        this.requiredBlood.style.fontSize = '24px';
-        this.requiredBlood.style.fontWeight = 'bold';
-        this.requiredBlood.style.color = '#FFFFFF';
-        this.requiredBlood.style.textShadow = '2px 2px 0 #AA0000';
-        this.requiredBlood.style.fontFamily = 'Arial, sans-serif';
-        this.requiredBlood.style.zIndex = '100';
-        this.requiredBlood.innerHTML = 'REQUIRED BLOOD: 0';
-        
-        document.body.appendChild(this.requiredBlood);
-        
-        // Create blood counter display - moved to center under required blood
+        // Create blood counter
         this.bloodCounter = document.createElement('div');
-        this.bloodCounter.id = 'blood-counter';
         this.bloodCounter.style.position = 'absolute';
-        this.bloodCounter.style.top = '75px';
+        this.bloodCounter.style.top = '120px'; // Move down to be under required blood
         this.bloodCounter.style.left = '50%';
         this.bloodCounter.style.transform = 'translateX(-50%)';
-        this.bloodCounter.style.fontSize = '32px';
-        this.bloodCounter.style.fontWeight = 'bold';
         this.bloodCounter.style.color = '#FFFFFF';
-        this.bloodCounter.style.textShadow = '2px 2px 0 #AA0000';
+        this.bloodCounter.style.fontSize = '24px';
+        this.bloodCounter.style.fontWeight = 'bold';
+        this.bloodCounter.style.textShadow = '2px 2px 4px #FF0000';
         this.bloodCounter.style.fontFamily = 'Arial, sans-serif';
         this.bloodCounter.style.zIndex = '100';
         this.bloodCounter.innerHTML = 'BLOOD: 0';
-        
         document.body.appendChild(this.bloodCounter);
+        
+        // Create required blood display
+        this.requiredBloodDisplay = document.createElement('div');
+        this.requiredBloodDisplay.style.position = 'absolute';
+        this.requiredBloodDisplay.style.top = '80px'; // Move down slightly from top
+        this.requiredBloodDisplay.style.left = '50%';
+        this.requiredBloodDisplay.style.transform = 'translateX(-50%)';
+        this.requiredBloodDisplay.style.color = '#FFFFFF';
+        this.requiredBloodDisplay.style.fontSize = '24px';
+        this.requiredBloodDisplay.style.fontWeight = 'bold';
+        this.requiredBloodDisplay.style.textShadow = '2px 2px 4px #000000';
+        this.requiredBloodDisplay.style.fontFamily = 'Arial, sans-serif';
+        this.requiredBloodDisplay.style.zIndex = '100';
+        document.body.appendChild(this.requiredBloodDisplay);
     }
     
     showItemPopup(item, x, y) {
@@ -428,8 +423,8 @@ export class UI {
 
     // Update the required blood display
     updateRequiredBlood(amount) {
-        if (this.requiredBlood) {
-            this.requiredBlood.innerHTML = `REQUIRED BLOOD: ${amount}`;
+        if (this.requiredBloodDisplay) {
+            this.requiredBloodDisplay.innerHTML = `REQUIRED BLOOD: ${amount}`;
         }
     }
     

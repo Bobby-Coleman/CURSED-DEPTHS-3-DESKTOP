@@ -116,6 +116,24 @@ export class RelicSystem {
                     // The blessing is applied in damage calculations
                     player.damageTakenMultiplier = (player.damageTakenMultiplier || 1) * 1.5;
                 }
+            },
+            {
+                id: 'bloodAmplifier',
+                name: 'Blood Amplifier',
+                blessing: '+20 Blood',
+                curse: 'None',
+                color: 0xAA0000,
+                onEquip: (player) => {
+                    if (window.gameState) {
+                        window.gameState.blood += 20;
+                    }
+                },
+                onUnequip: (player) => {
+                    if (window.gameState) {
+                        const currentBlood = window.gameState.blood || 0;
+                        window.gameState.blood = Math.max(0, currentBlood - 20);
+                    }
+                }
             }
         ];
     }
@@ -240,8 +258,8 @@ export class RelicSystem {
             return false;
         }
         
-        // Remove relic
-        player.relics.splice(relicIndex, 1);
+        // Remove relic using player's method which handles onUnequip
+        player.removeRelic(relicIndex);
         
         // Check for Mirror's Edge effect
         for (const r of player.relics) {
