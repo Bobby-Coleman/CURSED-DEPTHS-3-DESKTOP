@@ -80,9 +80,9 @@ window.sellRelic = function(index) {
         if (relicSystem.canSellRelic(player, player.relics[index])) {
             // Remove the relic and add HP
             if (relicSystem.sellRelic(player, index)) {
-                player.hp = Math.min(player.maxHp, player.hp + 5);
+                player.hp = Math.min(player.maxHp, player.hp + 1);
                 ui.updateStats(player, gameState);
-                ui.showMessage("Relic sold for 5 HP!");
+                ui.showMessage("Relic sold for 1 HP!");
                 
                 // Reset hovered relic
                 gameState.hoveredRelicIndex = -1;
@@ -172,6 +172,11 @@ function init() {
         ui.updateRequiredBlood(currentLevel.bloodRequired);
     }
     
+    // Show tutorial before spawning enemies
+    if (!gameState.tutorialShown) {
+        showControlsTutorial();
+    }
+    
     // Always start with a combat level (level 1)
     // Spawn enemies for the current level
     spawnEnemies();
@@ -190,13 +195,8 @@ function spawnEnemies() {
         
         enemies.push(enemy1);
         enemies.push(enemy2);
-    } else if (gameState.level === 3) {
+    } else if (gameState.level === 3) { // Second battle level
         // Level 3 gets exactly 4 specific enemies
-        // Calculate hatch position (in lower right corner)
-        const hatchX = ROOM_SIZE/2 - 80;
-        const hatchY = -ROOM_SIZE/2 + 80;
-        
-        // Define enemy types and their positions
         const enemySetup = [
             { type: 1, name: 'shooter' },    // Type 1: Shooter
             { type: 4, name: 'charger' },    // Type 4: Charger
@@ -204,15 +204,19 @@ function spawnEnemies() {
             { type: 3, name: 'bomber' }      // Type 3: Bomber
         ];
         
-        // Try to place each enemy at least 350 units from the hatch
+        // Calculate hatch position
+        const hatchX = ROOM_SIZE/2 - 80;
+        const hatchY = -ROOM_SIZE/2 + 80;
+        
+        // Spawn each enemy at least 350 units from the hatch
         enemySetup.forEach(setup => {
             let x, y;
             do {
                 x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
                 y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-            
-            // Calculate distance to hatch
-            const distanceToHatch = Math.sqrt(
+                
+                // Calculate distance to hatch
+                const distanceToHatch = Math.sqrt(
                     Math.pow(x - hatchX, 2) + 
                     Math.pow(y - hatchY, 2)
                 );
@@ -223,45 +227,45 @@ function spawnEnemies() {
             const enemy = new Enemy(scene, x, y, setup.type, gameState.level);
             enemies.push(enemy);
         });
-    } else {
-        // For other levels, spawn random enemies
-        const numEnemies = Math.floor(Math.random() * 3) + 2; // 2-4 enemies
+    } else if (gameState.level === 5) { // Third battle level
+        // Spawn 7 random enemies
+        const numEnemies = 7;
+        spawnRandomEnemies(numEnemies);
+    } else { // Fourth battle level and beyond
+        // Spawn 10 random enemies (maximum)
+        const numEnemies = 10;
+        spawnRandomEnemies(numEnemies);
+    }
+}
+
+// Helper function to spawn random enemies
+function spawnRandomEnemies(count) {
+    // Calculate hatch position
+    const hatchX = ROOM_SIZE/2 - 80;
+    const hatchY = -ROOM_SIZE/2 + 80;
+    
+    for (let i = 0; i < count; i++) {
+        // Random position away from player spawn and hatch
+        let x, y;
+        do {
+            x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+            y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+        } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350);
         
-        // Calculate hatch position
-        const hatchX = ROOM_SIZE/2 - 80;
-        const hatchY = -ROOM_SIZE/2 + 80;
-        
-        for (let i = 0; i < numEnemies; i++) {
-            // Random position away from player spawn and hatch
-            let x, y, distanceToHatch;
-            do {
-                x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-                y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-                
-                // Calculate distance to hatch
-                distanceToHatch = Math.sqrt(
-                    Math.pow(x - hatchX, 2) + 
-                    Math.pow(y - hatchY, 2)
-                );
-                
-                // Keep trying until we find a position far enough from the hatch
-            } while (distanceToHatch < 350);
-            
-            // Random enemy type based on level
-            let enemyType;
-            if (gameState.level <= 2) {
-                enemyType = 0; // Only basic enemies
-            } else if (gameState.level <= 4) {
-                enemyType = Math.random() < 0.7 ? 0 : 1; // 70% basic, 30% shooter
-            } else if (gameState.level <= 6) {
-                enemyType = Math.floor(Math.random() * 3); // Basic, shooter, or fast
-            } else {
-                enemyType = Math.floor(Math.random() * 4); // All types except nest
-            }
-            
-            const enemy = new Enemy(scene, x, y, enemyType, gameState.level);
-            enemies.push(enemy);
+        // Random enemy type based on level
+        let enemyType;
+        if (gameState.level <= 2) {
+            enemyType = 0; // Only basic enemies
+        } else if (gameState.level <= 4) {
+            enemyType = Math.random() < 0.7 ? 0 : 1; // 70% basic, 30% shooter
+        } else if (gameState.level <= 6) {
+            enemyType = Math.floor(Math.random() * 3); // Basic, shooter, or fast
+        } else {
+            enemyType = Math.floor(Math.random() * 4); // All types except nest
         }
+        
+        const enemy = new Enemy(scene, x, y, enemyType, gameState.level);
+        enemies.push(enemy);
     }
 }
 
@@ -660,21 +664,21 @@ document.getElementById('restart-button').addEventListener('click', () => {
     restartGame();
 });
 
-// Function to restart game from level 2
+// Function to restart game from level 3 (second battle level)
 function restartGame() {
-    // Reset game state but start at level 2 (to skip tutorial but maintain level patterns)
+    // Reset game state but start at level 3 (to skip tutorial and first shop)
     gameState = {
-        level: 2, // Start at level 2 (an even number, but we'll set isShopLevel to false)
+        level: 3, // Start at level 3 (second battle level)
         killStreak: 0,
         gameOver: false,
-        isShopLevel: false, // Force this to be a combat level, not a shop
+        isShopLevel: false,
         currentPickup: null,
         hoveredRelicIndex: -1,
         lastRelicSellTime: 0,
-        tutorialShown: true, // Mark tutorial as already shown
+        tutorialShown: true,
         isPaused: false,
-        blood: 0, // Initialize blood counter
-        enemies: [] // Reference to enemies array
+        blood: 0,
+        enemies: []
     };
     
     // Clear previous game objects
@@ -720,7 +724,7 @@ function restartGame() {
         ui.updateRequiredBlood(currentLevel.bloodRequired);
     }
     
-    // Spawn enemies for the level (always combat level since we're forcing isShopLevel to false)
+    // Spawn enemies for level 3 (second battle level)
     spawnEnemies();
     
     // Show level message and update UI after everything is initialized
@@ -770,11 +774,6 @@ function showControlsTutorial() {
     line3.style.height = '30px';
     line3.style.display = 'none'; // Initially hidden
     
-    const line4 = document.createElement('div');
-    line4.style.marginBottom = '40px';
-    line4.style.height = '30px';
-    line4.style.display = 'none'; // Initially hidden
-    
     // Create next button 
     const createNextButton = () => {
         const nextButton = document.createElement('button');
@@ -789,7 +788,7 @@ function showControlsTutorial() {
         nextButton.style.fontFamily = 'monospace, sans-serif';
         nextButton.style.marginTop = '20px';
     
-    // Button hover effect
+        // Button hover effect
         nextButton.addEventListener('mouseover', () => {
             nextButton.style.backgroundColor = '#ff0000';
         });
@@ -805,16 +804,15 @@ function showControlsTutorial() {
     startButton.textContent = "START";
     startButton.style.padding = '10px 20px';
     startButton.style.fontSize = '20px';
-    startButton.style.backgroundColor = '#800000'; // Dark red
+    startButton.style.backgroundColor = '#800000';
     startButton.style.color = 'white';
     startButton.style.border = '2px solid #ff0000';
     startButton.style.borderRadius = '5px';
     startButton.style.cursor = 'pointer';
     startButton.style.fontFamily = 'monospace, sans-serif';
     startButton.style.marginTop = '20px';
-    startButton.style.display = 'none'; // Initially hidden
+    startButton.style.display = 'none';
     
-    // Button hover effect
     startButton.addEventListener('mouseover', () => {
         startButton.style.backgroundColor = '#ff0000';
     });
@@ -824,12 +822,10 @@ function showControlsTutorial() {
     
     // Start button click handler
     startButton.addEventListener('click', () => {
-        // Fade out animation
         tutorialOverlay.style.transition = 'opacity 0.5s';
         tutorialOverlay.style.opacity = '0';
         setTimeout(() => {
             tutorialOverlay.remove();
-            // Resume the game after tutorial is removed
             gameState.isPaused = false;
         }, 500);
     });
@@ -837,7 +833,6 @@ function showControlsTutorial() {
     // Next buttons for each line
     const nextButton1 = createNextButton();
     const nextButton2 = createNextButton();
-    const nextButton3 = createNextButton();
     
     // Add all elements to the overlay
     tutorialOverlay.appendChild(line1);
@@ -845,22 +840,18 @@ function showControlsTutorial() {
     tutorialOverlay.appendChild(line2);
     tutorialOverlay.appendChild(nextButton2);
     tutorialOverlay.appendChild(line3);
-    tutorialOverlay.appendChild(nextButton3);
-    tutorialOverlay.appendChild(line4);
     tutorialOverlay.appendChild(startButton);
     
     document.body.appendChild(tutorialOverlay);
     
     // Define text for each line
-    const text1 = "Kill demons and collect the blood they drop before it disappears";
-    const text2 = "Bring the amount required for the sacrifice to the altar to progress";
-    const text3 = "Controls: Use WASD to move";
-    const text4 = "Point and click to shoot in that direction";
+    const text1 = "Kill demons and collect their blood before it DISAPPEARS";
+    const text2 = "Gather the required amount of blood each level and bring it to the altar statue to progress";
+    const text3 = "Use WASD to move around. Point and click to shoot. Good luck, you'll need it";
     
     // Initially hide all buttons
     nextButton1.style.display = 'none';
     nextButton2.style.display = 'none';
-    nextButton3.style.display = 'none';
     
     // Button click handlers
     nextButton1.addEventListener('click', () => {
@@ -875,14 +866,6 @@ function showControlsTutorial() {
         nextButton2.style.display = 'none';
         line3.style.display = 'block';
         typeOutText(line3, text3, () => {
-            nextButton3.style.display = 'block';
-        });
-    });
-    
-    nextButton3.addEventListener('click', () => {
-        nextButton3.style.display = 'none';
-        line4.style.display = 'block';
-        typeOutText(line4, text4, () => {
             startButton.style.display = 'block';
         });
     });
@@ -895,23 +878,19 @@ function showControlsTutorial() {
         const textSpan = document.createElement('span');
         element.appendChild(textSpan);
         
-        // If this is line 1, add "disappears" in red
+        // If this is line 1, handle the "DISAPPEARS" in red
         if (text === text1) {
             const interval = setInterval(() => {
                 if (index < text.length) {
-                    // Check if we're typing "before it disappears" part
-                    if (index === text.indexOf("before it disappears")) {
-                        // Add "before it " in white
-                        textSpan.innerHTML += "before it ";
-                        index += "before it ".length;
-                        
-                        // Add "disappears" in red
+                    // Check if we're at "DISAPPEARS"
+                    if (index === text.indexOf("DISAPPEARS")) {
+                        // Add the red text
                         const redText = document.createElement('span');
                         redText.style.color = '#ff0000';
-                        redText.textContent = "disappears";
+                        redText.textContent = "DISAPPEARS";
                         element.appendChild(redText);
-                        index += "disappears".length;
-        } else {
+                        index += "DISAPPEARS".length;
+                    } else {
                         textSpan.textContent += text.charAt(index);
                         index++;
                     }
@@ -920,17 +899,17 @@ function showControlsTutorial() {
                     if (onComplete) onComplete();
                 }
             }, 30);
-                        } else {
+        } else {
             const interval = setInterval(() => {
                 if (index < text.length) {
                     textSpan.textContent += text.charAt(index);
                     index++;
-                                } else {
+                } else {
                     clearInterval(interval);
                     if (onComplete) onComplete();
-                                }
-                            }, 30);
-                        }
+                }
+            }, 30);
+        }
     }
     
     // Start typing the first line

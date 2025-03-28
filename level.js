@@ -26,10 +26,10 @@ export class Level {
         // Get the effective combat level (ignoring shop levels)
         const combatLevel = Math.ceil(this.levelNumber / 2);
         
-        // Start with 20 blood on first combat level
+        // Start with 10 blood on first combat level
         // Then 50 blood on second combat level
         // Then increase by 50% each combat level after
-        if (combatLevel === 1) return 20;
+        if (combatLevel === 1) return 10;
         if (combatLevel === 2) return 50;
         
         // For combat level 3 and beyond, increase by 50% each time

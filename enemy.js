@@ -631,15 +631,27 @@ export class Enemy {
                     this.shoot(player);
                 }
             } else if (this.type === 3) { // Bomber
-                // Remove rotation - use animation frames if sprite sheet exists
-                // this.mesh.rotation.z = Math.atan2(dy, dx);
-                
                 // Move to maintain distance if too close or too far
                 const optimalRange = 200;
                 if (distanceToPlayer < optimalRange - 50) {
-                    // Move away from player
-                    this.mesh.position.x -= (dx / distanceToPlayer) * this.speed;
-                    this.mesh.position.y -= (dy / distanceToPlayer) * this.speed;
+                    // Move away from player, but check wall collision first
+                    const newX = this.mesh.position.x - (dx / distanceToPlayer) * this.speed;
+                    const newY = this.mesh.position.y - (dy / distanceToPlayer) * this.speed;
+                    
+                    // Only move if not hitting walls
+                    const roomSize = 800;
+                    const boundaryPadding = 70;
+                    const halfWidth = this.mesh.geometry.parameters.width / 2;
+                    const halfHeight = this.mesh.geometry.parameters.height / 2;
+                    
+                    if (newX - halfWidth >= -roomSize/2 + boundaryPadding && 
+                        newX + halfWidth <= roomSize/2 - boundaryPadding) {
+                        this.mesh.position.x = newX;
+                    }
+                    if (newY - halfHeight >= -roomSize/2 + boundaryPadding && 
+                        newY + halfHeight <= roomSize/2 - boundaryPadding) {
+                        this.mesh.position.y = newY;
+                    }
                 } else if (distanceToPlayer > optimalRange + 50) {
                     // Move toward player
                     this.mesh.position.x += (dx / distanceToPlayer) * this.speed;

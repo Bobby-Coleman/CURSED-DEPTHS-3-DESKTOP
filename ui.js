@@ -129,7 +129,7 @@ export class UI {
         // Create blood counter
         this.bloodCounter = document.createElement('div');
         this.bloodCounter.style.position = 'absolute';
-        this.bloodCounter.style.top = '120px'; // Move down to be under required blood
+        this.bloodCounter.style.top = '120px';
         this.bloodCounter.style.left = '50%';
         this.bloodCounter.style.transform = 'translateX(-50%)';
         this.bloodCounter.style.color = '#FFFFFF';
@@ -140,6 +140,20 @@ export class UI {
         this.bloodCounter.style.zIndex = '100';
         this.bloodCounter.innerHTML = 'BLOOD: 0';
         document.body.appendChild(this.bloodCounter);
+        
+        // Create level indicator for battle levels
+        this.levelIndicator = document.createElement('div');
+        this.levelIndicator.style.position = 'absolute';
+        this.levelIndicator.style.top = '20px';
+        this.levelIndicator.style.right = '20px';
+        this.levelIndicator.style.color = '#FFFFFF';
+        this.levelIndicator.style.fontSize = '28px';
+        this.levelIndicator.style.fontWeight = 'bold';
+        this.levelIndicator.style.textShadow = '2px 2px 4px #000000';
+        this.levelIndicator.style.fontFamily = 'Arial, sans-serif';
+        this.levelIndicator.style.zIndex = '100';
+        this.levelIndicator.style.display = 'none'; // Hidden by default
+        document.body.appendChild(this.levelIndicator);
         
         // Create required blood display
         this.requiredBloodDisplay = document.createElement('div');
@@ -296,6 +310,17 @@ export class UI {
         document.getElementById('kill-streak').textContent = gameState.killStreak;
         document.getElementById('relics').textContent = player.relics.length;
 
+        // Update level indicator visibility and content
+        if (this.levelIndicator) {
+            if (!gameState.isShopLevel) {
+                this.levelIndicator.style.display = 'block';
+                const battleLevel = Math.ceil(gameState.level / 2);
+                this.levelIndicator.innerHTML = `BATTLE: ${battleLevel}`;
+            } else {
+                this.levelIndicator.style.display = 'none';
+            }
+        }
+        
         // Update blood counter
         if (this.bloodCounter) {
             this.bloodCounter.innerHTML = `BLOOD: ${gameState.blood || 0}`;

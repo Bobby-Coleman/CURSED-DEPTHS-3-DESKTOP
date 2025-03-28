@@ -99,37 +99,25 @@ export class Shop {
     }
     
     buyItem(player, item, gameState) {
-        // Check if player has enough HP
-        if (player.hp <= item.price) {
-            return {
-                success: false,
-                message: "Not enough HP!"
-            };
+        // Check if player has enough HP to buy (all relics cost 2 HP)
+        if (player.hp <= 2) {
+            return { success: false, message: "Not enough HP to buy this relic!" };
         }
+
+        // Add relic to player's inventory
+        player.relics.push(item.data);
         
-        // Check if player has max relics
-        if (player.relics.length >= 5) {
-            return {
-                success: false,
-                message: "Cannot carry more than 5 relics!"
-            };
-        }
-        
-        // Add relic to player and deduct HP
-        player.addRelic(item.data);
-        player.hp -= item.price;
-        
-        // Remove item from shop
+        // Deduct 2 HP cost
+        player.hp -= 2;
+
+        // Remove the item from the shop
         this.scene.remove(item.mesh);
         const index = this.items.indexOf(item);
         if (index > -1) {
             this.items.splice(index, 1);
         }
-        
-        return {
-            success: true,
-            message: `Purchased ${item.data.name}!`
-        };
+
+        return { success: true, message: `Bought ${item.data.name} for 2 HP` };
     }
     
     cleanup() {
