@@ -120,18 +120,12 @@ export class RelicSystem {
             {
                 id: 'bloodAmplifier',
                 name: 'Blood Amplifier',
-                blessing: '+20 Blood',
+                blessing: '+20 Blood when clearing a room',
                 curse: 'None',
                 color: 0xAA0000,
-                onEquip: (player) => {
-                    if (window.gameState) {
-                        window.gameState.blood += 20;
-                    }
-                },
                 onUnequip: (player) => {
                     if (window.gameState) {
-                        const currentBlood = window.gameState.blood || 0;
-                        window.gameState.blood = Math.max(0, currentBlood - 20);
+                        window.gameState.blood = Math.max(0, window.gameState.blood - 20);
                     }
                 }
             }
@@ -193,6 +187,12 @@ export class RelicSystem {
                     break;
                 case 'ragingHeart':
                     player.baseDamage += 2;
+                    break;
+                case 'bloodAmplifier':
+                    // Only add blood if this was the last enemy
+                    if (gameState.enemies && gameState.enemies.length === 1) {
+                        gameState.blood += 20;
+                    }
                     break;
             }
         }

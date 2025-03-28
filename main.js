@@ -78,15 +78,14 @@ window.sellRelic = function(index) {
     if (player && player.relics[index]) {
         // Check if relic can be sold
         if (relicSystem.canSellRelic(player, player.relics[index])) {
-            const relic = player.relics[index];
-            // Call onUnequip before removing
-            if (relic.onUnequip) {
-                relic.onUnequip(player);
-            }
-            // Remove the relic and add gold
+            // Remove the relic and add HP
             if (relicSystem.sellRelic(player, index)) {
-                gameState.gold += 5;
+                player.hp = Math.min(player.maxHp, player.hp + 5);
                 ui.updateStats(player, gameState);
+                ui.showMessage("Relic sold for 5 HP!");
+                
+                // Reset hovered relic
+                gameState.hoveredRelicIndex = -1;
             }
         } else {
             // Show message if relic can't be sold yet
@@ -199,10 +198,10 @@ function spawnEnemies() {
         
         // Define enemy types and their positions
         const enemySetup = [
-            { type: 1, name: 'shooter' },    // Shooter
-            { type: 4, name: 'charger' },    // Charger
-            { type: 2, name: 'fast' },       // Fast Enemy
-            { type: 3, name: 'bomber' }      // Bomber
+            { type: 1, name: 'shooter' },    // Type 1: Shooter
+            { type: 4, name: 'charger' },    // Type 4: Charger
+            { type: 2, name: 'fast' },       // Type 2: Fast Enemy
+            { type: 3, name: 'bomber' }      // Type 3: Bomber
         ];
         
         // Try to place each enemy at least 350 units from the hatch
@@ -211,15 +210,15 @@ function spawnEnemies() {
             do {
                 x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
                 y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-                
-                // Calculate distance to hatch
-                const distanceToHatch = Math.sqrt(
+            
+            // Calculate distance to hatch
+            const distanceToHatch = Math.sqrt(
                     Math.pow(x - hatchX, 2) + 
                     Math.pow(y - hatchY, 2)
                 );
                 
                 // Keep trying until we find a position far enough from the hatch
-            } while (distanceToHatch < 350);
+            } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350);
             
             const enemy = new Enemy(scene, x, y, setup.type, gameState.level);
             enemies.push(enemy);
@@ -297,7 +296,7 @@ function nextLevel() {
         }
     }
     
-    // Reset blood to zero when moving to a new level
+    // Reset blood to zero when moving to a new level (since blood boost triggers on room clear)
     gameState.blood = 0;
     
     // Increment level
@@ -491,6 +490,14 @@ function animate() {
                         
                         // Increment kill streak
                         gameState.killStreak++;
+
+                        // If this was the last enemy and player has Blood Amplifier, add blood
+                        if (enemies.length === 0) {
+                            const bloodAmplifier = player.relics.find(r => r.id === 'bloodAmplifier');
+                            if (bloodAmplifier) {
+                                gameState.blood += 20;
+                            }
+                        }
                     }
                 }
                 
@@ -602,7 +609,7 @@ window.addEventListener('keydown', (e) => {
         if (currentTime - gameState.lastRelicSellTime > 500) {
             // Use the window.sellRelic function which properly handles onUnequip
             window.sellRelic(gameState.hoveredRelicIndex);
-            gameState.lastRelicSellTime = currentTime;
+                gameState.lastRelicSellTime = currentTime;
         }
     }
 });
@@ -781,8 +788,8 @@ function showControlsTutorial() {
         nextButton.style.cursor = 'pointer';
         nextButton.style.fontFamily = 'monospace, sans-serif';
         nextButton.style.marginTop = '20px';
-        
-        // Button hover effect
+    
+    // Button hover effect
         nextButton.addEventListener('mouseover', () => {
             nextButton.style.backgroundColor = '#ff0000';
         });
@@ -904,7 +911,7 @@ function showControlsTutorial() {
                         redText.textContent = "disappears";
                         element.appendChild(redText);
                         index += "disappears".length;
-                    } else {
+        } else {
                         textSpan.textContent += text.charAt(index);
                         index++;
                     }
@@ -913,17 +920,17 @@ function showControlsTutorial() {
                     if (onComplete) onComplete();
                 }
             }, 30);
-        } else {
+                        } else {
             const interval = setInterval(() => {
                 if (index < text.length) {
                     textSpan.textContent += text.charAt(index);
                     index++;
-                } else {
+                                } else {
                     clearInterval(interval);
                     if (onComplete) onComplete();
-                }
-            }, 30);
-        }
+                                }
+                            }, 30);
+                        }
     }
     
     // Start typing the first line
