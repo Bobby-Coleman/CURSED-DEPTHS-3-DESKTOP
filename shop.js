@@ -17,16 +17,12 @@ export class Shop {
             const bloodAmplifier = this.relicSystem.relicDefinitions.find(r => r.id === 'bloodAmplifier');
             
             // Create relic mesh
-            const relicGeometry = new THREE.CircleGeometry(20, 16);
-            const relicMaterial = new THREE.MeshBasicMaterial({ 
-                color: bloodAmplifier.color,
-                transparent: true,
-                opacity: 0.8
-            });
+            const relicGeometry = new THREE.BoxGeometry(20, 20, 5);
+            const relicMaterial = new THREE.MeshBasicMaterial({ color: bloodAmplifier.color });
             const relicMesh = new THREE.Mesh(relicGeometry, relicMaterial);
             
             // Position the relic mesh in the scene
-            relicMesh.position.set(0, 0, 2); // Centered at origin, slightly above floor
+            relicMesh.position.set(0, 0, 2);
             this.scene.add(relicMesh);
             
             // Add to items array - make it free (price: 0)
@@ -35,8 +31,8 @@ export class Shop {
                 data: bloodAmplifier,
                 mesh: relicMesh,
                 position: new THREE.Vector2(0, 0),
-                price: 0, // Free
-                description: "This one's on the house!" // Special message
+                price: 0,
+                description: "This one's on the house!"
             });
         } else {
             // For other shops, generate random items as before
