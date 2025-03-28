@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
     <title>Highway to Hell - Start</title>
     <style>
-        body, html {
+        body {
             margin: 0;
             padding: 0;
-            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: black;
             overflow: hidden;
+        }
+        /* Force landscape on mobile */
+        @media screen and (orientation: portrait) {
+            body {
+                transform: rotate(-90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                position: absolute;
+                top: 100%;
+                left: 0;
+            }
         }
         
         .background {
@@ -65,6 +83,8 @@
         function skipToMainGame() {
             // Flag that we're coming from the driving game (so the redirect logic won't loop)
             sessionStorage.setItem('fromDrivingGame', 'true');
+            // Set shop level flag for testing
+            sessionStorage.setItem('isShopLevel', 'true');
             
             // Get full repository path for GitHub Pages
             const fullPath = window.location.pathname;

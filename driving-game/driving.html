@@ -2,17 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cursed Depths - Driving</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
             overflow: hidden;
             background-color: #000;
             font-family: Arial, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
         }
         canvas {
             display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: none;
         }
         #instructions {
             position: absolute;
@@ -24,6 +31,13 @@
             border-radius: 5px;
             font-size: 16px;
             pointer-events: none;
+            z-index: 1000;
+        }
+        /* Hide instructions on mobile */
+        @media (max-width: 768px) {
+            #instructions {
+                display: none;
+            }
         }
         .key {
             display: inline-block;
@@ -32,6 +46,34 @@
             border-radius: 3px;
             padding: 2px 8px;
             margin: 0 2px;
+        }
+        /* Mobile controls */
+        #mobileControls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .mobileBtn {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
     </style>
 </head>
@@ -42,6 +84,12 @@
         <p>Avoid other cars on the road! Crash to enter Hell...</p>
     </div>
     
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <div class="mobileBtn" id="leftBtn">←</div>
+        <div class="mobileBtn" id="rightBtn">→</div>
+    </div>
+
     <!-- Audio element -->
     <audio id="bgMusic" src="assets/audio/background_music_enter.wav" loop></audio>
     
@@ -57,6 +105,17 @@
     
     <!-- Super simple music script -->
     <script>
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.classList.contains('mobileBtn')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
         // This gets executed right when the page loads
         var audio = document.getElementById('bgMusic');
         
@@ -71,10 +130,15 @@
             alert('Game error: ' + e.message);
         });
         
-        // Backup plan: also try to play on first key press
-        document.addEventListener('keydown', function() {
-            audio.play();
-        }, {once: true});
+        // Backup plan: also try to play on first interaction
+        function tryPlayAudio() {
+            audio.play().catch(function(error) {
+                console.log("Audio play failed:", error);
+            });
+        }
+        
+        document.addEventListener('keydown', tryPlayAudio, {once: true});
+        document.addEventListener('touchstart', tryPlayAudio, {once: true});
     </script>
     
     <!-- Game Script -->

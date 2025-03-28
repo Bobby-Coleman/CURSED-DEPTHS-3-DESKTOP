@@ -29,6 +29,19 @@ let gameState = {
     enemies: [] // Reference to enemies array
 };
 
+// Create game object to expose to window
+const game = {
+    player: null,
+    keys: null,
+    mouse: null,
+    level: null,
+    enemies: [],
+    gameState: gameState
+};
+
+// Expose game object to window for mobile controls
+window.game = game;
+
 // Initialize Three.js
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x228B22); // Jungle green background
@@ -67,11 +80,17 @@ const keys = {
     wasR: false
 };
 
+// Store keys in game object
+game.keys = keys;
+
 const mouse = {
     x: 0,
     y: 0,
     isDown: false
 };
+
+// Store mouse in game object
+game.mouse = mouse;
 
 // Make sellRelic function globally accessible
 window.sellRelic = function(index) {
@@ -148,6 +167,9 @@ function init() {
     
     // Initialize player
     player = new Player(scene);
+    
+    // Store player in game object for mobile controls
+    game.player = player;
     
     // Position player at the hatch in the lower right corner
     player.mesh.position.x = ROOM_SIZE/2 - 80;
@@ -245,12 +267,23 @@ function spawnRandomEnemies(count) {
     const hatchY = -ROOM_SIZE/2 + 80;
     
     for (let i = 0; i < count; i++) {
-        // Random position away from player spawn and hatch
+        // Random position away from player spawn, hatch, and statue
         let x, y;
         do {
             x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
             y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-        } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350);
+            
+            // Calculate distance to hatch
+            const distanceToHatch = Math.sqrt(
+                Math.pow(x - hatchX, 2) + 
+                Math.pow(y - hatchY, 2)
+            );
+            
+            // Calculate distance to statue (center of room)
+            const distanceToStatue = Math.sqrt(x * x + y * y);
+            
+            // Keep trying until we find a position far enough from both hatch and statue
+        } while (distanceToHatch < 350 || distanceToStatue < 150);
         
         // Random enemy type based on level
         let enemyType;
@@ -394,6 +427,9 @@ function animate() {
     
     // Keep enemies reference updated in gameState for use by other components
     gameState.enemies = enemies;
+    
+    // Update the enemies reference in the game object for auto-aim
+    game.enemies = enemies;
     
     if (!gameState.gameOver) {
         // Only update player and enemies if game is not paused
@@ -979,3 +1015,9 @@ function createCrosshair() {
     // Only hide cursor on the canvas, not the entire page
     renderer.domElement.style.cursor = 'none';
 }
+
+// Start the game when DOM is loaded
+document.addEventListener('DOMContentLoaded', startGame);
+
+// Export game object for mobile controls
+export { game };

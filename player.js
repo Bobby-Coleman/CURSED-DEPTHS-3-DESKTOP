@@ -18,7 +18,10 @@ export class Player {
         this.lastFireTime = 0;
         this.weaponRange = 200; // Default weapon range
         this.healOnKill = 0; // Amount of health regained per kill
-        this.speed = 5; // Player movement speed
+        
+        // Detect if on mobile and adjust speed accordingly
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        this.speed = isMobile ? 2.5 : 5; // Half speed (2.5) on mobile, normal speed (5) on desktop
         
         // Invulnerability tracking
         this.isInvulnerable = false;

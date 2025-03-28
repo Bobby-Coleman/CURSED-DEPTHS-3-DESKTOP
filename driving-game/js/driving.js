@@ -8,13 +8,17 @@ backgroundMusic.play();
 
 class DrivingGame {
     constructor() {
+        // Check if on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        const mobileSpeedMultiplier = isMobile ? 0.5 : 1; // 50% speed on mobile
+        
         // Game settings
         this.settings = {
             roadWidth: 20, // Increased from 15 to accommodate 4 lanes
             roadLength: 300,
-            carSpeed: 1.2,
-            baseCarSpeed: 1.2, // Store the original car speed for reference
-            obstacleSpeed: 0.4,
+            carSpeed: 0.8 * mobileSpeedMultiplier, // Apply mobile speed reduction
+            baseCarSpeed: 0.8 * mobileSpeedMultiplier, // Also reduced base speed to match
+            obstacleSpeed: 0.4 * mobileSpeedMultiplier, // Also reduce obstacle speed
             cameraHeight: 7,
             cameraDistance: 12,
             buildingCount: 20,
@@ -79,10 +83,13 @@ class DrivingGame {
         this.camera.position.set(0, this.settings.cameraHeight, this.settings.cameraDistance);
         this.camera.lookAt(0, 0, -30); // Look further ahead
         
-        // Create renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        // Create renderer with pixel ratio handling
+        this.renderer = new THREE.WebGLRenderer({ 
+            antialias: true,
+            powerPreference: "high-performance"
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
         document.body.appendChild(this.renderer.domElement);
         
         // Create speed indicator
@@ -92,10 +99,19 @@ class DrivingGame {
         this.createBeerCounter();
         
         // Handle window resize
-        window.addEventListener('resize', () => {
+        const onResize = () => {
+            // Update camera
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
+            
+            // Update renderer
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        };
+        
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(onResize, 100); // Wait for orientation change to complete
         });
     }
     
@@ -592,29 +608,45 @@ class DrivingGame {
     setupControls() {
         // Keyboard controls
         document.addEventListener('keydown', (event) => {
-            switch (event.key.toLowerCase()) {
-                case 'a':
-                case 'arrowleft':
-                    this.moveLeft = true;
-                    break;
-                case 'd':
-                case 'arrowright':
-                    this.moveRight = true;
-                    break;
+            if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+                this.moveLeft = true;
+            }
+            if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+                this.moveRight = true;
             }
         });
-        
+
         document.addEventListener('keyup', (event) => {
-            switch (event.key.toLowerCase()) {
-                case 'a':
-                case 'arrowleft':
-                    this.moveLeft = false;
-                    break;
-                case 'd':
-                case 'arrowright':
-                    this.moveRight = false;
-                    break;
+            if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') {
+                this.moveLeft = false;
             }
+            if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') {
+                this.moveRight = false;
+            }
+        });
+
+        // Mobile controls
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+
+        // Touch handlers for left button
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.moveLeft = true;
+        });
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.moveLeft = false;
+        });
+
+        // Touch handlers for right button
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.moveRight = true;
+        });
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.moveRight = false;
         });
     }
     
@@ -1528,15 +1560,15 @@ class DrivingGame {
         // Update the beer counter display
         this.updateBeerCounter();
         
-        // Play sound effect for beer collection
-        // this.playBeerSound(); // Uncomment if you add a sound effect
+        // Check if on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        // Reduced speed increase on mobile (5% instead of 10%)
+        const speedIncreaseAmount = isMobile ? 1.05 : 1.1;
         
-        // Turning sensitivity effect removed
-        
-        // Apply speed effect - 85% chance to increase (up from 60%), 15% chance to decrease
+        // Apply speed effect - 85% chance to increase, 15% chance to decrease
         if (Math.random() < 0.85) {
-            // Increase speed by 10%
-            this.settings.carSpeed *= 1.1;
+            // Increase speed by 5% on mobile, 10% on desktop
+            this.settings.carSpeed *= speedIncreaseAmount;
             console.log("Speed increased: " + this.settings.carSpeed.toFixed(2));
             
             // Add a visual cue for speed increase

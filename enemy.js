@@ -7,8 +7,10 @@ export class Enemy {
         this.level = level;
         this.isDead = false; // Flag to track if enemy is dead
         
-        // Enemy stats scaled by level (1.1x per level)
-        const levelMultiplier = Math.pow(1.1, level - 1);
+        // Enemy stats scaling configuration
+        const ENABLE_LEVEL_SCALING = false; // Set to true to re-enable level scaling
+        const SCALING_FACTOR = 1.1; // How much stats increase per level (10%)
+        const levelMultiplier = ENABLE_LEVEL_SCALING ? Math.pow(SCALING_FACTOR, level - 1) : 1;
         
         // Set enemy properties based on type
         if (type === 0) { // Basic monster
@@ -314,6 +316,13 @@ export class Enemy {
         this.randomMoveInterval = 3000; // Change direction every 3 seconds
         this.randomDirection = { x: 0, y: 0 };
         this.setNewRandomDirection();
+        
+        // Add position tracking for unstuck mechanism
+        this.lastPositions = [];
+        this.positionHistorySize = 30; // Store last 30 positions
+        this.lastPositionUpdate = 0;
+        this.stuckTime = 0;
+        this.isStuck = false;
     }
     
     setupAnimationFrames() {
@@ -471,6 +480,51 @@ export class Enemy {
     }
 
     update(player) {
+        // Store current position in history
+        const positionUpdateTime = performance.now();
+        if (positionUpdateTime - this.lastPositionUpdate > 100) { // Update every 100ms
+            this.lastPositions.push({
+                x: this.mesh.position.x,
+                y: this.mesh.position.y
+            });
+            if (this.lastPositions.length > this.positionHistorySize) {
+                this.lastPositions.shift();
+            }
+            this.lastPositionUpdate = positionUpdateTime;
+        }
+        
+        // Check if enemy is stuck
+        if (this.lastPositions.length >= this.positionHistorySize) {
+            const oldestPos = this.lastPositions[0];
+            const currentPos = this.lastPositions[this.lastPositions.length - 1];
+            const distanceMoved = Math.sqrt(
+                Math.pow(currentPos.x - oldestPos.x, 2) + 
+                Math.pow(currentPos.y - oldestPos.y, 2)
+            );
+            
+            if (distanceMoved < 5) { // If moved less than 5 units in 3 seconds
+                this.stuckTime += 100;
+                if (this.stuckTime >= 3000) { // If stuck for 3 seconds
+                    this.isStuck = true;
+                    this.stuckTime = 0;
+                }
+            } else {
+                this.stuckTime = 0;
+                this.isStuck = false;
+            }
+        }
+        
+        // Handle getting unstuck
+        if (this.isStuck) {
+            // Randomly change direction
+            const angle = Math.random() * Math.PI * 2;
+            this.direction = {
+                x: Math.cos(angle),
+                y: Math.sin(angle)
+            };
+            this.isStuck = false;
+        }
+        
         // Make text always face camera at the start of each update
         if (this.healthText) {
             this.healthText.rotation.copy(this.mesh.rotation);

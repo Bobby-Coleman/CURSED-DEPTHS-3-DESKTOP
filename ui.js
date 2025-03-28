@@ -226,7 +226,7 @@ export class UI {
                             <h3 style="color: #${item.data.color.toString(16).padStart(6, '0')}; margin: 0 0 5px 0;">${item.data.name}</h3>
                             <p style="margin: 5px 0;">Blessing: ${item.data.blessing}</p>
                             ${item.data.curse ? `<p style="margin: 5px 0;">Curse: ${item.data.curse}</p>` : ''}
-                            <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} HP</p>
+                            <p style="color: #FFD700; margin: 5px 0;">Price: 2 HP</p>
                             <p style="color: #88FF88; margin: 5px 0;">Press E to ${item.price === 0 ? 'pick up' : 'buy'}</p>
                         </div>
                     `;
@@ -243,7 +243,7 @@ export class UI {
                         <h3>${item.data.name}</h3>
                         <p>Blessing: ${item.data.blessing}</p>
                         ${item.data.curse ? `<p>Curse: ${item.data.curse}</p>` : ''}
-                        <p style="color: #FFD700;">Cost: 4 HP</p>
+                        <p style="color: #FFD700;">Cost: 2 HP</p>
                         <p>Press E to pick up</p>
                     `;
                 }
