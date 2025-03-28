@@ -26,20 +26,18 @@ export class Level {
         // Get the effective combat level (ignoring shop levels)
         const combatLevel = Math.ceil(this.levelNumber / 2);
         
-        // Level 1: 20 blood
-        // Level 2: 40 blood (would be combat level 1)
-        // Level 3: 150 blood (would be combat level 2)
-        // Level 4+: 50% more blood than previous combat level
-        switch (combatLevel) {
-            case 1: return 20;
-            case 2: return 40;
-            case 3: return 150;
-            default:
-                // For level 4 and above, increase by 50% from previous level
-                const prevCombatLevel = combatLevel - 1;
-                const prevLevelBlood = this.calculateRequiredBloodForCombatLevel(prevCombatLevel);
-                return Math.ceil(prevLevelBlood * 1.5);
+        // Start with 10 blood on first combat level
+        // Then 50 blood on second combat level
+        // Then increase by 50% each combat level after
+        if (combatLevel === 1) return 10;
+        if (combatLevel === 2) return 50;
+        
+        // For combat level 3 and beyond, increase by 50% each time
+        let blood = 50;
+        for (let i = 2; i < combatLevel; i++) {
+            blood = Math.ceil(blood * 1.5);
         }
+        return blood;
     }
     
     // Helper method to calculate blood for any combat level (used for progression calculation)
@@ -554,13 +552,22 @@ export class Level {
                     gameState.blood -= this.bloodRequired;
                     return true;
                 } else {
-                    // Not enough blood, show message and kill player
-                    ui.showNotEnoughBloodMessage();
-                    // Delay player death by 1 second to let them see the message first
-                    setTimeout(() => {
-                        player.hp = 0; // Kill the player
-                    }, 1000);
-                    return false;
+                    // Check if there are any active blood drops
+                    const hasActiveBloodDrops = window.lootSystem && window.lootSystem.bloodDrops && window.lootSystem.bloodDrops.length > 0;
+                    
+                    if (!hasActiveBloodDrops) {
+                        // No blood drops left, show message and kill player
+                        ui.showNotEnoughBloodMessage();
+                        // Delay player death by 1 second to let them see the message first
+                        setTimeout(() => {
+                            player.hp = 0; // Kill the player
+                        }, 1000);
+                        return false;
+                    } else {
+                        // There are still blood drops to collect
+                        ui.showMessage("Collect the remaining blood drops!");
+                        return false;
+                    }
                 }
             } else if (gameState.blood >= this.bloodRequired) {
                 // If they have enough blood but enemies remain, just show a message

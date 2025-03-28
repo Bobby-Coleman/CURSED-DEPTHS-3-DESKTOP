@@ -78,10 +78,14 @@ window.sellRelic = function(index) {
     if (player && player.relics[index]) {
         // Check if relic can be sold
         if (relicSystem.canSellRelic(player, player.relics[index])) {
-            // Remove the relic and add gold
+            // Remove the relic and add HP
             if (relicSystem.sellRelic(player, index)) {
-                gameState.gold += 5;
+                player.hp = Math.min(player.maxHp, player.hp + 1);
                 ui.updateStats(player, gameState);
+                ui.showMessage("Relic sold for 1 HP!");
+                
+                // Reset hovered relic
+                gameState.hoveredRelicIndex = -1;
             }
         } else {
             // Show message if relic can't be sold yet
@@ -155,18 +159,6 @@ function init() {
         player.shadow.position.y = player.mesh.position.y + 12;
     }
     
-    // Add Executioner's Seal for testing
-    player.relics.push({
-        id: 'executionersSeal',
-        name: "Executioner's Seal",
-        blessing: 'x3 damage if Kill Streak > 20',
-        curse: 'Take x2 damage',
-        color: 0x000000
-    });
-    
-    // Set initial kill streak for testing
-    gameState.killStreak = 15;
-    
     // Make gameState globally accessible for relic effects
     window.gameState = gameState;
     
@@ -178,6 +170,11 @@ function init() {
         // Initialize UI after player is created if it doesn't exist
         ui = new UI();
         ui.updateRequiredBlood(currentLevel.bloodRequired);
+    }
+    
+    // Show tutorial before spawning enemies
+    if (!gameState.tutorialShown) {
+        showControlsTutorial();
     }
     
     // Always start with a combat level (level 1)
@@ -198,94 +195,77 @@ function spawnEnemies() {
         
         enemies.push(enemy1);
         enemies.push(enemy2);
+    } else if (gameState.level === 3) { // Second battle level
+        // Level 3 gets exactly 4 specific enemies
+        const enemySetup = [
+            { type: 1, name: 'shooter' },    // Type 1: Shooter
+            { type: 4, name: 'charger' },    // Type 4: Charger
+            { type: 2, name: 'fast' },       // Type 2: Fast Enemy
+            { type: 3, name: 'bomber' }      // Type 3: Bomber
+        ];
         
-        // Show controls tutorial message on first level
-        showControlsTutorial();
-    } else {
-        // Always create exactly 10 enemies for non-tutorial levels
-        
-        // Calculate hatch position (in lower right corner)
+        // Calculate hatch position
         const hatchX = ROOM_SIZE/2 - 80;
         const hatchY = -ROOM_SIZE/2 + 80;
         
-        // Calculate wall boundaries to keep enemies inside the playable area
-        const wallPadding = 60; // Match wall size to ensure enemies don't spawn in walls
-        const playableMinX = -ROOM_SIZE/2 + wallPadding;
-        const playableMaxX = ROOM_SIZE/2 - wallPadding;
-        const playableMinY = -ROOM_SIZE/2 + wallPadding;
-        const playableMaxY = ROOM_SIZE/2 - wallPadding;
-        
-        // Always add one nest enemy for variety
-        let nestX, nestY;
-        do {
-            // Higher chance of spawning on left side (70% chance of negative X)
-            const leftSideBias = Math.random() < 0.7 ? -1 : 1;
-            // Keep within playable area
-            nestX = playableMinX + Math.random() * (playableMaxX - playableMinX);
-            nestY = playableMinY + Math.random() * (playableMaxY - playableMinY);
-            
-            // Apply left side bias
-            if (leftSideBias < 0) {
-                nestX = Math.min(nestX, 0);
-            }
-            
-            // Calculate distance to hatch
-            const distanceToHatch = Math.sqrt(
-                Math.pow(nestX - hatchX, 2) + 
-                Math.pow(nestY - hatchY, 2)
-            );
-            
-            // Ensure nest doesn't spawn too close to player or hatch
-        } while (Math.sqrt(nestX * nestX + nestY * nestY) < 350 || 
-                Math.sqrt(Math.pow(nestX - hatchX, 2) + Math.pow(nestY - hatchY, 2)) < 325);
-        
-        const nestEnemy = new Enemy(scene, nestX, nestY, 5, gameState.level);
-        enemies.push(nestEnemy);
-        
-        // Create the remaining 9 enemies
-        for (let i = 0; i < 9; i++) {
-            // Spawn enemy at random position with bias toward left side
-            let enemyX, enemyY;
+        // Spawn each enemy at least 350 units from the hatch
+        enemySetup.forEach(setup => {
+            let x, y;
             do {
-                // Higher chance of spawning on left side (70% chance of negative X)
-                const leftSideBias = Math.random() < 0.7 ? -1 : 1;
-                // Keep within playable area
-                enemyX = playableMinX + Math.random() * (playableMaxX - playableMinX);
-                enemyY = playableMinY + Math.random() * (playableMaxY - playableMinY);
-                
-                // Apply left side bias
-                if (leftSideBias < 0) {
-                    enemyX = Math.min(enemyX, 0);
-                }
+                x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
                 
                 // Calculate distance to hatch
                 const distanceToHatch = Math.sqrt(
-                    Math.pow(enemyX - hatchX, 2) + 
-                    Math.pow(enemyY - hatchY, 2)
+                    Math.pow(x - hatchX, 2) + 
+                    Math.pow(y - hatchY, 2)
                 );
                 
-                // Ensure enemies don't spawn too close to player or hatch
-            } while (Math.sqrt(enemyX * enemyX + enemyY * enemyY) < 350 || 
-                    Math.sqrt(Math.pow(enemyX - hatchX, 2) + Math.pow(enemyY - hatchY, 2)) < 325);
+                // Keep trying until we find a position far enough from the hatch
+            } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350);
             
-            // Create enemy based on type
-            const enemyType = Math.floor(Math.random() * 5); // 0: basic, 1: shooter, 2: fast, 3: bomber, 4: charger
-            const enemy = new Enemy(scene, enemyX, enemyY, enemyType, gameState.level);
+            const enemy = new Enemy(scene, x, y, setup.type, gameState.level);
             enemies.push(enemy);
+        });
+    } else if (gameState.level === 5) { // Third battle level
+        // Spawn 7 random enemies
+        const numEnemies = 7;
+        spawnRandomEnemies(numEnemies);
+    } else { // Fourth battle level and beyond
+        // Spawn 10 random enemies (maximum)
+        const numEnemies = 10;
+        spawnRandomEnemies(numEnemies);
+    }
+}
+
+// Helper function to spawn random enemies
+function spawnRandomEnemies(count) {
+    // Calculate hatch position
+    const hatchX = ROOM_SIZE/2 - 80;
+    const hatchY = -ROOM_SIZE/2 + 80;
+    
+    for (let i = 0; i < count; i++) {
+        // Random position away from player spawn and hatch
+        let x, y;
+        do {
+            x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+            y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+        } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350);
+        
+        // Random enemy type based on level
+        let enemyType;
+        if (gameState.level <= 2) {
+            enemyType = 0; // Only basic enemies
+        } else if (gameState.level <= 4) {
+            enemyType = Math.random() < 0.7 ? 0 : 1; // 70% basic, 30% shooter
+        } else if (gameState.level <= 6) {
+            enemyType = Math.floor(Math.random() * 3); // Basic, shooter, or fast
+        } else {
+            enemyType = Math.floor(Math.random() * 4); // All types except nest
         }
         
-        // Set a random initial aggro delay for each enemy (between 1-3 seconds)
-        setTimeout(() => {
-            for (const enemy of enemies) {
-                // Random delay between 1000-3000ms
-                const randomDelay = 1000 + Math.random() * 2000;
-                setTimeout(() => {
-                    if (enemy && !enemy.isDead) {
-                        enemy.isAggro = true;
-                    }
-                }, randomDelay);
-            }
-        }, 100); // Small initial delay to ensure enemies are fully created
+        const enemy = new Enemy(scene, x, y, enemyType, gameState.level);
+        enemies.push(enemy);
     }
 }
 
@@ -293,8 +273,8 @@ function createShopLevel() {
     // Set shop level flag
     gameState.isShopLevel = true;
     
-    // Create shop
-    shop = new Shop(scene, relicSystem);
+    // Create shop with current level number
+    shop = new Shop(scene, gameState.level);
     
     // Activate portal immediately in the lower right corner (use default position)
     currentLevel.activatePortal();
@@ -320,7 +300,7 @@ function nextLevel() {
         }
     }
     
-    // Reset blood to zero when moving to a new level
+    // Reset blood to zero when moving to a new level (since blood boost triggers on room clear)
     gameState.blood = 0;
     
     // Increment level
@@ -348,7 +328,7 @@ function nextLevel() {
         }
         
         // Create shop
-        shop = new Shop(scene, relicSystem);
+        shop = new Shop(scene, gameState.level);
         
         // Activate portal immediately and position it next to the shop
         currentLevel.activatePortal(200, 0);
@@ -514,6 +494,14 @@ function animate() {
                         
                         // Increment kill streak
                         gameState.killStreak++;
+
+                        // If this was the last enemy and player has Blood Amplifier, add blood
+                        if (enemies.length === 0) {
+                            const bloodAmplifier = player.relics.find(r => r.id === 'bloodAmplifier');
+                            if (bloodAmplifier) {
+                                gameState.blood += 20;
+                            }
+                        }
                     }
                 }
                 
@@ -623,24 +611,9 @@ window.addEventListener('keydown', (e) => {
         const currentTime = Date.now();
         // Add 500ms cooldown between sells
         if (currentTime - gameState.lastRelicSellTime > 500) {
-            const relic = player.relics[gameState.hoveredRelicIndex];
-            
-            // Check if the relic has a selling restriction
-            if (relic.canSell === false) {
-                ui.showMessage("This relic cannot be sold due to its curse!");
-            } else {
-                // Remove the relic and add HP
-                player.relics.splice(gameState.hoveredRelicIndex, 1);
-                player.hp = Math.min(player.maxHp, player.hp + 5);
-                
-                // Update UI
-                ui.updateRelics(player.relics);
-                ui.showMessage("Relic sold for 5 HP!");
-                
-                // Reset hovered relic
-                gameState.hoveredRelicIndex = -1;
+            // Use the window.sellRelic function which properly handles onUnequip
+            window.sellRelic(gameState.hoveredRelicIndex);
                 gameState.lastRelicSellTime = currentTime;
-            }
         }
     }
 });
@@ -691,21 +664,21 @@ document.getElementById('restart-button').addEventListener('click', () => {
     restartGame();
 });
 
-// Function to restart game from level 2
+// Function to restart game from level 3 (second battle level)
 function restartGame() {
-    // Reset game state but start at level 2 (to skip tutorial but maintain level patterns)
+    // Reset game state but start at level 3 (to skip tutorial and first shop)
     gameState = {
-        level: 2, // Start at level 2 (an even number, but we'll set isShopLevel to false)
+        level: 3, // Start at level 3 (second battle level)
         killStreak: 0,
         gameOver: false,
-        isShopLevel: false, // Force this to be a combat level, not a shop
+        isShopLevel: false,
         currentPickup: null,
         hoveredRelicIndex: -1,
         lastRelicSellTime: 0,
-        tutorialShown: true, // Mark tutorial as already shown
+        tutorialShown: true,
         isPaused: false,
-        blood: 0, // Initialize blood counter
-        enemies: [] // Reference to enemies array
+        blood: 0,
+        enemies: []
     };
     
     // Clear previous game objects
@@ -751,7 +724,7 @@ function restartGame() {
         ui.updateRequiredBlood(currentLevel.bloodRequired);
     }
     
-    // Spawn enemies for the level (always combat level since we're forcing isShopLevel to false)
+    // Spawn enemies for level 3 (second battle level)
     spawnEnemies();
     
     // Show level message and update UI after everything is initialized
@@ -794,109 +767,155 @@ function showControlsTutorial() {
     const line2 = document.createElement('div');
     line2.style.marginBottom = '20px';
     line2.style.height = '30px';
+    line2.style.display = 'none'; // Initially hidden
     
     const line3 = document.createElement('div');
     line3.style.marginBottom = '20px';
     line3.style.height = '30px';
+    line3.style.display = 'none'; // Initially hidden
     
-    const line4 = document.createElement('div');
-    line4.style.marginBottom = '40px';
-    line4.style.height = '30px';
+    // Create next button 
+    const createNextButton = () => {
+        const nextButton = document.createElement('button');
+        nextButton.textContent = "NEXT";
+        nextButton.style.padding = '10px 20px';
+        nextButton.style.fontSize = '20px';
+        nextButton.style.backgroundColor = '#800000'; // Dark red
+        nextButton.style.color = 'white';
+        nextButton.style.border = '2px solid #ff0000';
+        nextButton.style.borderRadius = '5px';
+        nextButton.style.cursor = 'pointer';
+        nextButton.style.fontFamily = 'monospace, sans-serif';
+        nextButton.style.marginTop = '20px';
     
-    // Create Good Luck button
-    const goodLuckButton = document.createElement('button');
-    goodLuckButton.textContent = "GOOD LUCK";
-    goodLuckButton.style.padding = '10px 20px';
-    goodLuckButton.style.fontSize = '20px';
-    goodLuckButton.style.backgroundColor = '#800000'; // Dark red
-    goodLuckButton.style.color = 'white';
-    goodLuckButton.style.border = '2px solid #ff0000';
-    goodLuckButton.style.borderRadius = '5px';
-    goodLuckButton.style.cursor = 'pointer';
-    goodLuckButton.style.fontFamily = 'monospace, sans-serif';
-    goodLuckButton.style.marginTop = '20px';
+        // Button hover effect
+        nextButton.addEventListener('mouseover', () => {
+            nextButton.style.backgroundColor = '#ff0000';
+        });
+        nextButton.addEventListener('mouseout', () => {
+            nextButton.style.backgroundColor = '#800000';
+        });
+        
+        return nextButton;
+    };
     
-    // Button hover effect
-    goodLuckButton.addEventListener('mouseover', () => {
-        goodLuckButton.style.backgroundColor = '#ff0000';
+    // Create Start button
+    const startButton = document.createElement('button');
+    startButton.textContent = "START";
+    startButton.style.padding = '10px 20px';
+    startButton.style.fontSize = '20px';
+    startButton.style.backgroundColor = '#800000';
+    startButton.style.color = 'white';
+    startButton.style.border = '2px solid #ff0000';
+    startButton.style.borderRadius = '5px';
+    startButton.style.cursor = 'pointer';
+    startButton.style.fontFamily = 'monospace, sans-serif';
+    startButton.style.marginTop = '20px';
+    startButton.style.display = 'none';
+    
+    startButton.addEventListener('mouseover', () => {
+        startButton.style.backgroundColor = '#ff0000';
     });
-    goodLuckButton.addEventListener('mouseout', () => {
-        goodLuckButton.style.backgroundColor = '#800000';
+    startButton.addEventListener('mouseout', () => {
+        startButton.style.backgroundColor = '#800000';
     });
     
-    // Button click handler
-    goodLuckButton.addEventListener('click', () => {
-        // Fade out animation
+    // Start button click handler
+    startButton.addEventListener('click', () => {
         tutorialOverlay.style.transition = 'opacity 0.5s';
         tutorialOverlay.style.opacity = '0';
         setTimeout(() => {
             tutorialOverlay.remove();
-            // Resume the game after tutorial is removed
             gameState.isPaused = false;
         }, 500);
     });
     
+    // Next buttons for each line
+    const nextButton1 = createNextButton();
+    const nextButton2 = createNextButton();
+    
     // Add all elements to the overlay
     tutorialOverlay.appendChild(line1);
+    tutorialOverlay.appendChild(nextButton1);
     tutorialOverlay.appendChild(line2);
+    tutorialOverlay.appendChild(nextButton2);
     tutorialOverlay.appendChild(line3);
-    tutorialOverlay.appendChild(line4);
-    tutorialOverlay.appendChild(goodLuckButton);
+    tutorialOverlay.appendChild(startButton);
     
     document.body.appendChild(tutorialOverlay);
     
-    // Type out text animation
-    const text1 = "Controls: Use WASD to move";
-    const text2 = "Point and click to shoot in that direction";
-    const text3 = "Kill demons and collect enough blood before it disappears";
-    const text4 = "Bring the amount required for the sacrifice to the altar to progress";
+    // Define text for each line
+    const text1 = "Kill demons and collect their blood before it DISAPPEARS";
+    const text2 = "Gather the required amount of blood each level and bring it to the altar statue to progress";
+    const text3 = "Use WASD to move around. Point and click to shoot. Good luck, you'll need it";
     
-    let charIndex1 = 0;
-    let charIndex2 = 0;
-    let charIndex3 = 0;
-    let charIndex4 = 0;
+    // Initially hide all buttons
+    nextButton1.style.display = 'none';
+    nextButton2.style.display = 'none';
     
-    // Type first line
-    const typeFirstLine = setInterval(() => {
-        if (charIndex1 < text1.length) {
-            line1.textContent += text1.charAt(charIndex1);
-            charIndex1++;
-        } else {
-            clearInterval(typeFirstLine);
-            // Start typing second line after first is complete
-            const typeSecondLine = setInterval(() => {
-                if (charIndex2 < text2.length) {
-                    line2.textContent += text2.charAt(charIndex2);
-                    charIndex2++;
+    // Button click handlers
+    nextButton1.addEventListener('click', () => {
+        nextButton1.style.display = 'none';
+        line2.style.display = 'block';
+        typeOutText(line2, text2, () => {
+            nextButton2.style.display = 'block';
+        });
+    });
+    
+    nextButton2.addEventListener('click', () => {
+        nextButton2.style.display = 'none';
+        line3.style.display = 'block';
+        typeOutText(line3, text3, () => {
+            startButton.style.display = 'block';
+        });
+    });
+    
+    // Function to type out text with a blinking effect
+    function typeOutText(element, text, onComplete) {
+        let index = 0;
+        
+        // Create a span for the text
+        const textSpan = document.createElement('span');
+        element.appendChild(textSpan);
+        
+        // If this is line 1, handle the "DISAPPEARS" in red
+        if (text === text1) {
+            const interval = setInterval(() => {
+                if (index < text.length) {
+                    // Check if we're at "DISAPPEARS"
+                    if (index === text.indexOf("DISAPPEARS")) {
+                        // Add the red text
+                        const redText = document.createElement('span');
+                        redText.style.color = '#ff0000';
+                        redText.textContent = "DISAPPEARS";
+                        element.appendChild(redText);
+                        index += "DISAPPEARS".length;
+                    } else {
+                        textSpan.textContent += text.charAt(index);
+                        index++;
+                    }
                 } else {
-                    clearInterval(typeSecondLine);
-                    // Start typing third line after second is complete
-                    const typeThirdLine = setInterval(() => {
-                        if (charIndex3 < text3.length) {
-                            line3.textContent += text3.charAt(charIndex3);
-                            charIndex3++;
-                        } else {
-                            clearInterval(typeThirdLine);
-                            // Start typing fourth line after third is complete
-                            const typeFourthLine = setInterval(() => {
-                                if (charIndex4 < text4.length) {
-                                    line4.textContent += text4.charAt(charIndex4);
-                                    charIndex4++;
-                                } else {
-                                    clearInterval(typeFourthLine);
-                                    // Make button visible after all text is displayed
-                                    goodLuckButton.style.display = 'block';
-                                }
-                            }, 30);
-                        }
-                    }, 30);
+                    clearInterval(interval);
+                    if (onComplete) onComplete();
+                }
+            }, 30);
+        } else {
+            const interval = setInterval(() => {
+                if (index < text.length) {
+                    textSpan.textContent += text.charAt(index);
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    if (onComplete) onComplete();
                 }
             }, 30);
         }
-    }, 30);
+    }
     
-    // Initially hide the button until text is done typing
-    goodLuckButton.style.display = 'none';
+    // Start typing the first line
+    typeOutText(line1, text1, () => {
+        nextButton1.style.display = 'block';
+    });
     
     // Set flag that tutorial has been shown
     gameState.tutorialShown = true;

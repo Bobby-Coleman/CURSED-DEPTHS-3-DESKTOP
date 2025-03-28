@@ -116,6 +116,18 @@ export class RelicSystem {
                     // The blessing is applied in damage calculations
                     player.damageTakenMultiplier = (player.damageTakenMultiplier || 1) * 1.5;
                 }
+            },
+            {
+                id: 'bloodAmplifier',
+                name: 'Blood Amplifier',
+                blessing: '+20 Blood when clearing a room',
+                curse: 'None',
+                color: 0xAA0000,
+                onUnequip: (player) => {
+                    if (window.gameState) {
+                        window.gameState.blood = Math.max(0, window.gameState.blood - 20);
+                    }
+                }
             }
         ];
     }
@@ -175,6 +187,12 @@ export class RelicSystem {
                     break;
                 case 'ragingHeart':
                     player.baseDamage += 2;
+                    break;
+                case 'bloodAmplifier':
+                    // Only add blood if this was the last enemy
+                    if (gameState.enemies && gameState.enemies.length === 1) {
+                        gameState.blood += 20;
+                    }
                     break;
             }
         }
@@ -240,8 +258,8 @@ export class RelicSystem {
             return false;
         }
         
-        // Remove relic
-        player.relics.splice(relicIndex, 1);
+        // Remove relic using player's method which handles onUnequip
+        player.removeRelic(relicIndex);
         
         // Check for Mirror's Edge effect
         for (const r of player.relics) {

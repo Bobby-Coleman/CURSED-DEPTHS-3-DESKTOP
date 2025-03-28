@@ -12,7 +12,7 @@ export class Enemy {
         
         // Set enemy properties based on type
         if (type === 0) { // Basic monster
-            this.baseHp = 15;
+            this.baseHp = 3;
             this.speed = 2;
             this.attackDamage = 1;
             this.attackRange = 30;
@@ -52,7 +52,7 @@ export class Enemy {
             this.setupAnimationFrames();
             
         } else if (type === 1) { // Shooter
-            this.baseHp = 9;
+            this.baseHp = 5;
             this.speed = 1;
             this.attackDamage = 1;
             this.attackRange = 800; // Entire screen width
@@ -93,7 +93,7 @@ export class Enemy {
             this.setupAnimationFrames();
             
         } else if (type === 3) { // Bomber
-            this.baseHp = 12;
+            this.baseHp = 7;
             this.speed = 1.5;
             this.attackDamage = 1;
             this.explosionDamage = 3;
@@ -120,9 +120,9 @@ export class Enemy {
             scene.add(this.explosionMesh);
             
         } else if (type === 4) { // Charger
-            this.baseHp = 15;
+            this.baseHp = 7;
             this.speed = 2;
-            this.attackDamage = 2;
+            this.attackDamage = 3;
             this.attackRange = 30;
             this.chargeSpeed = 8;
             this.isCharging = false;
@@ -166,7 +166,7 @@ export class Enemy {
             this.setupAnimationFrames();
             
         } else if (type === 5) { // Nest
-            this.baseHp = 50;
+            this.baseHp = 12;
             this.speed = 0; // Doesn't move
             this.attackDamage = 0; // Doesn't attack directly
             this.attackRange = 0;
@@ -207,7 +207,7 @@ export class Enemy {
             texture.minFilter = THREE.NearestFilter;
             
         } else if (type === 6) { // Small nest enemy
-            this.baseHp = 5;
+            this.baseHp = 1;
             this.speed = 3;
             this.attackDamage = 1;
             this.attackRange = 30;
@@ -247,7 +247,7 @@ export class Enemy {
             this.setupAnimationFrames();
             
         } else { // Fast monster (type 2)
-            this.baseHp = 6;
+            this.baseHp = 4;
             this.speed = 4;
             this.attackDamage = 1;
             this.attackRange = 30;
@@ -631,15 +631,27 @@ export class Enemy {
                     this.shoot(player);
                 }
             } else if (this.type === 3) { // Bomber
-                // Remove rotation - use animation frames if sprite sheet exists
-                // this.mesh.rotation.z = Math.atan2(dy, dx);
-                
                 // Move to maintain distance if too close or too far
                 const optimalRange = 200;
                 if (distanceToPlayer < optimalRange - 50) {
-                    // Move away from player
-                    this.mesh.position.x -= (dx / distanceToPlayer) * this.speed;
-                    this.mesh.position.y -= (dy / distanceToPlayer) * this.speed;
+                    // Move away from player, but check wall collision first
+                    const newX = this.mesh.position.x - (dx / distanceToPlayer) * this.speed;
+                    const newY = this.mesh.position.y - (dy / distanceToPlayer) * this.speed;
+                    
+                    // Only move if not hitting walls
+                    const roomSize = 800;
+                    const boundaryPadding = 70;
+                    const halfWidth = this.mesh.geometry.parameters.width / 2;
+                    const halfHeight = this.mesh.geometry.parameters.height / 2;
+                    
+                    if (newX - halfWidth >= -roomSize/2 + boundaryPadding && 
+                        newX + halfWidth <= roomSize/2 - boundaryPadding) {
+                        this.mesh.position.x = newX;
+                    }
+                    if (newY - halfHeight >= -roomSize/2 + boundaryPadding && 
+                        newY + halfHeight <= roomSize/2 - boundaryPadding) {
+                        this.mesh.position.y = newY;
+                    }
                 } else if (distanceToPlayer > optimalRange + 50) {
                     // Move toward player
                     this.mesh.position.x += (dx / distanceToPlayer) * this.speed;

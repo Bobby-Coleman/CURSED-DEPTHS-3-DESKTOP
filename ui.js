@@ -42,7 +42,7 @@ export class UI {
         this.tooltip.style.whiteSpace = 'pre-line';
         document.body.appendChild(this.tooltip);
 
-        // Create weapon stats container if it doesn't exist
+        // Create weapon stats container
         const existingWeaponStats = document.getElementById('weapon-stats-container');
         if (!existingWeaponStats) {
             this.weaponStats = document.createElement('div');
@@ -60,11 +60,10 @@ export class UI {
                 <div style="border-bottom: 1px solid #666; margin-bottom: 5px; padding-bottom: 5px;">
                     <span style="color: #FFA500;">Current Weapon</span>
                 </div>
-                <div>Damage: <span id="current-weapon-damage">0</span></div>
-                <div>Fire Rate: <span id="current-weapon-fire-rate">0</span> bullets/sec</div>
-                <div>Range: <span id="current-weapon-range">200-800</span> units</div>
+                <div>Damage: <span id="current-weapon-damage">1</span></div>
+                <div>Fire Rate: <span id="current-weapon-fire-rate">3</span> bullets/sec</div>
+                <div>Range: <span id="current-weapon-range">200</span> units</div>
             `;
-            
             document.body.appendChild(this.weaponStats);
         } else {
             this.weaponStats = existingWeaponStats;
@@ -126,43 +125,51 @@ export class UI {
         
         document.body.appendChild(this.messageContainer);
 
-        // Create required blood indicator at the top center
-        this.requiredBlood = document.createElement('div');
-        this.requiredBlood.id = 'required-blood';
-        this.requiredBlood.style.position = 'absolute';
-        this.requiredBlood.style.top = '45px';
-        this.requiredBlood.style.left = '50%';
-        this.requiredBlood.style.transform = 'translateX(-50%)';
-        this.requiredBlood.style.fontSize = '24px';
-        this.requiredBlood.style.fontWeight = 'bold';
-        this.requiredBlood.style.color = '#FFFFFF';
-        this.requiredBlood.style.textShadow = '2px 2px 0 #AA0000';
-        this.requiredBlood.style.fontFamily = 'Arial, sans-serif';
-        this.requiredBlood.style.zIndex = '100';
-        this.requiredBlood.innerHTML = 'REQUIRED BLOOD: 0';
-        
-        document.body.appendChild(this.requiredBlood);
-        
-        // Create blood counter display - moved to center under required blood
+        // Create blood counter
         this.bloodCounter = document.createElement('div');
-        this.bloodCounter.id = 'blood-counter';
         this.bloodCounter.style.position = 'absolute';
-        this.bloodCounter.style.top = '75px';
+        this.bloodCounter.style.top = '120px';
         this.bloodCounter.style.left = '50%';
         this.bloodCounter.style.transform = 'translateX(-50%)';
-        this.bloodCounter.style.fontSize = '32px';
-        this.bloodCounter.style.fontWeight = 'bold';
         this.bloodCounter.style.color = '#FFFFFF';
-        this.bloodCounter.style.textShadow = '2px 2px 0 #AA0000';
+        this.bloodCounter.style.fontSize = '24px';
+        this.bloodCounter.style.fontWeight = 'bold';
+        this.bloodCounter.style.textShadow = '2px 2px 4px #FF0000';
         this.bloodCounter.style.fontFamily = 'Arial, sans-serif';
         this.bloodCounter.style.zIndex = '100';
         this.bloodCounter.innerHTML = 'BLOOD: 0';
-        
         document.body.appendChild(this.bloodCounter);
+        
+        // Create level indicator for battle levels
+        this.levelIndicator = document.createElement('div');
+        this.levelIndicator.style.position = 'absolute';
+        this.levelIndicator.style.top = '20px';
+        this.levelIndicator.style.right = '20px';
+        this.levelIndicator.style.color = '#FFFFFF';
+        this.levelIndicator.style.fontSize = '28px';
+        this.levelIndicator.style.fontWeight = 'bold';
+        this.levelIndicator.style.textShadow = '2px 2px 4px #000000';
+        this.levelIndicator.style.fontFamily = 'Arial, sans-serif';
+        this.levelIndicator.style.zIndex = '100';
+        this.levelIndicator.style.display = 'none'; // Hidden by default
+        document.body.appendChild(this.levelIndicator);
+        
+        // Create required blood display
+        this.requiredBloodDisplay = document.createElement('div');
+        this.requiredBloodDisplay.style.position = 'absolute';
+        this.requiredBloodDisplay.style.top = '80px'; // Move down slightly from top
+        this.requiredBloodDisplay.style.left = '50%';
+        this.requiredBloodDisplay.style.transform = 'translateX(-50%)';
+        this.requiredBloodDisplay.style.color = '#FFFFFF';
+        this.requiredBloodDisplay.style.fontSize = '24px';
+        this.requiredBloodDisplay.style.fontWeight = 'bold';
+        this.requiredBloodDisplay.style.textShadow = '2px 2px 4px #000000';
+        this.requiredBloodDisplay.style.fontFamily = 'Arial, sans-serif';
+        this.requiredBloodDisplay.style.zIndex = '100';
+        document.body.appendChild(this.requiredBloodDisplay);
     }
     
     showItemPopup(item, x, y) {
-        // Set popup content based on item type
         let content = '';
         
         switch (item.type) {
@@ -212,15 +219,15 @@ export class UI {
                 `;
                 break;
             case 'relic':
-                if (item.price) {
+                if (item.price !== undefined) {
                     // Shop relic
                     content = `
                         <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 5px;">
                             <h3 style="color: #${item.data.color.toString(16).padStart(6, '0')}; margin: 0 0 5px 0;">${item.data.name}</h3>
                             <p style="margin: 5px 0;">Blessing: ${item.data.blessing}</p>
                             ${item.data.curse ? `<p style="margin: 5px 0;">Curse: ${item.data.curse}</p>` : ''}
-                            <p style="color: #FF0000; margin: 5px 0;">Price: ${item.price} HP</p>
-                            <p style="color: #88FF88; margin: 5px 0;">Press E to buy</p>
+                            <p style="color: #FFD700; margin: 5px 0;">Price: ${item.price} HP</p>
+                            <p style="color: #88FF88; margin: 5px 0;">Press E to ${item.price === 0 ? 'pick up' : 'buy'}</p>
                         </div>
                     `;
                     this.popup.innerHTML = content;
@@ -253,7 +260,6 @@ export class UI {
                 break;
         }
         
-        // Default positioning for non-shop items
         this.popup.innerHTML = content;
         this.popup.style.left = `${x}px`;
         this.popup.style.top = `${y}px`;
@@ -292,7 +298,8 @@ export class UI {
         }, 2000);
     }
     
-    updateStats(player, gameState, enemies) {
+    updateStats(player, gameState) {
+        // Update basic stats
         document.getElementById('hp').textContent = player.hp;
         document.getElementById('max-hp').textContent = player.maxHp;
         document.getElementById('ammo').textContent = player.ammo;
@@ -301,23 +308,27 @@ export class UI {
         document.getElementById('kill-streak').textContent = gameState.killStreak;
         document.getElementById('relics').textContent = player.relics.length;
 
+        // Update weapon stats with calculated values
+        const calculatedDamage = player.calculateDamage();
+        document.getElementById('current-weapon-damage').textContent = calculatedDamage;
+        document.getElementById('current-weapon-fire-rate').textContent = player.fireRate;
+        document.getElementById('current-weapon-range').textContent = player.weaponRange;
+
+        // Update level indicator visibility and content
+        if (this.levelIndicator) {
+            if (!gameState.isShopLevel) {
+                this.levelIndicator.style.display = 'block';
+                const battleLevel = Math.ceil(gameState.level / 2);
+                this.levelIndicator.innerHTML = `BATTLE: ${battleLevel}`;
+            } else {
+                this.levelIndicator.style.display = 'none';
+            }
+        }
+        
         // Update blood counter
         if (this.bloodCounter) {
             this.bloodCounter.innerHTML = `BLOOD: ${gameState.blood || 0}`;
         }
-        
-        // Update weapon stats with calculated values
-        const calculatedDamage = player.calculateDamage();
-        document.getElementById('current-weapon-damage').textContent = calculatedDamage;
-        document.getElementById('current-weapon-fire-rate').textContent = `${player.fireRate}`;
-        
-        // Update range display with specific weapon range
-        document.getElementById('current-weapon-range').textContent = `${player.weaponRange}`;
-
-        // Force immediate update
-        document.getElementById('current-weapon-damage').style.display = 'none';
-        document.getElementById('current-weapon-damage').offsetHeight;
-        document.getElementById('current-weapon-damage').style.display = '';
 
         // Update relic slots
         for (let i = 0; i < 5; i++) {
@@ -361,11 +372,6 @@ export class UI {
                     this.tooltip.style.display = 'none';
                 };
             }
-        }
-
-        // Update remaining enemies if on a combat level
-        if (enemies && document.getElementById('enemies-remaining')) {
-            document.getElementById('enemies-remaining').textContent = enemies.length;
         }
     }
 
@@ -428,8 +434,8 @@ export class UI {
 
     // Update the required blood display
     updateRequiredBlood(amount) {
-        if (this.requiredBlood) {
-            this.requiredBlood.innerHTML = `REQUIRED BLOOD: ${amount}`;
+        if (this.requiredBloodDisplay) {
+            this.requiredBloodDisplay.innerHTML = `REQUIRED BLOOD: ${amount}`;
         }
     }
     

@@ -2,17 +2,23 @@ import * as THREE from 'three';
 
 export class Player {
     constructor(scene) {
-        // Player stats
-        this.hp = 20;
-        this.maxHp = 20;
+        this.scene = scene;
+        this.hp = 8;
+        this.maxHp = 8;
         this.ammo = 300;
         this.maxAmmo = 300;
-        this.speed = 5;
-        this.baseDamage = 3;  // Fixed starting damage
-        this.fireRate = 5;    // Fixed starting fire rate
-        this.weaponRange = 200;  // Fixed starting range
-        this.lastShotTime = 0;
+        this.isDead = false;
         this.relics = [];
+        this.canSellRelics = true; // Can sell relics by default
+        this.canHeal = true; // Can pick up hearts by default
+        this.baseDamage = 1; // Base weapon damage - can be affected by relics
+        this.damageMultiplier = 1; // Applied to damage calculations
+        this.damageTakenMultiplier = 1; // How much extra damage the player takes
+        this.fireRate = 3; // Bullets per second
+        this.lastFireTime = 0;
+        this.weaponRange = 200; // Default weapon range
+        this.healOnKill = 0; // Amount of health regained per kill
+        this.speed = 5; // Player movement speed
         
         // Invulnerability tracking
         this.isInvulnerable = false;
@@ -72,7 +78,6 @@ export class Player {
         this.bullets = [];
         this.bulletGeometry = new THREE.CircleGeometry(3, 8);
         this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
-        this.scene = scene;
     }
     
     // Create a shadow for the player
@@ -256,7 +261,7 @@ export class Player {
         const currentTime = performance.now();
         const shootingInterval = 1000 / this.fireRate;
         
-        if (currentTime - this.lastShotTime >= shootingInterval && this.ammo > 0) {
+        if (currentTime - this.lastFireTime >= shootingInterval && this.ammo > 0) {
             // Create new bullet
             const bullet = new THREE.Mesh(this.bulletGeometry, this.bulletMaterial);
             
@@ -282,7 +287,7 @@ export class Player {
             });
             
             // Update last shot time and ammo
-            this.lastShotTime = currentTime;
+            this.lastFireTime = currentTime;
             this.ammo--;
         }
     }
@@ -425,12 +430,30 @@ export class Player {
     }
     
     addRelic(relic) {
-        if (this.relics.length < 5) {
-            this.relics.push(relic);
-            // Apply relic effects (will be implemented)
-            return true;
+        // Add relic to player's collection
+        this.relics.push(relic);
+        
+        // Call onEquip if it exists
+        if (relic.onEquip) {
+            relic.onEquip(this);
         }
-        return false;
+        
+        // Apply any static effects
+        if (relic.apply) {
+            relic.apply(this);
+        }
+    }
+    
+    removeRelic(index) {
+        const relic = this.relics[index];
+        if (relic) {
+            // Call onUnequip if it exists
+            if (relic.onUnequip) {
+                relic.onUnequip(this);
+            }
+            // Remove the relic from the array
+            this.relics.splice(index, 1);
+        }
     }
 
     // Clean up player resources when needed
