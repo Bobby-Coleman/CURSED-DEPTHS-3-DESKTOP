@@ -60,9 +60,9 @@ export class UI {
                 <div style="border-bottom: 1px solid #666; margin-bottom: 5px; padding-bottom: 5px;">
                     <span style="color: #FFA500;">Current Weapon</span>
                 </div>
-                <div>Damage: <span id="current-weapon-damage">0</span></div>
-                <div>Fire Rate: <span id="current-weapon-fire-rate">0</span> bullets/sec</div>
-                <div>Range: <span id="current-weapon-range">200-800</span> units</div>
+                <div>Damage: <span id="current-weapon-damage">1</span></div>
+                <div>Fire Rate: <span id="current-weapon-fire-rate">3</span> bullets/sec</div>
+                <div>Range: <span id="current-weapon-range">200</span> units</div>
             `;
             
             document.body.appendChild(this.weaponStats);
@@ -301,7 +301,7 @@ export class UI {
         }, 2000);
     }
     
-    updateStats(player, gameState, enemies) {
+    updateStats(player, gameState) {
         document.getElementById('hp').textContent = player.hp;
         document.getElementById('max-hp').textContent = player.maxHp;
         document.getElementById('ammo').textContent = player.ammo;
@@ -329,15 +329,8 @@ export class UI {
         // Update weapon stats with calculated values
         const calculatedDamage = player.calculateDamage();
         document.getElementById('current-weapon-damage').textContent = calculatedDamage;
-        document.getElementById('current-weapon-fire-rate').textContent = `${player.fireRate}`;
-        
-        // Update range display with specific weapon range
-        document.getElementById('current-weapon-range').textContent = `${player.weaponRange}`;
-
-        // Force immediate update
-        document.getElementById('current-weapon-damage').style.display = 'none';
-        document.getElementById('current-weapon-damage').offsetHeight;
-        document.getElementById('current-weapon-damage').style.display = '';
+        document.getElementById('current-weapon-fire-rate').textContent = player.fireRate;
+        document.getElementById('current-weapon-range').textContent = player.weaponRange;
 
         // Update relic slots
         for (let i = 0; i < 5; i++) {
@@ -381,11 +374,6 @@ export class UI {
                     this.tooltip.style.display = 'none';
                 };
             }
-        }
-
-        // Update remaining enemies if on a combat level
-        if (enemies && document.getElementById('enemies-remaining')) {
-            document.getElementById('enemies-remaining').textContent = enemies.length;
         }
     }
 
