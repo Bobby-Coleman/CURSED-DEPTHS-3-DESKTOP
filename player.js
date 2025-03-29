@@ -21,7 +21,7 @@ export class Player {
         
         // Detect if on mobile and adjust speed accordingly
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        this.speed = isMobile ? 2.5 : 5; // Half speed (2.5) on mobile, normal speed (5) on desktop
+        this.speed = isMobile ? 1.25 : 2.5; // Half speed (1.25) on mobile, normal speed (2.5) on desktop
         
         // Invulnerability tracking
         this.isInvulnerable = false;

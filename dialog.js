@@ -227,8 +227,9 @@ export class Dialog {
         this.backgroundMusic.volume = 1.0; // Set to 100% volume
         // Remove dialog container
         document.body.removeChild(this.container);
-        // Start the game
+        // Start the game and show tutorial
         window.startGame();
+        window.showControlsTutorial();
     }
     
     show() {

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { drunkThoughts } from './drunk_thoughts.js';
 
 // Play background music at the start of the game
 const backgroundMusic = new Audio('assets/audio/background_music_enter.wav');
@@ -652,7 +653,7 @@ class DrivingGame {
     
     updatePlayerPosition() {
         // Update player's horizontal position based on input
-        const moveSpeed = 0.15; // Turn sensitivity removed - always use base value
+        const moveSpeed = 0.15;
         
         // Calculate road curve at player position
         const playerCurveAmount = this.roadCurve * 40;
@@ -675,7 +676,7 @@ class DrivingGame {
         this.playerCar.position.x += (targetX - this.playerCar.position.x) * 0.1;
         
         // Add rotation when turning for fluid driving effect
-        const maxRotation = 0.3; // Maximum rotation in radians (about 17 degrees)
+        const maxRotation = 0.3;
         
         if (this.moveLeft && !this.moveRight) {
             // Turning left - rotate on Y axis
@@ -693,16 +694,15 @@ class DrivingGame {
             this.playerCar.rotation.z = -0.1;
         } else {
             // Return to straight, but follow the road curve
-            const curveDirection = -Math.sign(this.roadCurve); // Negative to turn in the curve direction
+            const curveDirection = -Math.sign(this.roadCurve);
             const curveRotation = curveDirection * Math.abs(this.roadCurve) * 1.5;
             
             // Ease towards the curve rotation
             this.playerCar.rotation.y += (curveRotation - this.playerCar.rotation.y) * 0.1;
-            this.playerCar.rotation.z *= 0.9; // Return to upright
+            this.playerCar.rotation.z *= 0.9;
         }
         
-        // Update camera to follow the car, staying centered on the curved road
-        this.camera.position.x = this.playerCar.position.x;
+        // Remove camera following
         
         // Check if player hit guardrails
         this.checkGuardrailCollision();
@@ -1063,12 +1063,7 @@ class DrivingGame {
             light.intensity = 1 + flickerAmount;
         });
         
-        // Add slight camera shake for more immersion
-        const shakeAmount = 0.03;
-        if (this.settings.carSpeed > 0.8) {
-            this.camera.position.y = this.settings.cameraHeight + (Math.random() - 0.5) * shakeAmount;
-            this.camera.position.x = (Math.random() - 0.5) * shakeAmount;
-        }
+        // Remove camera shake
     }
     
     playCrashAnimation() {
@@ -1563,29 +1558,39 @@ class DrivingGame {
         // Check if on mobile
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
         // Reduced speed increase on mobile (5% instead of 10%)
-        const speedIncreaseAmount = isMobile ? 1.05 : 1.1;
+        const speedIncreaseAmount = isMobile ? 1.05 : 1.07; // Changed from 1.1 to 1.07 for desktop
         
-        // Apply speed effect - 85% chance to increase, 15% chance to decrease
-        if (Math.random() < 0.85) {
-            // Increase speed by 5% on mobile, 10% on desktop
+        // First 5 beers always increase speed
+        if (this.beersCollected <= 5) {
+            // Increase speed by 5% on mobile, 7% on desktop
             this.settings.carSpeed *= speedIncreaseAmount;
             console.log("Speed increased: " + this.settings.carSpeed.toFixed(2));
             
             // Add a visual cue for speed increase
             this.createSpeedVisualEffect(true);
         } else {
-            // Decrease speed by 10%
-            this.settings.carSpeed *= 0.9;
-            console.log("Speed decreased: " + this.settings.carSpeed.toFixed(2));
-            
-            // Add a visual cue for speed decrease
-            this.createSpeedVisualEffect(false);
+            // After 5 beers, apply random speed changes
+            if (Math.random() < 0.85) {
+                // Increase speed by 5% on mobile, 7% on desktop
+                this.settings.carSpeed *= speedIncreaseAmount;
+                console.log("Speed increased: " + this.settings.carSpeed.toFixed(2));
+                
+                // Add a visual cue for speed increase
+                this.createSpeedVisualEffect(true);
+            } else {
+                // Decrease speed by 10%
+                this.settings.carSpeed *= 0.9;
+                console.log("Speed decreased: " + this.settings.carSpeed.toFixed(2));
+                
+                // Add a visual cue for speed decrease
+                this.createSpeedVisualEffect(false);
+            }
         }
         
         // Limit the speed range to avoid extremes
-        // Min: 50% of base speed, Max: 250% of base speed
+        // Min: 50% of base speed, Max: 500% of base speed (doubled from 250%)
         const minSpeed = this.settings.baseCarSpeed * 0.5;
-        const maxSpeed = this.settings.baseCarSpeed * 2.5;
+        const maxSpeed = this.settings.baseCarSpeed * 5.0;
         this.settings.carSpeed = Math.max(minSpeed, Math.min(maxSpeed, this.settings.carSpeed));
         
         // Add only ONE fog patch per beer collected
@@ -1609,15 +1614,24 @@ class DrivingGame {
         indicator.style.fontWeight = 'bold';
         indicator.style.zIndex = '1002';
         
-        // Style based on speed change (no background, just text color)
-        if (isSpeedUp) {
-            indicator.textContent = 'SPEED UP!';
-            indicator.style.color = 'lime';
-            indicator.style.textShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+        // Show drunk thoughts in order at 5 beers
+        if (this.beersCollected >= 5) {
+            // Calculate which message to show based on beer count
+            const messageIndex = (this.beersCollected - 5) % drunkThoughts.length;
+            indicator.textContent = drunkThoughts[messageIndex];
+            indicator.style.color = 'purple';
+            indicator.style.textShadow = '0 0 10px rgba(128, 0, 128, 0.7)';
         } else {
-            indicator.textContent = 'SPEED DOWN!';
-            indicator.style.color = 'red';
-            indicator.style.textShadow = '0 0 10px rgba(255, 0, 0, 0.7)';
+            // Style based on speed change (no background, just text color)
+            if (isSpeedUp) {
+                indicator.textContent = 'SPEED UP!';
+                indicator.style.color = 'lime';
+                indicator.style.textShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+            } else {
+                indicator.textContent = 'SPEED DOWN!';
+                indicator.style.color = 'red';
+                indicator.style.textShadow = '0 0 10px rgba(255, 0, 0, 0.7)';
+            }
         }
         
         // Add to DOM
@@ -1626,7 +1640,7 @@ class DrivingGame {
         // Remove after a short delay
         setTimeout(() => {
             // Fade out
-            indicator.style.transition = 'opacity 0.5s ease-out';
+            indicator.style.transition = 'opacity 0.2s ease-out'; // Reduced from 0.5s
             indicator.style.opacity = '0';
             
             // Remove from DOM after fade
@@ -1634,12 +1648,21 @@ class DrivingGame {
                 if (indicator.parentNode) {
                     document.body.removeChild(indicator);
                 }
-            }, 500);
-        }, 1500);
+            }, 200); // Reduced from 500ms
+        }, 650); // Increased from 400ms to 650ms (added 0.25 seconds)
     }
     
     createFogPatch(beerCount = 1) {
-        // Create a DOM element for the fog patch
+        // Remove any existing fog patches
+        this.fogPatches.forEach(patch => {
+            clearTimeout(patch.timeoutId);
+            if (patch.element && patch.element.parentNode) {
+                patch.element.parentNode.removeChild(patch.element);
+            }
+        });
+        this.fogPatches = [];
+
+        // Create a single DOM element for the fog patch
         const fogPatch = document.createElement('div');
         
         // Fill the entire screen
@@ -1650,43 +1673,23 @@ class DrivingGame {
         fogPatch.style.height = '100%';
         fogPatch.style.borderRadius = '0';
         
-        // Simple semi-transparent white overlay with blurred edges
-        fogPatch.style.background = 'radial-gradient(circle, rgba(255, 255, 255, 0.25) 40%, rgba(255, 255, 255, 0.15) 70%, rgba(255, 255, 255, 0.1) 100%)';
+        // Apply stronger blur effect based on beer count
+        // Start more subtle (1px) and build up more gradually
+        const blurAmount = Math.min(beerCount * 2, 52); // Increased max blur by 30% to 52px
+        fogPatch.style.backdropFilter = `blur(${blurAmount}px)`;
         
-        // No box shadow, no backdrop filter, no borders
-        fogPatch.style.boxShadow = 'none';
-        fogPatch.style.border = 'none';
+        // Add a color tint that gets stronger with more beers
+        const tintOpacity = Math.min(beerCount * 0.15, 0.6); // Increased max opacity to 0.6
+        fogPatch.style.backgroundColor = `rgba(255, 255, 255, ${tintOpacity})`;
         
         fogPatch.style.zIndex = '1000';
-        fogPatch.style.pointerEvents = 'none'; // Don't interfere with controls
+        fogPatch.style.pointerEvents = 'none';
         
         // Add to DOM
         document.body.appendChild(fogPatch);
         
-        // Make effect last 6x as long (doubled from previous 3x)
-        const duration = (Math.max(2000 - (beerCount * 300), 1000) + (Math.random() * 500)) * 6;
-        
-        // Store reference in fogPatches array with timeout info
-        const timeoutId = setTimeout(() => {
-            // Fast fade out
-            fogPatch.style.transition = 'opacity 0.3s ease-out';
-            fogPatch.style.opacity = '0';
-            
-            // Quick removal
-            setTimeout(() => {
-                if (fogPatch.parentNode) {
-                    document.body.removeChild(fogPatch);
-                }
-                
-                // Remove from array
-                const index = this.fogPatches.findIndex(p => p.element === fogPatch);
-                if (index !== -1) {
-                    this.fogPatches.splice(index, 1);
-                }
-            }, 300);
-        }, duration);
-        
-        this.fogPatches.push({ element: fogPatch, timeoutId });
+        // Store reference in fogPatches array
+        this.fogPatches.push({ element: fogPatch, timeoutId: null });
     }
     
     createSpeedIndicator() {

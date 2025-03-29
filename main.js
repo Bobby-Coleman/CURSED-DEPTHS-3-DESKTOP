@@ -132,6 +132,9 @@ function startGame() {
 // Make startGame globally accessible
 window.startGame = startGame;
 
+// Make showControlsTutorial globally accessible
+window.showControlsTutorial = showControlsTutorial;
+
 function init() {
     // Reset game state
     gameState = {
@@ -192,11 +195,6 @@ function init() {
         // Initialize UI after player is created if it doesn't exist
         ui = new UI();
         ui.updateRequiredBlood(currentLevel.bloodRequired);
-    }
-    
-    // Show tutorial before spawning enemies
-    if (!gameState.tutorialShown) {
-        showControlsTutorial();
     }
     
     // Always start with a combat level (level 1)

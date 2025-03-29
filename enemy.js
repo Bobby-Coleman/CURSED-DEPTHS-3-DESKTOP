@@ -249,8 +249,8 @@ export class Enemy {
             this.setupAnimationFrames();
             
         } else { // Fast monster (type 2)
-            this.baseHp = 4;
-            this.speed = 4;
+            this.baseHp = 6;
+            this.speed = 2;
             this.attackDamage = 1;
             this.attackRange = 30;
             
@@ -876,7 +876,7 @@ export class Enemy {
                             mesh: new THREE.Mesh(this.bulletGeometry, this.bulletMaterial),
                             dx: 0,
                             dy: 0,
-                            speed: 5,
+                            speed: 2.5,
                             damage: this.attackDamage
                         };
                         
