@@ -234,9 +234,48 @@ function spawnEnemies() {
         enemies.push(enemy1);
         enemies.push(enemy2);
     } else if (gameState.level === 5) { // Third battle level (level 5 in gameState)
-        // Level 5 gets exactly 6 random enemies
-        const numEnemies = 6;
-        spawnRandomEnemies(numEnemies);
+        // Level 5 gets exactly 6 enemies with varied types
+        const enemyTypes = [0, 1, 2, 3, 4]; // All enemy types
+        const positions = [];
+        
+        // Calculate hatch position
+        const hatchX = ROOM_SIZE/2 - 80;
+        const hatchY = -ROOM_SIZE/2 + 80;
+        
+        // Spawn 6 enemies
+        for (let i = 0; i < 6; i++) {
+            let x, y;
+            do {
+                x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                
+                // Calculate distances
+                const distanceToHatch = Math.sqrt(
+                    Math.pow(x - hatchX, 2) + 
+                    Math.pow(y - hatchY, 2)
+                );
+                const distanceToStatue = Math.sqrt(x * x + y * y);
+                
+                // Check distance from other enemies
+                const tooCloseToOthers = positions.some(pos => {
+                    const dx = x - pos.x;
+                    const dy = y - pos.y;
+                    return Math.sqrt(dx * dx + dy * dy) < 100;
+                });
+                
+            } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350 || 
+                    Math.sqrt(x * x + y * y) < 150 || 
+                    positions.some(pos => Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)) < 100));
+            
+            // Store position to check against for next enemy
+            positions.push({ x, y });
+            
+            // Pick a random enemy type from the available types
+            const randomType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            
+            const enemy = new Enemy(scene, x, y, randomType, gameState.level);
+            enemies.push(enemy);
+        }
     } else if (gameState.level === 7) { // Fourth battle level
         // Spawn 8 random enemies
         const numEnemies = 8;

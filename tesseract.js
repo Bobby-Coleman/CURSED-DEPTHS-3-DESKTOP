@@ -6,17 +6,20 @@ export class Tesseract {
         this.group = new THREE.Group();
         
         // Create pentagram plane under tesseract
-        const pentagramTexture = new THREE.TextureLoader().load('pentagram.png');
-        const pentagramGeometry = new THREE.PlaneGeometry(80, 80);
+        const pentagramTexture = new THREE.TextureLoader().load('assets/sprites/pentagram.png');
+        const pentagramGeometry = new THREE.PlaneGeometry(100, 100); // Made slightly larger
         const pentagramMaterial = new THREE.MeshBasicMaterial({
             map: pentagramTexture,
             transparent: true,
-            opacity: 0.8,
-            side: THREE.DoubleSide
+            opacity: 0.6, // Slightly more transparent
+            side: THREE.DoubleSide,
+            depthWrite: false // Prevents z-fighting with floor
         });
         const pentagram = new THREE.Mesh(pentagramGeometry, pentagramMaterial);
         pentagram.rotation.x = -Math.PI / 2; // Lay flat on ground
-        pentagram.position.y = -5; // Slightly below tesseract
+        pentagram.position.y = -40; // Much lower position to avoid tesseract warping
+        pentagram.position.z = 0.1; // Slightly above the ground to prevent z-fighting
+        pentagram.position.x = -20; // Slightly offset from tesseract center
         this.group.add(pentagram);
         
         // Create inner cube (bigger size)
