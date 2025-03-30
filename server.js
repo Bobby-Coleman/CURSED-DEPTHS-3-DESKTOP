@@ -5,6 +5,9 @@ const port = 4040;
 // Serve static files from the root directory
 app.use(express.static('./'));
 
+// Serve the driving game files
+app.use('/driving-game', express.static('./driving-game'));
+
 // Redirect the root path to start.html
 app.get('/', (req, res) => {
   res.redirect('/driving-game/start.html');
