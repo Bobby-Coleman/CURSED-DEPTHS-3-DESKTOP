@@ -27,14 +27,17 @@ export class Level {
         const combatLevel = Math.ceil(this.levelNumber / 2);
         
         // Start with 10 blood on first combat level
-        // Then 50 blood on second combat level
-        // Then increase by 50% each combat level after
+        // Then 40 blood on second combat level
+        // Then 60 blood on third combat level
+        // Then 80 blood on fourth combat level
         if (combatLevel === 1) return 10;
-        if (combatLevel === 2) return 50;
+        if (combatLevel === 2) return 40;
+        if (combatLevel === 3) return 60;
+        if (combatLevel === 4) return 80;
         
-        // For combat level 3 and beyond, increase by 50% each time
-        let blood = 50;
-        for (let i = 2; i < combatLevel; i++) {
+        // For combat level 5 and beyond, increase by 50% each time
+        let blood = 80;
+        for (let i = 4; i < combatLevel; i++) {
             blood = Math.ceil(blood * 1.5);
         }
         return blood;
@@ -43,11 +46,12 @@ export class Level {
     // Helper method to calculate blood for any combat level (used for progression calculation)
     calculateRequiredBloodForCombatLevel(combatLevel) {
         switch (combatLevel) {
-            case 1: return 20;
+            case 1: return 10;
             case 2: return 40;
-            case 3: return 150;
+            case 3: return 60;
+            case 4: return 80;
             default:
-                // Recursively calculate from previous levels
+                // For level 5 and beyond, increase by 50% each time
                 const prevCombatLevel = combatLevel - 1;
                 const prevLevelBlood = this.calculateRequiredBloodForCombatLevel(prevCombatLevel);
                 return Math.ceil(prevLevelBlood * 1.5);
@@ -212,26 +216,8 @@ export class Level {
     }
     
     createObstacles() {
-        // Create random rocks/obstacles
-        const numObstacles = Math.floor(Math.random() * 6) + 4; // 4-9 obstacles
-        
-        const obstacleGeometry = new THREE.CircleGeometry(20, 6);
-        const obstacleMaterial = new THREE.MeshBasicMaterial({ color: 0x808080 }); // Gray
-        
-        for (let i = 0; i < numObstacles; i++) {
-            // Create obstacle
-            const obstacle = new THREE.Mesh(obstacleGeometry, obstacleMaterial);
-            
-            // Position randomly, but not in center where player spawns
-            let x, y;
-            do {
-                x = Math.random() * (this.roomSize - 100) - (this.roomSize / 2 - 50);
-                y = Math.random() * (this.roomSize - 100) - (this.roomSize / 2 - 50);
-            } while (Math.sqrt(x * x + y * y) < 100); // Keep away from center
-            
-            obstacle.position.set(x, y, 1);
-            this.scene.add(obstacle);
-        }
+        // Empty method - no obstacles will be created
+        return;
     }
     
     createTomb() {

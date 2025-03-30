@@ -16,7 +16,7 @@ export class Player {
         this.damageTakenMultiplier = 1; // How much extra damage the player takes
         this.fireRate = 3; // Bullets per second
         this.lastFireTime = 0;
-        this.weaponRange = 200; // Default weapon range
+        this.weaponRange = 285; // Initial weapon range set to 285 units
         this.healOnKill = 0; // Amount of health regained per kill
         
         // Detect if on mobile and adjust speed accordingly
@@ -115,7 +115,7 @@ export class Player {
     }
     
     generateRandomRange() {
-        return 200; // Fixed range of 200
+        return 285; // Fixed range of 285 units
     }
     
     setupAnimationFrames() {

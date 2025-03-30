@@ -7,6 +7,8 @@ import { LootSystem } from './loot.js';
 import { RelicSystem } from './relics.js';
 import { Shop } from './shop.js';
 import { Dialog } from './dialog.js';
+import { Tesseract } from './tesseract.js';
+import { PlayerDialogManager } from './playerDialog.js';
 
 // Game constants
 const ROOM_SIZE = 800;
@@ -45,6 +47,14 @@ window.game = game;
 // Initialize Three.js
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x228B22); // Jungle green background
+
+// Add lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(5, 5, 5);
+scene.add(directionalLight);
 
 // Create camera with slightly larger view to include walls
 const CAMERA_PADDING = 80; // Extra padding to view walls
@@ -123,6 +133,8 @@ let relicSystem;
 let shop;
 let dialog;
 let lastTime = 0; // For deltaTime calculation
+let tesseract;
+let playerDialog;
 
 function startGame() {
     init();
@@ -171,6 +183,12 @@ function init() {
     // Initialize player
     player = new Player(scene);
     
+    // Initialize player dialog
+    playerDialog = new PlayerDialogManager(scene, player, camera);
+    
+    // Create tesseract
+    tesseract = new Tesseract(scene);
+    
     // Store player in game object for mobile controls
     game.player = player;
     
@@ -215,6 +233,14 @@ function spawnEnemies() {
         
         enemies.push(enemy1);
         enemies.push(enemy2);
+    } else if (gameState.level === 5) { // Third battle level (level 5 in gameState)
+        // Level 5 gets exactly 6 random enemies
+        const numEnemies = 6;
+        spawnRandomEnemies(numEnemies);
+    } else if (gameState.level === 7) { // Fourth battle level
+        // Spawn 8 random enemies
+        const numEnemies = 8;
+        spawnRandomEnemies(numEnemies);
     } else if (gameState.level === 3) { // Second battle level
         // Level 3 gets exactly 4 specific enemies
         const enemySetup = [
@@ -247,11 +273,7 @@ function spawnEnemies() {
             const enemy = new Enemy(scene, x, y, setup.type, gameState.level);
             enemies.push(enemy);
         });
-    } else if (gameState.level === 5) { // Third battle level
-        // Spawn 7 random enemies
-        const numEnemies = 7;
-        spawnRandomEnemies(numEnemies);
-    } else { // Fourth battle level and beyond
+    } else { // Beyond fourth battle level
         // Spawn 10 random enemies (maximum)
         const numEnemies = 10;
         spawnRandomEnemies(numEnemies);
@@ -288,7 +310,10 @@ function spawnRandomEnemies(count) {
         if (gameState.level <= 2) {
             enemyType = 0; // Only basic enemies
         } else if (gameState.level <= 4) {
-            enemyType = Math.random() < 0.7 ? 0 : 1; // 70% basic, 30% shooter
+            enemyType = Math.floor(Math.random() * 2); // Basic or shooter (0 or 1)
+        } else if (gameState.level === 5) {
+            // For battle level 3 (level 5), use all enemy types 0-4
+            enemyType = Math.floor(Math.random() * 5); // Basic, shooter, fast, bomber, or charger
         } else if (gameState.level <= 6) {
             enemyType = Math.floor(Math.random() * 3); // Basic, shooter, or fast
         } else {
@@ -432,6 +457,16 @@ function animate() {
     if (!gameState.gameOver) {
         // Only update player and enemies if game is not paused
         if (!gameState.isPaused) {
+            // Update tesseract
+            if (tesseract) {
+                tesseract.update();
+            }
+            
+            // Update player dialog
+            if (playerDialog) {
+                playerDialog.update();
+            }
+            
             // Calculate delta time for animations
             const currentTime = performance.now();
             const deltaTime = currentTime - (lastTime || currentTime);
@@ -700,6 +735,20 @@ document.getElementById('restart-button').addEventListener('click', () => {
 
 // Function to restart game from level 3 (second battle level)
 function restartGame() {
+    // Clean up existing objects
+    if (player) {
+        player.cleanup();
+    }
+    if (playerDialog) {
+        playerDialog.cleanup();
+    }
+    if (currentLevel) {
+        currentLevel.cleanup();
+    }
+    if (lootSystem) {
+        lootSystem.cleanup();
+    }
+    
     // Reset game state but start at level 3 (to skip tutorial and first shop)
     gameState = {
         level: 3, // Start at level 3 (second battle level)
@@ -734,6 +783,9 @@ function restartGame() {
     
     // Initialize player
     player = new Player(scene);
+    
+    // Initialize player dialog with new player instance
+    playerDialog = new PlayerDialogManager(scene, player, camera);
     
     // Position player at the hatch in the lower right corner
     player.mesh.position.x = ROOM_SIZE/2 - 80;
@@ -783,7 +835,7 @@ function showControlsTutorial() {
     tutorialOverlay.style.left = '0';
     tutorialOverlay.style.width = '100%';
     tutorialOverlay.style.height = '100%';
-    tutorialOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+    tutorialOverlay.style.backgroundColor = 'rgba(0, 0, 0, 1)'; // Changed to fully opaque black
     tutorialOverlay.style.color = 'white';
     tutorialOverlay.style.fontFamily = 'monospace, sans-serif';
     tutorialOverlay.style.fontSize = '24px';
@@ -856,12 +908,12 @@ function showControlsTutorial() {
     
     // Start button click handler
     startButton.addEventListener('click', () => {
-        tutorialOverlay.style.transition = 'opacity 0.5s';
+        tutorialOverlay.style.transition = 'opacity 1s';
         tutorialOverlay.style.opacity = '0';
         setTimeout(() => {
             tutorialOverlay.remove();
             gameState.isPaused = false;
-        }, 500);
+        }, 1000);
     });
     
     // Next buttons for each line

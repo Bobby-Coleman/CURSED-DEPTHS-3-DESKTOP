@@ -166,11 +166,11 @@ export class Shop {
             });
         } else {
             // For other shops, generate random items as before
-            this.generateItems();
+            this.createRelics();
         }
     }
     
-    generateItems() {
+    createRelics() {
         // Create three relics in the center
         const positions = [-40, 0, 40]; // Closer together
         

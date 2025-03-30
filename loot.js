@@ -174,8 +174,24 @@ export class LootSystem {
         
         // Create mesh
         const geometry = new THREE.BoxGeometry(15, 15, 5);
-        const material = new THREE.MeshBasicMaterial({ color: relic.color });
+        const material = new THREE.MeshBasicMaterial({ 
+            color: relic.color,
+            emissive: 0xFFFFFF,
+            emissiveIntensity: 0.5
+        });
         const mesh = new THREE.Mesh(geometry, material);
+        
+        // Add glow effect
+        const glowGeometry = new THREE.BoxGeometry(17, 17, 6);
+        const glowMaterial = new THREE.MeshBasicMaterial({
+            color: 0xFFFFFF,
+            transparent: true,
+            opacity: 0.3,
+            side: THREE.DoubleSide
+        });
+        const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+        mesh.add(glowMesh);
+        
         mesh.position.set(x, y, 1);
         this.scene.add(mesh);
         
