@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Highway to Hell - Start</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: black;
+            overflow: hidden;
+        }
+        /* Force landscape on mobile */
+        @media screen and (orientation: portrait) {
+            body {
+                transform: rotate(-90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                position: absolute;
+                top: 100%;
+                left: 0;
+            }
+        }
+        
+        .background {
+            width: 100%;
+            height: 100vh;
+            background-image: url('assets/sprites/driving_start_menu.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .start-button {
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio element that will be played -->
+    <audio id="backgroundMusic" src="assets/audio/background_music_enter.wav" loop></audio>
+    
+    <div class="background">
+        <button class="start-button" onclick="startDriving()">START DRIVING</button>
+    </div>
+    
+    <!-- Test button for quick access to main game -->
+    <button class="test-button" onclick="skipToMainGame()">TEST - Skip to Main Game</button>
+    
+    <script>
+        function startDriving() {
+            // Navigate to the driving game with a parameter to start music
+            window.location.href = 'driving.html?playMusic=true';
+        }
+        
+        function skipToMainGame() {
+            // Flag that we're coming from the driving game (so the redirect logic won't loop)
+            sessionStorage.setItem('fromDrivingGame', 'true');
+            // Set shop level flag for testing
+            sessionStorage.setItem('isShopLevel', 'true');
+            
+            // Get full repository path for GitHub Pages
+            const fullPath = window.location.pathname;
+            const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
+            let basePath = '';
+            
+            // Check if we're on GitHub Pages or local
+            if (window.location.hostname.includes('github.io')) {
+                // We're on GitHub Pages
+                basePath = '/' + repoName;
+            } else if (fullPath.includes('/driving-game/')) {
+                // We're on localhost
+                basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
+            }
+            
+            // Navigate to main game
+            window.location.href = basePath + '/index.html';
+        }
+    </script>
+</body>
+</html> 

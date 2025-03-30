@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cursed Depths - Driving</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: none;
+        }
+        #instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        /* Hide instructions on mobile */
+        @media (max-width: 768px) {
+            #instructions {
+                display: none;
+            }
+        }
+        .key {
+            display: inline-block;
+            background-color: #444;
+            border: 1px solid #666;
+            border-radius: 3px;
+            padding: 2px 8px;
+            margin: 0 2px;
+        }
+        /* Mobile controls */
+        #mobileControls {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        .mobileBtn {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            pointer-events: auto;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="instructions">
+        <p>Use <span class="key">A</span><span class="key">D</span> or <span class="key">Arrow Keys</span> to drive</p>
+        <p><span class="key">A</span>/<span class="key">←</span> and <span class="key">D</span>/<span class="key">→</span>: Move left/right</p>
+        <p>Avoid other cars on the road! Crash to enter Hell...</p>
+    </div>
+    
+    <!-- Mobile Controls -->
+    <div id="mobileControls">
+        <div class="mobileBtn" id="leftBtn">←</div>
+        <div class="mobileBtn" id="rightBtn">→</div>
+    </div>
+
+    <!-- Audio element -->
+    <audio id="bgMusic" src="assets/audio/background_music_enter.wav" loop></audio>
+    
+    <!-- Three.js Library -->
+    <script async src="https://unpkg.com/es-module-shims/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.132.2/build/three.module.js"
+        }
+    }
+    </script>
+    
+    <!-- Super simple music script -->
+    <script>
+        // Prevent default touch behaviors
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.classList.contains('mobileBtn')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // This gets executed right when the page loads
+        var audio = document.getElementById('bgMusic');
+        
+        // Check if we should play music based on URL parameter
+        if (window.location.href.includes('playMusic=true')) {
+            audio.play();
+        }
+        
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Error caught:', e.message, 'at', e.filename, ':', e.lineno);
+            alert('Game error: ' + e.message);
+        });
+        
+        // Backup plan: also try to play on first interaction
+        function tryPlayAudio() {
+            audio.play().catch(function(error) {
+                console.log("Audio play failed:", error);
+            });
+        }
+        
+        document.addEventListener('keydown', tryPlayAudio, {once: true});
+        document.addEventListener('touchstart', tryPlayAudio, {once: true});
+    </script>
+    
+    <!-- Game Script -->
+    <script src="js/driving.js" type="module"></script>
+</body>
+</html> 
