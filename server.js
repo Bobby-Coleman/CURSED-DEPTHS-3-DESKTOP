@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 8080;
+const port = 5050;
 
 // Serve static files from the root directory
 app.use(express.static('./'));

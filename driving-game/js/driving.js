@@ -17,8 +17,8 @@ class DrivingGame {
         this.settings = {
             roadWidth: 20, // Increased from 15 to accommodate 4 lanes
             roadLength: 300,
-            carSpeed: 0.8 * mobileSpeedMultiplier, // Apply mobile speed reduction
-            baseCarSpeed: 0.8 * mobileSpeedMultiplier, // Also reduced base speed to match
+            carSpeed: 1.2 * mobileSpeedMultiplier, // Increased from 1.0 to 1.2
+            baseCarSpeed: 1.2 * mobileSpeedMultiplier, // Also increased base speed to match
             obstacleSpeed: 0.4 * mobileSpeedMultiplier, // Also reduce obstacle speed
             cameraHeight: 7,
             cameraDistance: 12,
@@ -68,6 +68,18 @@ class DrivingGame {
         
         // Load beer texture
         this.beerTexture = new THREE.TextureLoader().load('assets/sprites/beer.png');
+        
+        // Add trippy effect overlay
+        this.trippyOverlay = document.createElement('div');
+        this.trippyOverlay.style.position = 'fixed';
+        this.trippyOverlay.style.top = '0';
+        this.trippyOverlay.style.left = '0';
+        this.trippyOverlay.style.width = '100%';
+        this.trippyOverlay.style.height = '100%';
+        this.trippyOverlay.style.pointerEvents = 'none';
+        this.trippyOverlay.style.zIndex = '1000';
+        this.trippyOverlay.style.transition = 'opacity 0.3s ease-in-out';
+        document.body.appendChild(this.trippyOverlay);
         
         // Start the animation loop
         this.animate();
@@ -1063,7 +1075,39 @@ class DrivingGame {
             light.intensity = 1 + flickerAmount;
         });
         
-        // Remove camera shake
+        // Update trippy effect
+        if (this.beersCollected > 0) {
+            const maxOpacity = 0.75;
+            // Start with much lower opacity (0.05) and build up more gradually
+            const baseOpacity = 0.05;
+            const additionalOpacity = (this.beersCollected / 5) * (maxOpacity - baseOpacity);
+            const opacity = Math.min(maxOpacity, baseOpacity + additionalOpacity);
+            
+            // Create rainbow gradient
+            const hue = (this.time * 50) % 360;
+            const gradient = `linear-gradient(45deg, 
+                hsl(${hue}, 100%, 50%), 
+                hsl(${(hue + 120) % 360}, 100%, 50%), 
+                hsl(${(hue + 240) % 360}, 100%, 50%))`;
+            
+            // Start with much weaker blur (1px) and build up more gradually
+            const baseBlur = 1;
+            const additionalBlur = (this.beersCollected / 5) * (12 - baseBlur);
+            const blurAmount = Math.min(12, baseBlur + additionalBlur);
+            
+            this.trippyOverlay.style.background = gradient;
+            this.trippyOverlay.style.opacity = opacity;
+            this.trippyOverlay.style.mixBlendMode = 'normal';
+            this.trippyOverlay.style.backdropFilter = `blur(${blurAmount}px)`;
+            this.trippyOverlay.style.transition = 'opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out';
+            
+            // Add a semi-transparent white background to increase opacity
+            this.trippyOverlay.style.backgroundColor = `rgba(255, 255, 255, ${opacity * 0.2})`;
+        } else {
+            this.trippyOverlay.style.opacity = '0';
+            this.trippyOverlay.style.backdropFilter = 'blur(0px)';
+            this.trippyOverlay.style.backgroundColor = 'transparent';
+        }
     }
     
     playCrashAnimation() {
@@ -1594,7 +1638,7 @@ class DrivingGame {
         this.settings.carSpeed = Math.max(minSpeed, Math.min(maxSpeed, this.settings.carSpeed));
         
         // Add only ONE fog patch per beer collected
-        this.createFogPatch(this.beersCollected);
+        // this.createFogPatch(this.beersCollected); // Commented out the blur effect
     }
     
     createSpeedVisualEffect(isSpeedUp) {
