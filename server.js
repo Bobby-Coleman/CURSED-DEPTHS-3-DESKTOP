@@ -5,6 +5,11 @@ const port = 5050;
 // Serve static files from the root directory
 app.use(express.static('./'));
 
+// Redirect the root path to start.html
+app.get('/', (req, res) => {
+  res.redirect('/driving-game/start.html');
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Game server running at http://localhost:${port}`);

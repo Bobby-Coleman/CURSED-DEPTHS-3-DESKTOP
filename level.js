@@ -29,18 +29,11 @@ export class Level {
         // Start with 10 blood on first combat level
         // Then 40 blood on second combat level
         // Then 60 blood on third combat level
-        // Then 80 blood on fourth combat level
+        // Then 100 blood on fourth combat level and beyond
         if (combatLevel === 1) return 10;
         if (combatLevel === 2) return 40;
         if (combatLevel === 3) return 60;
-        if (combatLevel === 4) return 80;
-        
-        // For combat level 5 and beyond, increase by 50% each time
-        let blood = 80;
-        for (let i = 4; i < combatLevel; i++) {
-            blood = Math.ceil(blood * 1.5);
-        }
-        return blood;
+        return 100; // Level 4 and beyond requires 100 blood
     }
     
     // Helper method to calculate blood for any combat level (used for progression calculation)
@@ -49,12 +42,8 @@ export class Level {
             case 1: return 10;
             case 2: return 40;
             case 3: return 60;
-            case 4: return 80;
             default:
-                // For level 5 and beyond, increase by 50% each time
-                const prevCombatLevel = combatLevel - 1;
-                const prevLevelBlood = this.calculateRequiredBloodForCombatLevel(prevCombatLevel);
-                return Math.ceil(prevLevelBlood * 1.5);
+                return 100; // Level 4 and beyond requires 100 blood
         }
     }
     
@@ -75,6 +64,20 @@ export class Level {
         this.floor = new THREE.Mesh(floorGeometry, floorMaterial);
         this.floor.position.z = 0;
         this.scene.add(this.floor);
+        
+        // Add pentagram in bottom left
+        const pentagramGeometry = new THREE.PlaneGeometry(100, 100);
+        const pentagramMaterial = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('assets/sprites/pentagram.png'),
+            transparent: true,
+            opacity: 0.7
+        });
+        const pentagram = new THREE.Mesh(pentagramGeometry, pentagramMaterial);
+        pentagram.position.set(-this.roomSize/2 + 100, -this.roomSize/2 + 100, 0.1);
+        this.scene.add(pentagram);
+        
+        // Store pentagram for collision detection
+        this.pentagram = pentagram;
         
         // Create closed hatch in the lower right corner
         const hatchGeometry = new THREE.PlaneGeometry(80, 80);
@@ -570,6 +573,18 @@ export class Level {
         const dy = player.mesh.position.y;
         // Tomb is at (0,0) - check if player is within 50 units
         return Math.sqrt(dx * dx + dy * dy) < 70;
+    }
+    
+    // Check if player is touching the pentagram portal
+    checkPentagramPortal(player) {
+        if (!this.pentagram) return false;
+        
+        // Check if player is touching pentagram
+        const dx = player.mesh.position.x - this.pentagram.position.x;
+        const dy = player.mesh.position.y - this.pentagram.position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        return distance < 40; // Pentagram collision radius
     }
     
     cleanup() {

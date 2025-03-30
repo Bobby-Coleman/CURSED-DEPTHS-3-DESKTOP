@@ -277,9 +277,48 @@ function spawnEnemies() {
             enemies.push(enemy);
         }
     } else if (gameState.level === 7) { // Fourth battle level
-        // Spawn 8 random enemies
-        const numEnemies = 8;
-        spawnRandomEnemies(numEnemies);
+        // Spawn 10 enemies with all types
+        const enemyTypes = [0, 1, 2, 3, 4]; // All enemy types available
+        const positions = [];
+        
+        // Calculate hatch position
+        const hatchX = ROOM_SIZE/2 - 80;
+        const hatchY = -ROOM_SIZE/2 + 80;
+        
+        // Spawn all 10 enemies
+        for (let i = 0; i < 10; i++) {
+            let x, y;
+            do {
+                x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                
+                // Calculate distances
+                const distanceToHatch = Math.sqrt(
+                    Math.pow(x - hatchX, 2) + 
+                    Math.pow(y - hatchY, 2)
+                );
+                const distanceToStatue = Math.sqrt(x * x + y * y);
+                
+                // Check distance from other enemies
+                const tooCloseToOthers = positions.some(pos => {
+                    const dx = x - pos.x;
+                    const dy = y - pos.y;
+                    return Math.sqrt(dx * dx + dy * dy) < 100;
+                });
+                
+            } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350 || 
+                    Math.sqrt(x * x + y * y) < 150 || 
+                    positions.some(pos => Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)) < 100));
+            
+            // Store position to check against for next enemy
+            positions.push({ x, y });
+            
+            // Pick a random enemy type from all available types
+            const randomType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            
+            const enemy = new Enemy(scene, x, y, randomType, gameState.level);
+            enemies.push(enemy);
+        }
     } else if (gameState.level === 3) { // Second battle level
         // Level 3 gets exactly 4 specific enemies
         const enemySetup = [
@@ -313,54 +352,48 @@ function spawnEnemies() {
             enemies.push(enemy);
         });
     } else { // Beyond fourth battle level
-        // Spawn 10 random enemies (maximum)
-        const numEnemies = 10;
-        spawnRandomEnemies(numEnemies);
-    }
-}
-
-// Helper function to spawn random enemies
-function spawnRandomEnemies(count) {
-    // Calculate hatch position
-    const hatchX = ROOM_SIZE/2 - 80;
-    const hatchY = -ROOM_SIZE/2 + 80;
-    
-    for (let i = 0; i < count; i++) {
-        // Random position away from player spawn, hatch, and statue
-        let x, y;
-        do {
-            x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-            y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
-            
-            // Calculate distance to hatch
-            const distanceToHatch = Math.sqrt(
-                Math.pow(x - hatchX, 2) + 
-                Math.pow(y - hatchY, 2)
-            );
-            
-            // Calculate distance to statue (center of room)
-            const distanceToStatue = Math.sqrt(x * x + y * y);
-            
-            // Keep trying until we find a position far enough from both hatch and statue
-        } while (distanceToHatch < 350 || distanceToStatue < 150);
+        // Also spawn 10 enemies with all types
+        const enemyTypes = [0, 1, 2, 3, 4]; // All enemy types available
+        const positions = [];
         
-        // Random enemy type based on level
-        let enemyType;
-        if (gameState.level <= 2) {
-            enemyType = 0; // Only basic enemies
-        } else if (gameState.level <= 4) {
-            enemyType = Math.floor(Math.random() * 2); // Basic or shooter (0 or 1)
-        } else if (gameState.level === 5) {
-            // For battle level 3 (level 5), use all enemy types 0-4
-            enemyType = Math.floor(Math.random() * 5); // Basic, shooter, fast, bomber, or charger
-        } else if (gameState.level <= 6) {
-            enemyType = Math.floor(Math.random() * 3); // Basic, shooter, or fast
-        } else {
-            enemyType = Math.floor(Math.random() * 4); // All types except nest
+        // Calculate hatch position
+        const hatchX = ROOM_SIZE/2 - 80;
+        const hatchY = -ROOM_SIZE/2 + 80;
+        
+        // Spawn all 10 enemies
+        for (let i = 0; i < 10; i++) {
+            let x, y;
+            do {
+                x = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                y = Math.random() * (ROOM_SIZE - 100) - (ROOM_SIZE / 2 - 50);
+                
+                // Calculate distances
+                const distanceToHatch = Math.sqrt(
+                    Math.pow(x - hatchX, 2) + 
+                    Math.pow(y - hatchY, 2)
+                );
+                const distanceToStatue = Math.sqrt(x * x + y * y);
+                
+                // Check distance from other enemies
+                const tooCloseToOthers = positions.some(pos => {
+                    const dx = x - pos.x;
+                    const dy = y - pos.y;
+                    return Math.sqrt(dx * dx + dy * dy) < 100;
+                });
+                
+            } while (Math.sqrt(Math.pow(x - hatchX, 2) + Math.pow(y - hatchY, 2)) < 350 || 
+                    Math.sqrt(x * x + y * y) < 150 || 
+                    positions.some(pos => Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2)) < 100));
+            
+            // Store position to check against for next enemy
+            positions.push({ x, y });
+            
+            // Pick a random enemy type from all available types
+            const randomType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            
+            const enemy = new Enemy(scene, x, y, randomType, gameState.level);
+            enemies.push(enemy);
         }
-        
-        const enemy = new Enemy(scene, x, y, enemyType, gameState.level);
-        enemies.push(enemy);
     }
 }
 
@@ -544,6 +577,12 @@ function animate() {
                     player.mesh.position.y = prevPlayerPosY;
                     if (player.shadow) player.shadow.position.y = prevPlayerPosY + 12;
                 }
+            }
+            
+            // Check for pentagram portal collision
+            if (currentLevel.checkPentagramPortal && currentLevel.checkPentagramPortal(player)) {
+                // Transition to platformer game
+                window.location.href = 'platformer-game/index.html';
             }
             
             if (!gameState.isShopLevel) {
