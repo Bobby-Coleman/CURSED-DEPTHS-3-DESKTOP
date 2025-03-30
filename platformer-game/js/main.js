@@ -67,29 +67,89 @@ const player = {
 // Background layers for parallax effect
 const backgrounds = [];
 let currentBackgroundIndex = 0;
+let hasMoreBackgrounds = true;
 
-// Load all background images
+// Add memory text system
+const memoryTexts = [
+    "The first time I saw the darkness, it was just a shadow in the corner of my eye.",
+    "The whispers started as gentle murmurs, growing louder with each step.",
+    "The ground beneath my feet felt different here, like walking on memories.",
+    "The air was thick with the scent of old books and forgotten dreams.",
+    "The walls seemed to breathe, pulsing with an ancient rhythm."
+];
+
+let currentMemoryText = "";
+let isTyping = false;
+let typeIndex = 0;
+let typeSpeed = 30;
+let currentMemoryIndex = 0;
+let backgroundWidths = []; // Store the scaled widths of all backgrounds
+
+// Calculate and store background widths when they load
+function calculateBackgroundWidths() {
+    backgroundWidths = [];
+    let totalWidth = 0;
+    
+    for (let i = 0; i < backgrounds.length; i++) {
+        const img = backgrounds[i];
+        if (!img.complete || img.naturalWidth === 0) continue;
+        
+        const scale = canvas.height / img.height;
+        const scaledWidth = img.width * scale;
+        backgroundWidths.push({
+            width: scaledWidth,
+            startX: totalWidth,
+            endX: totalWidth + scaledWidth
+        });
+        totalWidth += scaledWidth;
+    }
+}
+
+// Update loadBackgrounds to calculate widths when images load
 function loadBackgrounds() {
-    const backgroundSources = [
+    // Clear backgrounds array
+    backgrounds.length = 0;
+    
+    // Start with the first two backgrounds
+    const initialBackgrounds = [
         'assets/images/background_1.PNG',
         'assets/images/background_2.png'
     ];
     
-    // Clear backgrounds array
-    backgrounds.length = 0;
-    
-    // Load each background
-    backgroundSources.forEach((src, index) => {
+    // Load initial backgrounds
+    initialBackgrounds.forEach((src, index) => {
         const img = new Image();
         img.src = src;
         img.onload = function() {
             console.log(`Background ${index + 1} loaded successfully`);
+            calculateBackgroundWidths();
         };
         img.onerror = function() {
             console.log(`Background ${index + 1} failed to load`);
         };
         backgrounds.push(img);
     });
+    
+    // Try to load additional backgrounds
+    let nextIndex = 3;
+    function tryLoadNextBackground() {
+        const img = new Image();
+        img.src = `assets/images/background_${nextIndex}.png`;
+        img.onload = function() {
+            console.log(`Background ${nextIndex} loaded successfully`);
+            backgrounds.push(img);
+            calculateBackgroundWidths();
+            nextIndex++;
+            tryLoadNextBackground();
+        };
+        img.onerror = function() {
+            console.log(`No more backgrounds found after ${nextIndex - 1}`);
+            hasMoreBackgrounds = false;
+            showExitDoor();
+        };
+    }
+    
+    tryLoadNextBackground();
 }
 
 // Track player input
@@ -571,41 +631,99 @@ function drawLeftWall() {
     ctx.restore();
 }
 
+function checkMemoryTrigger() {
+    // Find which background we're currently in based on player position
+    for (let i = 0; i < backgroundWidths.length; i++) {
+        const bg = backgroundWidths[i];
+        
+        // Calculate the player's position relative to this background
+        const playerRelativeX = player.distanceTraveled - bg.startX;
+        const screenBuffer = canvas.width / 2; // Half screen width buffer
+        
+        // Trigger when player overlaps with the left edge of the background, plus screen buffer
+        if (playerRelativeX >= -screenBuffer && 
+            playerRelativeX < -screenBuffer + 5 && // Small window to trigger
+            i < memoryTexts.length && 
+            !isTyping && 
+            currentMemoryIndex !== i) {
+            
+            currentMemoryIndex = i;
+            startTypingMemory();
+            break;
+        }
+    }
+}
+
+function startTypingMemory() {
+    currentMemoryText = "";
+    isTyping = true;
+    typeIndex = 0;
+    typeNextCharacter();
+}
+
+function typeNextCharacter() {
+    if (!isTyping) return;
+    
+    if (typeIndex < memoryTexts[currentMemoryIndex].length) {
+        currentMemoryText += memoryTexts[currentMemoryIndex][typeIndex];
+        typeIndex++;
+        setTimeout(typeNextCharacter, typeSpeed);
+    } else {
+        isTyping = false;
+    }
+}
+
+function drawMemoryText() {
+    if (currentMemoryText) {
+        ctx.save();
+        
+        // Add a subtle dark background for better readability
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, 100);
+        
+        // Draw the text with a nice style
+        ctx.fillStyle = 'white';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Add text shadow for better visibility
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        
+        // Draw the text
+        ctx.fillText(currentMemoryText, canvas.width / 2, 50);
+        
+        ctx.restore();
+    }
+}
+
 // Game loop
 function gameLoop() {
     if (!gameState.running) return;
     
-    // Update game state
-    updatePlayer();
-    gameState.portalAnimTime += 0.05;
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Fade out instructions after 5 seconds
-    if (gameState.showInstructions) {
-        if (gameState.instructionFade > 0) {
-            gameState.instructionFade -= 0.005;
-            if (gameState.instructionFade <= 0) {
-                gameState.showInstructions = false;
-            }
-        }
-    }
-    
-    // Render
+    // Draw backgrounds
     drawBackground();
-    drawPath(); // Draw the terrain instead of platforms
     
-    // Draw left wall if player is at the edge
-    if (player.distanceTraveled <= 5) {
-        drawLeftWall();
-    }
+    // Draw ground path
+    drawPath();
     
+    // Draw player
     drawPlayer();
     
-    // Draw instructions
-    if (gameState.showInstructions) {
-        drawInstructions();
-    }
+    // Check for memory trigger and draw memory text
+    checkMemoryTrigger();
+    drawMemoryText();
     
-    // Continue the game loop
+    // Update player position
+    updatePlayer();
+    
+    // Request next frame
     requestAnimationFrame(gameLoop);
 }
 
@@ -635,6 +753,10 @@ function init() {
     
     // Set initial Y position to be on ground
     positionPlayerOnGround();
+    
+    // Trigger first memory text immediately
+    currentMemoryIndex = 0;
+    startTypingMemory();
     
     // Start game loop immediately
     gameLoop();
@@ -672,4 +794,24 @@ function drawInstructions() {
     ctx.fillText('Explore the endless world', canvas.width/2, canvas.height/2 + 120);
     
     ctx.restore();
+}
+
+// Add this function to show the exit door
+function showExitDoor() {
+    // Create exit door element
+    const exitDoor = document.createElement('div');
+    exitDoor.style.position = 'fixed';
+    exitDoor.style.right = '20px';
+    exitDoor.style.top = '50%';
+    exitDoor.style.transform = 'translateY(-50%)';
+    exitDoor.style.padding = '20px';
+    exitDoor.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    exitDoor.style.color = 'white';
+    exitDoor.style.borderRadius = '10px';
+    exitDoor.style.cursor = 'pointer';
+    exitDoor.textContent = 'Exit Game';
+    exitDoor.onclick = function() {
+        window.location.href = '../index.html';
+    };
+    document.body.appendChild(exitDoor);
 } 
