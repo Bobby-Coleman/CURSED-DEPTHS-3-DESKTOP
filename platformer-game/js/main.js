@@ -754,6 +754,14 @@ function init() {
     // Set initial Y position to be on ground
     positionPlayerOnGround();
     
+    // Center the first background on the player
+    if (backgrounds.length > 0 && backgrounds[0].complete) {
+        const firstBg = backgrounds[0];
+        const scale = canvas.height / firstBg.height;
+        const scaledWidth = firstBg.width * scale;
+        gameState.scrollX = (scaledWidth - canvas.width) / 2;
+    }
+    
     // Trigger first memory text immediately
     currentMemoryIndex = 0;
     startTypingMemory();
