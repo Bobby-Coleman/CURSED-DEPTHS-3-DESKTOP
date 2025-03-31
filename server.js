@@ -11,14 +11,18 @@ app.use('/driving-game', express.static('./driving-game'));
 // Serve the museum3d files
 app.use('/museum3d', express.static('./museum3d'));
 
-// Redirect the root path to start.html
+// Serve the visual novel files
+app.use('/visual-novel', express.static('./visual-novel'));
+
+// Redirect the root path to the visual novel
 app.get('/', (req, res) => {
-  res.redirect('/driving-game/start.html');
+  res.redirect('/visual-novel/index.html');
 });
 
 // Start the server
 app.listen(port, () => {
   console.log(`Game server running at http://localhost:${port}`);
-  console.log(`Access your driving game at: http://localhost:${port}/driving-game/start.html`);
+  console.log(`Start with the visual novel at: http://localhost:${port}/visual-novel/index.html`);
+  console.log(`Access your driving game at: http://localhost:${port}/driving-game/driving.html`);
   console.log(`Access your museum game at: http://localhost:${port}/museum3d/index.html`);
 }); 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Novel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            overflow: hidden;
+            background: black;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #dialogBox {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 10px;
+            line-height: 1.4;
+            z-index: 2;
+            cursor: pointer;
+            transition: text-shadow 0.3s ease;
+        }
+        #dialogBox:hover {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+                         0 0 20px rgba(255, 255, 255, 0.5),
+                         0 0 30px rgba(255, 255, 255, 0.3);
+        }
+        #choiceButton {
+            position: fixed;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            background: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            font-family: Arial, sans-serif;
+            transition: all 0.3s;
+            z-index: 2;
+        }
+        #choiceButton:hover {
+            background: #cc0000;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="dialogBox"></div>
+    <button id="choiceButton">Take the keys and leave</button>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
