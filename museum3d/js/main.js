@@ -5,7 +5,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 // Museum texts for wall sections
 const museumTexts = [
-   "this is the game im making. Do NOT change ANY code, just look over my current code and tell me if everything is working and if theres anything youd change. - I'll examine your current files to see what code exists and provide feedback.",
+    "testing testing 01 this is the game im making. Do NOT change ANY code, just look over my current code and tell me if everything is working and if theres anything youd change. - I'll examine your current files to see what code exists and provide feedback.",
     "why is the loot.js and level.js showing 1 error each? Can you please review and TELL me what youre gonna do before doing it. - I'll check both files to identify the errors.",
     "when i open the index.html from the folder i only see a blank screen. - Let me check the index.",
     "its already in use - The error means port 8000 is already being used by another process.",
@@ -30,7 +30,7 @@ const museumTexts = [
     "great, please dont change ANYTHING but start the game with raging heart equiped so i can ttest it. Then we'll remove that - I'll modify just the player initialization to start with Raging Heart equipped:.",
     "Nice that worked! Now please remove raging heart initialization. - I'll remove the Raging Heart from the initial relics array and set it back to empty:.",
     "i have raging heart and hemoclaw and yet my damage is only 9. Why is this - Let me help investigate why your damage calculation might be lower than expected.",
-    "i have this relic and yet my damage didnt go up either - I see from the new screenshot that you now have the Infernal Core relic equipped, which should give +25% base damage per equipped relic",
+    "i have this relic and yet my damage didnt go up either - I see from the new screenshot that you now have the Infernal Core relic equipped, which should give +25% base damage per equipped relic.",
     "please add a simple option to sell relics for 5 gold when hovering over them at the top - I'll help you add a sell feature for relics.",
     "this is good except when i go to press it the menu goes away, can you make it so that it just tells you to press e to sell it - I'll modify the UI to show Press E to sell instead of having a button, and then implement the selling mechanism through the 'E' key press, similar to how other pickups work.",
     "oh shit, no actually switch it to be a different key, maybe R, because currently when i go to pick up a relic it now sells it - Ah yes, that's a good catch! Using 'E' conflicts with the pickup mechanic.",
@@ -46,13 +46,13 @@ const museumTexts = [
     "its not working at all! - I see the issue - the text isn't showing up because we need to make sure the text plane always faces the camera (billboarding) and we need to make the texture properly visible.",
     "is it possible to impliment git version control? i really don't want to lose my progress. - I'll help you set up Git version control for your project.",
     "git config --global user.name Admin && git config --global user.email admin@example.com - why'd you use placeholder info? is that okay or do you need my actual git info - Ah, I apologize for using placeholder information! No, you should definitely use your actual Git information.",
-    "my email is do you need anything more - Perfect! I'll set up Git with your actual information:.",
+    "my email is colemankidding@gmail.com and my name is Bobby Coleman do you need anything more - Perfect! I'll set up Git with your actual information:.",
     "please backup this project on my github online - I'll help you create a GitHub repository and push your code to it.",
     "username is Bobby-Coleman - Great! Let's set up your GitHub repository.",
     "whats going on - The terminal is asking you to confirm where to save your SSH key.",
     "yes continue - Alright, let's continue with the SSH setup.",
     "did it work - Let me check if the SSH key was created successfully:.",
-    "is it this - Yes, exactly! That's your complete SSH public key.",
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG+sk0whTuDdt6TN1R4CTItbrzViugBhMhTXgkFT1uQD colemankidding@gmail.com is it this - Yes, exactly! That's your complete SSH public key.",
     "got it right - Perfect! Now let's create a new repository for your game and push your code to GitHub.",
     "got it - Great! Now let's connect your local repository to GitHub and push your code.",
     "this worked! - Yes, it did! Your game is now safely stored on GitHub at https://github.",
@@ -76,7 +76,7 @@ const museumTexts = [
     "is there a way to do it manually bc i dont see it - Yes! In Safari, you can enable the Developer Tools manually:.",
     "wghere - In the Safari settings window you're showing, check the box that says Show features for web developers at the bottom of the Advanced tab (I can see it's already checked in your screenshot).",
     "thoughts - Ah, now I can see exactly what's happening! The logs show:.",
-    "It looks good but there's a problem where a random UI box that shows zero damage is being placed in front of the reeal ui box with the correct damage. - Ah, I see the issue in the screenshot - there are two weapon stat boxes overlapping, with one showing Damage: 0 and Fire Rate: 0 bullets/sec",
+    "It looks good but there's a problem where a random UI box that shows zero damage is being placed in front of the reeal ui box with the correct damage. - Ah, I see the issue in the screenshot - there are two weapon stat boxes overlapping, with one showing Damage: 0 and Fire Rate: 0 bullets/sec.",
     "this is working perfectly, please push to github - Great! I'll push both changes to GitHub - the damage calculation fix and the UI fix that prevents duplicate weapon stat boxes:.",
     "the blood pact relic isn't working, please adjust accordingly to make it work with killstreak. Brass heart is also not adding ammo, but it used to work. Please change these relics and NOTHING else in the code. - I'll check the relic effects in the `RelicSystem` class.",
     "Please show the enemies health as a number below their health bar as well! - I'll modify the Enemy class to add a health number display below the health bar.",
@@ -159,7 +159,7 @@ const museumTexts = [
     "its good but it doesnt expload ! - I see the issue - let me make the bomb even simpler and make sure it explodes.",
     "the bombs don't expload ! please impliment a very simple aoe spawn when it stops moving. - I see the issue.",
     "it works ! push this to github  ---  can you make it so that the bomb stays still once it stops for a second longer before blowing up. - I'll modify the bomb's behavior to stay still for a second before exploding.",
-    "the server is down - I see the server is down with a",
+    "the server is down - I see the server is down with a Safari Can't Connect to the Server error for localhost:8080.",
     "python - Ah, you're using Python to serve the files.",
     "can you change the bomb to wait two seconds before exploading - I'll modify the bomb's explosion timer from 1 second to 2 seconds in the `enemy.",
     "the bombs currenty expload while moving still. I want them to stop and then expload after two seconds. - I see the issue.",
@@ -172,7 +172,7 @@ const museumTexts = [
     "i think its main.js - Let me check main.",
     "it didnt work. also from now on dont ask to push to github ill tell you - I see the issue in main.",
     "this is what i see - I see the issue - the background is black because we need to update the camera's position and the background's z-position.",
-    "everything is black it broke the game. why is a single tilesheet breaking the game? - Looking at the code, I see the issue."
+    "everything is black it broke the game. why is a single tilesheet breaking the game? - Looking at the code, I see the issue.",
 ];
 
 // Game variables
@@ -282,34 +282,51 @@ function createHallwaySegment(index) {
 
     // Add text to walls if font is loaded
     if (font) {
-        const textIndex = Math.abs(Math.floor(segment.zPosition / HALLWAY_LENGTH)) % museumTexts.length;
-        addTextToWall(leftWall, museumTexts[textIndex], -1);
-        addTextToWall(rightWall, museumTexts[textIndex], 1);
+        // Calculate base text index for this segment
+        const baseTextIndex = Math.abs(Math.floor(segment.zPosition / HALLWAY_LENGTH)) * 8;
+        
+        // Add 8 texts to each wall (more texts to fill the space)
+        for (let i = 0; i < 8; i++) {
+            // Left wall texts
+            addTextToWall(leftWall, museumTexts[(baseTextIndex + i) % museumTexts.length], -1, i);
+            // Right wall texts
+            addTextToWall(rightWall, museumTexts[(baseTextIndex + i + 4) % museumTexts.length], 1, i);
+        }
     }
 
     hallways.push(segment);
 }
 
-function addTextToWall(wall, text, side) {
-    const textGeometry = new TextGeometry(text, {
-        font: font,
-        size: 0.15,
-        height: 0.01,
+function addTextToWall(wall, text, side, textIndex) {
+    // Split text into words and create lines of 5 words
+    const words = text.split(' ');
+    const lines = [];
+    for (let i = 0; i < words.length; i += 5) {
+        lines.push(words.slice(i, i + 5).join(' '));
+    }
+
+    // Create and position each line of text
+    lines.forEach((line, lineIndex) => {
+        const textGeometry = new TextGeometry(line, {
+            font: font,
+            size: 0.12,
+            height: 0.01,
+        });
+        textGeometry.computeBoundingBox();
+        
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        
+        // Position text in a continuous strip
+        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+        textMesh.position.set(
+            side * -0.15,
+            -(HALLWAY_HEIGHT/2) + PLAYER_HEIGHT + 0.5 - (lineIndex * 0.15), // Vertical position stays consistent
+            -HALLWAY_LENGTH/2 + (HALLWAY_LENGTH * (textIndex/8)) // Evenly space across entire wall length
+        );
+        textMesh.rotation.y = -Math.PI/2 * side;
+        wall.add(textMesh);
     });
-    textGeometry.computeBoundingBox();
-    
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    
-    // Position text at eye level
-    const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-    textMesh.position.set(
-        side * -0.15,
-        -(HALLWAY_HEIGHT/2) + PLAYER_HEIGHT - 0.3,
-        -HALLWAY_LENGTH/2
-    );
-    textMesh.rotation.y = -Math.PI/2 * side;
-    wall.add(textMesh);
 }
 
 function onKeyDown(event) {
@@ -429,7 +446,9 @@ function animate() {
                     wall.children.forEach(child => wall.remove(child));
                     // Add new text
                     if (font) {
-                        addTextToWall(wall, museumTexts[textIndex], wall.position.x < 0 ? -1 : 1);
+                        // Left wall gets current index, right wall gets next index
+                        const isLeftWall = wall.position.x < 0;
+                        addTextToWall(wall, museumTexts[isLeftWall ? textIndex : (textIndex + 1) % museumTexts.length], isLeftWall ? -1 : 1);
                     }
                 });
             }
@@ -447,7 +466,9 @@ function animate() {
                     wall.children.forEach(child => wall.remove(child));
                     // Add new text
                     if (font) {
-                        addTextToWall(wall, museumTexts[textIndex], wall.position.x < 0 ? -1 : 1);
+                        // Left wall gets current index, right wall gets next index
+                        const isLeftWall = wall.position.x < 0;
+                        addTextToWall(wall, museumTexts[isLeftWall ? textIndex : (textIndex + 1) % museumTexts.length], isLeftWall ? -1 : 1);
                     }
                 });
             }
