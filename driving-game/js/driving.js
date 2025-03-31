@@ -1487,10 +1487,10 @@ class DrivingGame {
             baseUrl = baseUrl.slice(0, -1);
         }
         
-        console.log('Navigating to: ' + baseUrl + '/game/index.html');
+        console.log('Navigating to: ' + baseUrl + '/index.html');
         
-        // Navigate to the main game instead of the visual novel
-        window.location.href = baseUrl + '/game/index.html';
+        // Navigate to the main game
+        window.location.href = baseUrl + '/index.html';
     }
     
     createBeer() {
