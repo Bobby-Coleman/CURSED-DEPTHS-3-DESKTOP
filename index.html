@@ -120,6 +120,9 @@
         <div>Level: <span id="level">1</span></div>
         <div>Kill Streak: <span id="kill-streak">0</span></div>
         <div>Relics: <span id="relics">0</span> / 5</div>
+        <div id="museum-portal" style="position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; cursor: pointer; pointer-events: auto;">
+            <img src="museum3d/assets/images/pentagon_active.png" alt="Museum Portal" style="width: 100%; height: 100%;">
+        </div>
     </div>
     <div id="game-over">
         <h2>Game Over</h2>
@@ -141,6 +144,11 @@
     <script src="main.js" type="module"></script>
     <script type="module">
         import { game } from './main.js';
+
+        // Add museum portal click handler
+        document.getElementById('museum-portal').addEventListener('click', () => {
+            window.location.href = '/museum3d/index.html';
+        });
 
         // Global variables for mobile movement
         window.mobileControls = {
