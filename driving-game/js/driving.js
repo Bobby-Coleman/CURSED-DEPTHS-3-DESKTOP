@@ -1007,7 +1007,7 @@ class DrivingGame {
     showStartMessage() {
         // Create start message text
         const startText = document.createElement('div');
-        startText.textContent = 'AVOID THE CARS! GET HOME SAFE!';
+        startText.textContent = 'AVOID THE CARS';
         startText.style.position = 'fixed';
         startText.style.top = '50%';
         startText.style.left = '50%';
@@ -1487,10 +1487,10 @@ class DrivingGame {
             baseUrl = baseUrl.slice(0, -1);
         }
         
-        console.log('Navigating to: ' + baseUrl + '/index.html');
+        console.log('Navigating to: ' + baseUrl + '/game/index.html');
         
-        // Navigate to the index page with the correct path
-        window.location.href = baseUrl + '/index.html';
+        // Navigate to the main game instead of the visual novel
+        window.location.href = baseUrl + '/game/index.html';
     }
     
     createBeer() {
