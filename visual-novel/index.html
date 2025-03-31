@@ -10,42 +10,114 @@
             padding: 0;
             box-sizing: border-box;
         }
-        body {
-            overflow: hidden;
-            background: black;
-        }
-        canvas {
-            display: block;
+
+        .visual-novel {
+            position: relative;
             width: 100vw;
             height: 100vh;
-            position: fixed;
+            background: black;
+            overflow: hidden;
+        }
+
+        .scene-layer {
+            position: absolute;
             top: 0;
             left: 0;
-            z-index: 1;
+            width: 100%;
+            height: 100%;
+            transition: opacity 0.5s ease;
         }
+
+        .background {
+            z-index: 1;
+            background: url('assets/background.jpg') center center;
+            background-size: cover;
+            opacity: 1;
+        }
+
+        .wife-layer {
+            z-index: 2;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .husband-layer {
+            z-index: 3;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .character {
+            height: 90vh;
+            width: auto;
+            object-fit: contain;
+            position: absolute;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .wife { 
+            right: 10%;
+        }
+
+        .husband { 
+            left: 10%;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+        }
+
+        .shaking {
+            animation: shake 0.2s ease-in-out infinite;
+        }
+
         #dialogBox {
             position: fixed;
             bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
             width: 80%;
+            max-width: 1200px;
             padding: 20px;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             font-family: Arial, sans-serif;
-            font-size: 24px;
+            font-size: clamp(16px, 3vw, 24px);
             text-align: center;
             border-radius: 10px;
             line-height: 1.4;
-            z-index: 2;
+            z-index: 100;
             cursor: pointer;
             transition: text-shadow 0.3s ease;
+            min-height: 100px;
         }
+
+        #dialogBox.typing::after {
+            content: '▼';
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            opacity: 0;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
         #dialogBox:hover {
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
                          0 0 20px rgba(255, 255, 255, 0.5),
                          0 0 30px rgba(255, 255, 255, 0.3);
         }
+
         #choiceButton {
             position: fixed;
             bottom: 150px;
@@ -56,24 +128,47 @@
             color: white;
             border: none;
             border-radius: 5px;
-            font-size: 20px;
+            font-size: clamp(14px, 2vw, 20px);
             cursor: pointer;
             display: none;
             font-family: Arial, sans-serif;
             transition: all 0.3s;
-            z-index: 2;
+            z-index: 100;
         }
+
         #choiceButton:hover {
             background: #cc0000;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
         }
+
+        @media (max-width: 768px) {
+            .character {
+                height: 70vh;
+            }
+            #dialogBox {
+                width: 90%;
+                bottom: 30px;
+            }
+            #choiceButton {
+                bottom: 120px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div id="dialogBox"></div>
-    <button id="choiceButton">Take the keys and leave</button>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <div class="visual-novel">
+        <div class="scene-layer background"></div>
+        <div class="scene-layer wife-layer">
+            <img class="character wife" src="assets/mad.png" alt="Wife Mad" id="wifeMad">
+            <img class="character wife" src="assets/sad.png" alt="Wife Sad" id="wifeSad">
+        </div>
+        <div class="scene-layer husband-layer">
+            <img class="character husband" src="assets/husband.png" alt="Husband" id="husband">
+        </div>
+        <div id="dialogBox"></div>
+        <button id="choiceButton">Take the keys and leave</button>
+    </div>
     <script src="script.js"></script>
 </body>
 </html> 

@@ -21,112 +21,125 @@ const dialog = [
     { speaker: "W", text: "[cracking] Don't do this. You can't drive. You're gonna abandon another thing that needed you? You know what? Go to HELL." }
 ];
 
-// Three.js setup
-let scene, camera, renderer, plane;
-let madTexture, sadTexture, madMaterial, sadMaterial;
 let currentLine = 0;
+let isTyping = false;
 const dialogBox = document.getElementById('dialogBox');
 const choiceButton = document.getElementById('choiceButton');
+const wifeMad = document.getElementById('wifeMad');
+const wifeSad = document.getElementById('wifeSad');
+const husband = document.getElementById('husband');
 
-// Initialize Three.js scene
+// Initialize the visual novel
 function init() {
-    // Create scene
-    scene = new THREE.Scene();
-    
-    // Create camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 1;
-
-    // Create renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    document.body.appendChild(renderer.domElement);
-
-    // Load textures
-    const textureLoader = new THREE.TextureLoader();
-    madTexture = textureLoader.load('assets/mad.jpg', adjustPlaneSize);
-    sadTexture = textureLoader.load('assets/sad.jpg');
-
-    // Create materials
-    madMaterial = new THREE.MeshBasicMaterial({ map: madTexture });
-    sadMaterial = new THREE.MeshBasicMaterial({ map: sadTexture });
-
-    // Create plane (temporary size, will be adjusted when texture loads)
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    plane = new THREE.Mesh(geometry, madMaterial);
-    scene.add(plane);
-
-    // Handle window resize
-    window.addEventListener('resize', onWindowResize, false);
-
-    // Start animation loop
-    animate();
-
-    // Show first line of dialog
     updateDialog();
+    // Add click event listeners
+    document.addEventListener('click', handleClick);
+    choiceButton.addEventListener('click', () => {
+        window.location.href = '/driving-game/driving.html?playMusic=true&beerCount=3';
+    });
 }
 
-// Adjust plane size to match screen aspect ratio and fill screen
-function adjustPlaneSize() {
-    const imageAspect = madTexture.image.width / madTexture.image.height;
-    const screenAspect = window.innerWidth / window.innerHeight;
-    
-    let planeWidth, planeHeight;
-    
-    if (screenAspect > imageAspect) {
-        // Screen is wider than image
-        planeWidth = 2;
-        planeHeight = 2 / screenAspect * imageAspect;
-    } else {
-        // Screen is taller than image
-        planeHeight = 2;
-        planeWidth = 2 * screenAspect / imageAspect;
-    }
-    
-    plane.scale.set(planeWidth, planeHeight, 1);
-}
-
-// Update dialog text and background
-function updateDialog() {
-    if (currentLine < dialog.length) {
-        const line = dialog[currentLine];
-        dialogBox.textContent = `${line.speaker}: ${line.text}`;
-        
-        // Switch background based on speaker
-        plane.material = line.speaker === "W" ? madMaterial : sadMaterial;
-    } else {
-        dialogBox.textContent = "What will you do?";
-        choiceButton.style.display = 'block';
-    }
-}
-
-// Handle window resize
-function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    adjustPlaneSize();
-}
-
-// Animation loop
-function animate() {
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
-
-// Event listeners
-document.addEventListener('click', (event) => {
+// Handle click events
+function handleClick(event) {
     // Ignore clicks on the choice button
     if (event.target === choiceButton) return;
     
-    currentLine++;
-    updateDialog();
-});
+    // Only allow clicks when not typing
+    if (!isTyping) {
+        currentLine++;
+        updateDialog();
+    }
+}
 
-choiceButton.addEventListener('click', () => {
-    window.location.href = '/driving-game/driving.html?playMusic=true&beerCount=3';
-});
+// Type out text character by character
+function typeText(text) {
+    isTyping = true;
+    dialogBox.classList.add('typing');
+    let index = 0;
+    dialogBox.textContent = '';
+    
+    function type() {
+        if (index < text.length) {
+            dialogBox.textContent += text.charAt(index);
+            index++;
+            setTimeout(type, 30); // Adjust speed here (lower = faster)
+        } else {
+            completeTyping();
+            // Stop shaking when typing is complete
+            wifeMad.classList.remove('shaking');
+            wifeSad.classList.remove('shaking');
+            husband.classList.remove('shaking');
+        }
+    }
+    
+    type();
+}
+
+// Complete the current typing animation
+function completeTyping() {
+    isTyping = false;
+    dialogBox.classList.remove('typing');
+    if (currentLine < dialog.length) {
+        const line = dialog[currentLine];
+        dialogBox.textContent = `${line.speaker}: ${line.text}`;
+    }
+    // Stop shaking when typing is complete
+    wifeMad.classList.remove('shaking');
+    wifeSad.classList.remove('shaking');
+    husband.classList.remove('shaking');
+}
+
+// Update character states and start shake animation
+function updateCharacterStates(speaker) {
+    // Reset all character states
+    wifeMad.style.opacity = "0";
+    wifeSad.style.opacity = "0";
+    husband.style.opacity = "0.8"; // Keep husband always visible at 80% opacity by default
+    
+    // Remove shake animations first
+    wifeMad.classList.remove('shaking');
+    wifeSad.classList.remove('shaking');
+    husband.classList.remove('shaking');
+    
+    if (speaker === "W") {
+        // Show mad wife by default when speaking
+        wifeMad.style.opacity = "1";
+        // Start shaking only during typing
+        wifeMad.classList.add('shaking');
+    } else if (speaker === "H") {
+        // When husband speaks, show sad wife in background
+        wifeSad.style.opacity = "0.8";
+        husband.style.opacity = "1";
+        // Start shaking only during typing
+        husband.classList.add('shaking');
+    }
+}
+
+// Update dialog and character visibility
+function updateDialog() {
+    if (currentLine < dialog.length) {
+        const line = dialog[currentLine];
+        
+        // Special case for the final line where wife is emotional
+        if (currentLine === dialog.length - 1) {
+            wifeMad.style.opacity = "0";
+            wifeSad.style.opacity = "1";
+            wifeSad.classList.add('shaking');
+            husband.style.opacity = "0.8";
+        } else {
+            updateCharacterStates(line.speaker);
+        }
+        
+        typeText(`${line.speaker}: ${line.text}`);
+    } else {
+        dialogBox.textContent = ""; // Remove the text
+        choiceButton.style.display = 'block';
+        // For the choice, keep husband visible but fade characters slightly
+        wifeMad.style.opacity = "0";
+        wifeSad.style.opacity = "0";
+        husband.style.opacity = "0.6";
+    }
+}
 
 // Start the visual novel
 init(); 
