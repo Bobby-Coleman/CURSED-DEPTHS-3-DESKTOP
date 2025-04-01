@@ -81,6 +81,13 @@ export class Player {
         this.bullets = [];
         this.bulletGeometry = new THREE.CircleGeometry(3, 8);
         this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+        
+        // Auto-aim settings
+        this.autoAimEnabled = false;
+        this.autoAimRange = 250; // How far to search for enemies to auto-aim at
+        
+        // Add floating HP text above player
+        this.createFloatingHPText();
     }
     
     // Create a shadow for the player
@@ -258,6 +265,9 @@ export class Player {
         
         // Update bullets
         this.updateBullets(enemies);
+        
+        // Update the floating HP text position
+        this.updateHPTextPosition();
     }
     
     shoot() {
@@ -476,5 +486,47 @@ export class Player {
         
         // Remove player mesh
         this.scene.remove(this.mesh);
+        
+        // Remove floating HP text
+        if (this.hpText) {
+            document.body.removeChild(this.hpText);
+        }
+    }
+
+    createFloatingHPText() {
+        // Create HTML element for the floating HP text
+        this.hpText = document.createElement('div');
+        this.hpText.style.position = 'absolute';
+        this.hpText.style.color = '#FF0000'; // Red text
+        this.hpText.style.fontFamily = 'Arial, sans-serif';
+        this.hpText.style.fontWeight = 'bold';
+        this.hpText.style.fontSize = '20px';
+        this.hpText.style.textShadow = '2px 2px 2px #000000';
+        this.hpText.style.pointerEvents = 'none'; // Prevent interaction with the text
+        this.hpText.style.zIndex = '1000';
+        this.hpText.textContent = this.hp.toString();
+        document.body.appendChild(this.hpText);
+        
+        // Update the HP text position
+        this.updateHPTextPosition();
+    }
+    
+    updateHPTextPosition() {
+        if (!this.hpText) return;
+        
+        // Convert player's position to screen coordinates
+        const width = window.innerWidth, height = window.innerHeight;
+        const pos = this.mesh.position.clone();
+        
+        // Calculate screen position (simple conversion for orthographic camera)
+        const x = (pos.x / 800 + 0.5) * width;
+        const y = (-pos.y / 800 + 0.5) * height;
+        
+        // Position the text above the player
+        this.hpText.style.left = `${x}px`;
+        this.hpText.style.top = `${y - 40}px`; // 40px above player
+        
+        // Update the text content
+        this.hpText.textContent = this.hp.toString();
     }
 }

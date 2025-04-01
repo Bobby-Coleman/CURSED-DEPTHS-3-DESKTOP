@@ -180,11 +180,26 @@ export class Shop {
             
             // Create relic mesh
             const relicGeometry = new THREE.BoxGeometry(20, 20, 5);
-            const relicMaterial = new THREE.MeshBasicMaterial({ 
-                color: relic.color,
-                emissive: 0xFFFFFF,
-                emissiveIntensity: 0.5
-            });
+            
+            // Check if this is the Two-Headed Goat relic, use special texture
+            let relicMaterial;
+            
+            if (relic.id === 'twoHeadedGoat') {
+                // Use the two-headed goat texture
+                const texture = new THREE.TextureLoader().load('assets/sprites/twoheadedgoat.png');
+                relicMaterial = new THREE.MeshBasicMaterial({ 
+                    map: texture,
+                    transparent: true
+                });
+            } else {
+                // Regular colored box for other relics
+                relicMaterial = new THREE.MeshBasicMaterial({ 
+                    color: relic.color,
+                    emissive: 0xFFFFFF,
+                    emissiveIntensity: 0.5
+                });
+            }
+            
             const relicMesh = new THREE.Mesh(relicGeometry, relicMaterial);
             
             // Add glow effect

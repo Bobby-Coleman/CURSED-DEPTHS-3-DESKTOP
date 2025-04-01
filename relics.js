@@ -3,6 +3,17 @@ export class RelicSystem {
         // Define all available relics
         this.relicDefinitions = [
             {
+                id: 'twoHeadedGoat',
+                name: 'Two Headed Goat',
+                blessing: 'Allows access to the Pentagram Portal',
+                curse: 'None',
+                color: 0x330066, // Deep purple
+                apply: (player) => {
+                    // No direct effects, just enables pentagram access
+                    player.hasTwoHeadedGoat = true;
+                }
+            },
+            {
                 id: 'colossusHeart',
                 name: 'Colossus Heart',
                 blessing: '+50% max HP',
@@ -142,6 +153,43 @@ export class RelicSystem {
         const shopRelics = [];
         const availableRelics = [...this.relicDefinitions];
         
+        // Special case: For the first shop, include the Two-Headed Goat
+        // This is for testing purposes
+        if (window.gameState && window.gameState.level === 2) {
+            const twoHeadedGoatRelic = this.relicDefinitions.find(r => r.id === 'twoHeadedGoat');
+            if (twoHeadedGoatRelic) {
+                shopRelics.push(this.createRelic(twoHeadedGoatRelic));
+                
+                // Remove it from available relics
+                const index = availableRelics.findIndex(r => r.id === 'twoHeadedGoat');
+                if (index !== -1) {
+                    availableRelics.splice(index, 1);
+                }
+                
+                // Get one less relic than requested since we already added the goat
+                num--;
+            }
+        } else {
+            // For other shops, give Two-Headed Goat a 5% chance to appear
+            const roll = Math.random();
+            if (roll < 0.05) { // 5% chance
+                const twoHeadedGoatRelic = this.relicDefinitions.find(r => r.id === 'twoHeadedGoat');
+                if (twoHeadedGoatRelic) {
+                    shopRelics.push(this.createRelic(twoHeadedGoatRelic));
+                    
+                    // Remove it from available relics
+                    const index = availableRelics.findIndex(r => r.id === 'twoHeadedGoat');
+                    if (index !== -1) {
+                        availableRelics.splice(index, 1);
+                    }
+                    
+                    // Get one less relic than requested since we already added the goat
+                    num--;
+                }
+            }
+        }
+        
+        // Get the rest of the relics
         for (let i = 0; i < num && availableRelics.length > 0; i++) {
             const index = Math.floor(Math.random() * availableRelics.length);
             shopRelics.push(this.createRelic(availableRelics[index]));

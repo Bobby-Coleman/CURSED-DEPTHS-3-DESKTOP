@@ -13,51 +13,18 @@ export class LootSystem {
         // Always drop blood when enemy dies
         this.createBloodDrop(x, y);
         
-        // Roll for additional drops
+        // 30% chance to drop a heart, otherwise only blood
         const roll = Math.random();
-        let dropType;
-        
-        if (roll < 0.15) {
-            dropType = 'weapon';
-        } else if (roll < 0.30) {
-            dropType = 'heart';
-        } else if (roll < 0.45) {
-            dropType = 'gold';
-        } else if (roll < 0.55) {
-            dropType = 'relic';
-        } else if (roll < 0.75) {
-            dropType = 'ammo';
-        } else {
-            // No additional drop
-            return null;
+        if (roll < 0.3) {
+            const heartDrop = this.createHeartDrop(x, y);
+            if (heartDrop) {
+                this.drops.push(heartDrop);
+            }
+            return heartDrop;
         }
         
-        // Create drop based on type
-        let drop;
-        
-        switch (dropType) {
-            case 'weapon':
-                drop = this.createWeaponDrop(x, y);
-                break;
-            case 'heart':
-                drop = this.createHeartDrop(x, y);
-                break;
-            case 'gold':
-                drop = this.createGoldDrop(x, y);
-                break;
-            case 'relic':
-                drop = this.createRelicDrop(x, y);
-                break;
-            case 'ammo':
-                drop = this.createAmmoDrop(x, y);
-                break;
-        }
-        
-        if (drop) {
-            this.drops.push(drop);
-        }
-        
-        return drop;
+        // No additional drop
+        return null;
     }
     
     createBloodDrop(x, y) {

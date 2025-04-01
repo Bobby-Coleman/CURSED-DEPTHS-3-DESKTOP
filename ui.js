@@ -223,7 +223,7 @@ export class UI {
                     // Shop relic
                     content = `
                         <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 5px;">
-                            <h3 style="color: #${item.data.color.toString(16).padStart(6, '0')}; margin: 0 0 5px 0;">${item.data.name}</h3>
+                            <h3 style="color: #FFFFFF; margin: 0 0 5px 0;">${item.data.name}</h3>
                             <p style="margin: 5px 0;">Blessing: ${item.data.blessing}</p>
                             ${item.data.curse ? `<p style="margin: 5px 0;">Curse: ${item.data.curse}</p>` : ''}
                             <p style="color: #FFD700; margin: 5px 0;">Price: 2 HP</p>
@@ -240,7 +240,7 @@ export class UI {
                 } else {
                     // Dropped relic
                     content = `
-                        <h3>${item.data.name}</h3>
+                        <h3 style="color: #FFFFFF;">${item.data.name}</h3>
                         <p>Blessing: ${item.data.blessing}</p>
                         ${item.data.curse ? `<p>Curse: ${item.data.curse}</p>` : ''}
                         <p style="color: #FFD700;">Cost: 2 HP</p>
@@ -344,7 +344,7 @@ export class UI {
                 slot.onmouseover = () => {
                     gameState.hoveredRelicIndex = i;  // Track which relic is being hovered
                     this.tooltip.innerHTML = `
-                        <div style="color: ${color};">${relic.name}</div>
+                        <div style="color: #FFFFFF;">${relic.name}</div>
                         <div>Blessing: ${relic.blessing}</div>
                         ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
                         <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>

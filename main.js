@@ -581,8 +581,16 @@ function animate() {
             
             // Check for pentagram portal collision
             if (currentLevel.checkPentagramPortal && currentLevel.checkPentagramPortal(player)) {
-                // Transition to platformer game
-                window.location.href = 'platformer-game/index.html';
+                // Check if the player has the Two-Headed Goat relic
+                const hasTwoHeadedGoat = player.hasTwoHeadedGoat || player.relics.some(r => r.id === 'twoHeadedGoat');
+                
+                if (hasTwoHeadedGoat) {
+                    // Transition to platformer game if they have the relic
+                    window.location.href = 'platformer-game/index.html';
+                } else {
+                    // Show message that they need the relic
+                    ui.showMessage("Please find the Two Headed Goat relic to enter");
+                }
             }
             
             // Check for hell door collision
