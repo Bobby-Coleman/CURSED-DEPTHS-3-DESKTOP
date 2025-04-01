@@ -175,6 +175,23 @@ const museumTexts = [
     "everything is black it broke the game. why is a single tilesheet breaking the game? - Looking at the code, I see the issue.",
 ];
 
+// Simple audio setup - exactly matching the visual novel approach
+const introVoice = new Audio('audio/intro_voice.mp3');
+introVoice.volume = 0.7;
+
+// Initialize audio (will be called from first user interaction)
+function initAudio() {
+    console.log('Initializing audio...');
+    // Play background music
+    introVoice.play().catch(err => console.log('Audio play failed:', err));
+    
+    // Schedule redirect after audio duration
+    setTimeout(() => {
+        console.log('Redirecting to visual novel...');
+        window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/visual-novel/index.html';
+    }, 26000);
+}
+
 // Game variables
 let camera, scene, renderer, controls;
 let hallways = [];
@@ -231,10 +248,11 @@ function init() {
     // Controls setup
     controls = new PointerLockControls(camera, document.body);
 
-    // Automatically lock controls when game starts
+    // Automatically lock controls and start audio on first click
     document.addEventListener('click', () => {
         controls.lock();
-    });
+        initAudio(); // Start audio on first interaction
+    }, { once: true });
 
     controls.addEventListener('unlock', () => {
         // Re-lock on next click
@@ -481,139 +499,4 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     font = loadedFont;
     init();
     animate();
-    
-    // Initialize audio with multiple approaches and fallbacks
-    initAudio();
-});
-
-// Multiple approaches to ensure audio plays successfully
-function initAudio() {
-    console.log("Initializing audio system...");
-    
-    // Store status for debugging
-    let audioStatus = {
-        elementFound: false,
-        playAttempted: false,
-        playSucceeded: false,
-        playError: null,
-        redirectScheduled: false
-    };
-    
-    // Get the audio element from the DOM
-    const audioElement = document.getElementById('introVoice');
-    if (!audioElement) {
-        console.error("Audio element not found in the DOM!");
-        return;
-    }
-    audioStatus.elementFound = true;
-    
-    // Get the button for manual playback
-    const audioButton = document.getElementById('audioButton');
-    if (audioButton) {
-        // Hide button initially, show if autoplay fails
-        audioButton.style.display = 'none';
-        
-        // Add click handler to the button
-        audioButton.addEventListener('click', function() {
-            console.log("Audio button clicked");
-            playAudioWithElement(audioElement);
-            audioButton.style.display = 'none'; // Hide after click
-        });
-    }
-    
-    // Helper function to actually play the audio
-    function playAudioWithElement(element) {
-        if (audioStatus.playSucceeded) {
-            console.log("Audio already playing, not starting again");
-            return;
-        }
-        
-        console.log("Attempting to play audio...");
-        audioStatus.playAttempted = true;
-        
-        // First check if the audio source is valid
-        if (!element.src && element.getElementsByTagName('source').length === 0) {
-            console.error("No audio source found!");
-            audioStatus.playError = "No source";
-            if (audioButton) {
-                audioButton.style.display = 'block';
-            }
-            return;
-        }
-        
-        // Enforce volume setting
-        element.volume = 1.0;
-        
-        // Play with detailed error handling
-        element.play()
-            .then(() => {
-                console.log("Audio playback started successfully!");
-                audioStatus.playSucceeded = true;
-                
-                // Schedule the redirect only once we confirm audio is playing
-                if (!audioStatus.redirectScheduled) {
-                    scheduleRedirect();
-                }
-            })
-            .catch(error => {
-                console.error("Audio playback failed:", error);
-                audioStatus.playError = error.message || "Unknown error";
-                
-                // Show the manual play button if autoplay fails
-                if (audioButton) {
-                    audioButton.style.display = 'block';
-                }
-                
-                // Schedule redirect even if audio fails
-                if (!audioStatus.redirectScheduled) {
-                    scheduleRedirect();
-                }
-            });
-    }
-    
-    // Schedule the redirect to visual novel
-    function scheduleRedirect() {
-        console.log("Scheduling redirect to visual novel...");
-        audioStatus.redirectScheduled = true;
-        
-        // Redirect after 26 seconds
-        setTimeout(() => {
-            console.log("Redirecting to visual novel now");
-            window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/visual-novel/index.html';
-        }, 26000);
-    }
-    
-    // IMPORTANT: Try to play audio immediately on initialization
-    console.log("Making initial attempt to play audio automatically...");
-    playAudioWithElement(audioElement);
-    
-    // Try to play automatically after 4 seconds
-    setTimeout(() => {
-        console.log("4-second timer elapsed, attempting to play audio...");
-        playAudioWithElement(audioElement);
-    }, 4000);
-    
-    // Provide a global function for debugging
-    window.debugAudioStatus = function() {
-        console.log("Audio Status:", audioStatus);
-        console.log("Audio Element:", audioElement);
-        return audioStatus;
-    };
-    
-    // Attempt to play when user interacts with the page
-    document.addEventListener('click', function playOnInteraction() {
-        console.log("User interaction detected, attempting to play audio...");
-        playAudioWithElement(audioElement);
-        document.removeEventListener('click', playOnInteraction);
-    });
-    
-    // Also attempt to play on keydown if other methods fail
-    document.addEventListener('keydown', function playOnKey(event) {
-        if (!audioStatus.playSucceeded && (event.code === 'KeyW' || event.code === 'KeyA' || 
-            event.code === 'KeyS' || event.code === 'KeyD')) {
-            console.log("Key press detected, attempting to play audio...");
-            playAudioWithElement(audioElement);
-            document.removeEventListener('keydown', playOnKey);
-        }
-    });
-} 
+}); 
