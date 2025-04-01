@@ -10,7 +10,7 @@ const museumTexts = [
         "I’m not drunk, I’ve only had two. - You reek of whiskey and the baby’s still awake.",
         "Please don’t leave. - I’m not leaving. I just need air.",
         "Daddy, do you remember the blue fish from the aquarium? - Of course I do. You named it Glitterhead.",
-        "You threw my laptop, Bobby. You actually threw it. - I was angry. I didn’t mean to.",
+        "You threw my laptop, Mark. You actually threw it. - I was angry. I didn’t mean to.",
         "It's okay, we can fix it. - You always say that. Not everything can be fixed.",
         "You were the one who told me I could do this. - I still believe that.",
         "What if I mess everything up again? - Then we start over. Again.",
@@ -19,7 +19,7 @@ const museumTexts = [
         "You said you'd quit. - I will. I just need to get through this week.",
         "She asked if you're coming to her play. - I’ll be there. I swear on my life.",
         "You kissed my forehead and said everything would be okay. - I lied. But I needed to believe it.",
-        "Why are we like this, Bobby? - Because we both don’t know how to let go.",
+        "Why are we like this, Mark? - Because we both don’t know how to let go.",
         "Daddy, I drew you. You're a superhero. - Let me see that. Wow. That’s amazing.",
         "You can’t keep disappearing like this. - I don’t mean to. I just get lost.",
         "You were sober for six months. What happened? - I thought I could have one.",
@@ -39,7 +39,7 @@ const museumTexts = [
         "She asked why you're always sad. - I said sometimes daddies just get quiet.",
         "You held her like she was glass. - She saved me, a little.",
         "I found the letters you wrote and never sent. - I didn’t think I deserved to send them.",
-        "I still wear the ring, Bobby. - Even after all this?",
+        "I still wear the ring, Mark. - Even after all this?",
         "She keeps your photo under her pillow. - I can’t even look at myself right now.",
         "Don’t disappear on her again. - I won’t. I promise.",
         "You missed her first step. - I watched it on video, 100 times.",
@@ -54,6 +54,7 @@ const museumTexts = [
         "She said 'Daddy made the monster go away.' - I didn’t even know she saw it.",
         "This is the last time. - You said that last time.",
         "You held me like I was the only thing keeping you on Earth. - You were.",
+    
 ];
 
 
