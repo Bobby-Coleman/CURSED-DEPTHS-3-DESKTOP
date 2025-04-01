@@ -41,6 +41,19 @@
         #controls p {
             margin: 5px 0;
         }
+        #audioButton {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            font-family: Arial, sans-serif;
+        }
     </style>
 </head>
 <body>
@@ -53,18 +66,17 @@
         <p>ESC = Pause</p>
     </div>
     
-    <!-- Multiple audio elements with different paths -->
-    <audio id="introVoice1" preload="auto">
-        <source src="../audio/intro_voice.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="introVoice2" preload="auto">
+    <!-- Add audio elements with multiple sources for compatibility -->
+    <audio id="introVoice" preload="auto">
         <source src="/museum3d/audio/intro_voice.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="introVoice3" preload="auto">
         <source src="audio/intro_voice.mp3" type="audio/mpeg">
     </audio>
-    <audio id="introVoice4" preload="auto">
-        <source src="./audio/intro_voice.mp3" type="audio/mpeg">
+    
+    <!-- Fallback button in case autoplay fails -->
+    <button id="audioButton">Click to Start Audio</button>
+    
+    <audio id="backgroundMusic" loop>
+        <source src="audio/song.wav" type="audio/wav">
     </audio>
     
     <script type="importmap">

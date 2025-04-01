@@ -1,0 +1,12 @@
+# Set proper MIME types for audio files
+AddType audio/mpeg mp3
+AddType audio/mp4 m4a
+AddType audio/ogg ogg
+
+# Allow cross-origin requests
+Header set Access-Control-Allow-Origin "*"
+
+# Set caching for audio files (1 hour)
+<FilesMatch "\.(mp3|m4a|ogg)$">
+Header set Cache-Control "max-age=3600"
+</FilesMatch> 
