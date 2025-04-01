@@ -13,7 +13,7 @@ const dialog = [
     { speaker: "Mark", text: "Say that again." },
     { speaker: "Emily", text: "[cold] You heard me." },
     { speaker: "Mark", text: "[unsteady] I'm done. I'm leaving." },
-    { speaker: "Emily", text: "You're drunk. Sit down." },
+    { speaker: "Emily", text: "You're drunk. You can't drive. Sit down." },
     { speaker: "Mark", text: "[controlled] Back off." },
     { speaker: "Emily", text: "[cracking] Fine. Go to hell." }
 ];
