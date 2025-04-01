@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cursed Depths - Driving</title>
+    <script type="module">
+        import { getPath } from '../pathResolver.js';
+        window.getPath = getPath;
+    </script>
     <style>
         body {
             margin: 0;
@@ -91,7 +95,7 @@
     </div>
 
     <!-- Audio element -->
-    <audio id="bgMusic" src="assets/audio/background_music_enter.wav" loop></audio>
+    <audio id="bgMusic" src="../driving-game/assets/audio/background_music_enter.wav" loop></audio>
     
     <!-- Three.js Library -->
     <script async src="https://unpkg.com/es-module-shims/dist/es-module-shims.js"></script>
@@ -142,6 +146,6 @@
     </script>
     
     <!-- Game Script -->
-    <script src="js/driving.js" type="module"></script>
+    <script src="./js/driving.js" type="module"></script>
 </body>
 </html> 

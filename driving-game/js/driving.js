@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { drunkThoughts } from './drunk_thoughts.js';
 
 // Play background music at the start of the game
-const backgroundMusic = new Audio('assets/audio/background_music_enter.wav');
+const backgroundMusic = new Audio('../../driving-game/assets/audio/background_music_enter.wav');
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.7;
 backgroundMusic.play();
@@ -67,7 +67,7 @@ class DrivingGame {
         this.setupControls();
         
         // Load beer texture
-        this.beerTexture = new THREE.TextureLoader().load('assets/sprites/beer.png');
+        this.beerTexture = new THREE.TextureLoader().load('../../driving-game/assets/sprites/beer.png');
         
         // Add trippy effect overlay
         this.trippyOverlay = document.createElement('div');

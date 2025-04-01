@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visual Novel</title>
+    <script type="module">
+        import { getPath } from '../pathResolver.js';
+        window.getPath = getPath;
+    </script>
     <style>
         * {
             margin: 0;
@@ -30,7 +34,7 @@
 
         .background {
             z-index: 1;
-            background: url('assets/background.jpg') center center;
+            background: url('../visual-novel/assets/background.jpg') center center;
             background-size: cover;
             opacity: 1;
         }
@@ -160,15 +164,15 @@
     <div class="visual-novel">
         <div class="scene-layer background"></div>
         <div class="scene-layer wife-layer">
-            <img class="character wife" src="assets/mad.png" alt="Wife Mad" id="wifeMad">
-            <img class="character wife" src="assets/sad.png" alt="Wife Sad" id="wifeSad">
+            <img class="character wife" src="../visual-novel/assets/mad.png" alt="Wife Mad" id="wifeMad">
+            <img class="character wife" src="../visual-novel/assets/sad.png" alt="Wife Sad" id="wifeSad">
         </div>
         <div class="scene-layer husband-layer">
-            <img class="character husband" src="assets/husband.png" alt="Husband" id="husband">
+            <img class="character husband" src="../visual-novel/assets/husband.png" alt="Husband" id="husband">
         </div>
         <div id="dialogBox"></div>
         <button id="choiceButton">Take the keys and leave</button>
     </div>
-    <script src="script.js"></script>
+    <script src="./script.js" type="module"></script>
 </body>
 </html> 
