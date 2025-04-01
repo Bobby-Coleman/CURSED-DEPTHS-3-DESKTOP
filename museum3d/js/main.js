@@ -482,12 +482,34 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     init();
     animate();
     
-    // Play intro voice after 4 seconds
+    // Create audio element early to prepare it
+    const audio = new Audio('/museum3d/audio/intro_voice.mp3');
+    
+    // Flag to track if we've attempted to play audio
+    let audioAttempted = false;
+    
+    // Play audio on first user interaction (click) and also after 4 seconds
+    document.addEventListener('click', function playAudioOnUserInteraction() {
+        if (!audioAttempted) {
+            audio.play().catch(error => {
+                console.error("Audio playback failed on user interaction:", error);
+            });
+            audioAttempted = true;
+            // Remove the event listener after first attempt
+            document.removeEventListener('click', playAudioOnUserInteraction);
+        }
+    });
+    
+    // Also try to play after 4 seconds
     setTimeout(() => {
-        const audio = new Audio('audio/intro_voice.mp3');
-        audio.play().catch(error => {
-            console.error("Audio playback failed:", error);
-        });
+        if (!audioAttempted) {
+            audio.play().catch(error => {
+                console.error("Audio playback failed on timeout:", error);
+                // If auto-play fails, we'll need user interaction
+                console.log("Browser requires user interaction for audio playback");
+            });
+            audioAttempted = true;
+        }
     }, 4000);
     
     // Redirect to visual novel after 26 seconds
