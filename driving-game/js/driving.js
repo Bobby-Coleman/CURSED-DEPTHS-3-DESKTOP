@@ -11,25 +11,54 @@ backgroundMusic.volume = 0.7;
 const urlParams = new URLSearchParams(window.location.search);
 const shouldPlayMusic = urlParams.get('playMusic') !== 'false'; // Default to playing music
 
-// Add event listeners for the audio element
-backgroundMusic.addEventListener('canplaythrough', () => {
-    if (shouldPlayMusic) {
+// Track if music has been attempted to play
+let musicPlayAttempted = false;
+
+// Function to try playing the music
+const tryPlayMusic = () => {
+    if (shouldPlayMusic && !musicPlayAttempted) {
+        musicPlayAttempted = true;
         backgroundMusic.play().catch(error => {
             console.error('Audio playback failed:', error);
+            // Reset flag if autoplay was rejected
+            if (error.name === 'NotAllowedError') {
+                musicPlayAttempted = false;
+            }
         });
     }
-});
+};
+
+// Add event listeners for the audio element
+backgroundMusic.addEventListener('canplaythrough', tryPlayMusic);
 
 backgroundMusic.addEventListener('error', (e) => {
     console.error('Audio error:', e);
 });
 
-// Autoplay fallback - many browsers require user interaction before playing audio
-document.addEventListener('click', () => {
-    if (shouldPlayMusic && backgroundMusic.paused) {
-        backgroundMusic.play().catch(error => {
-            console.error('Audio playback failed after user interaction:', error);
+// Use multiple events to try to start audio
+document.addEventListener('click', tryPlayMusic);
+document.addEventListener('touchstart', tryPlayMusic);
+document.addEventListener('keydown', tryPlayMusic);
+
+// Check referrer to detect navigation from other pages
+const referrer = document.referrer;
+if (referrer && referrer.includes(window.location.origin)) {
+    // Add a slight delay for cross-page navigation
+    setTimeout(() => {
+        // Create a fake user interaction to try to trigger audio
+        const event = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
         });
+        document.dispatchEvent(event);
+    }, 1000);
+}
+
+// Ensure audio plays when tab becomes visible again
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && shouldPlayMusic && !backgroundMusic.paused) {
+        backgroundMusic.play().catch(e => console.error('Visibility change playback failed:', e));
     }
 });
 
