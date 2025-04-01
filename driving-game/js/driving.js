@@ -113,8 +113,8 @@ class DrivingGame {
         this.settings = {
             roadWidth: 20, // Increased from 15 to accommodate 4 lanes
             roadLength: 300,
-            carSpeed: 1.2 * mobileSpeedMultiplier, // Increased from 1.0 to 1.2
-            baseCarSpeed: 1.2 * mobileSpeedMultiplier, // Also increased base speed to match
+            carSpeed: 0.6 * mobileSpeedMultiplier, // Reduced from 1.2 to 0.6 (half speed)
+            baseCarSpeed: 0.6 * mobileSpeedMultiplier, // Also reduced base speed to match
             obstacleSpeed: 0.4 * mobileSpeedMultiplier, // Also reduce obstacle speed
             cameraHeight: 7,
             cameraDistance: 12,
