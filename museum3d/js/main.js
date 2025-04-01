@@ -481,4 +481,17 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     font = loadedFont;
     init();
     animate();
+    
+    // Play intro voice after 4 seconds
+    setTimeout(() => {
+        const audio = new Audio('audio/intro_voice.mp3');
+        audio.play().catch(error => {
+            console.error("Audio playback failed:", error);
+        });
+    }, 4000);
+    
+    // Redirect to visual novel after 26 seconds
+    setTimeout(() => {
+        window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/visual-novel/index.html';
+    }, 26000);
 }); 
