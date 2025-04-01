@@ -34,9 +34,20 @@ const husband = document.getElementById('husband');
 let audioContext;
 let oscillator;
 let gainNode;
-const backgroundMusic = new Audio('assets/visual_novel.wav');
-backgroundMusic.loop = true;
-backgroundMusic.volume = 0.3;
+
+// Load background music
+const bgMusic = new Audio(pathUtils.resolveAssetPath('assets/audio/background_music_enter.wav'));
+bgMusic.loop = true;
+bgMusic.volume = 0.5;
+
+// Load typing sound
+const typingSound = new Audio(pathUtils.resolveAssetPath('assets/audio/typing.wav'));
+typingSound.volume = 0.3;
+
+// Load character images
+wifeMad.src = pathUtils.resolveAssetPath('assets/mad.png');
+wifeSad.src = pathUtils.resolveAssetPath('assets/sad.png');
+husband.src = pathUtils.resolveAssetPath('assets/husband.png');
 
 // Initialize audio (must be called from a user interaction)
 function initAudio() {
@@ -47,7 +58,7 @@ function initAudio() {
         gainNode.connect(audioContext.destination);
     }
     // Start background music
-    backgroundMusic.play().catch(err => console.log('Audio play failed:', err));
+    bgMusic.play().catch(err => console.log('Audio play failed:', err));
 }
 
 // Play a random tone
@@ -299,12 +310,12 @@ function init() {
     choiceButton.addEventListener('click', () => {
         // Fade out music before transitioning
         const fadeOut = setInterval(() => {
-            if (backgroundMusic.volume > 0.02) {
-                backgroundMusic.volume -= 0.02;
+            if (bgMusic.volume > 0.02) {
+                bgMusic.volume -= 0.02;
             } else {
-                backgroundMusic.pause();
+                bgMusic.pause();
                 clearInterval(fadeOut);
-                window.location.href = '/driving-game/driving.html?playMusic=true&beerCount=3';
+                redirectToDrivingGame();
             }
         }, 50);
     });
@@ -420,4 +431,9 @@ function updateDialog() {
 }
 
 // Start the visual novel
-init(); 
+init();
+
+// Update redirect to use pathUtils
+function redirectToDrivingGame() {
+    window.location.href = pathUtils.resolveAssetPath('driving-game/driving.html?playMusic=true&beerCount=3');
+} 

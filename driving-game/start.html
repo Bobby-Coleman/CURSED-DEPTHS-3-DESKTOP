@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
     <title>Highway to Hell - Start</title>
+    <script src="../pathUtils.js"></script>
+    <script>
+        // Dynamically set base URL based on current path
+        const baseElement = document.createElement('base');
+        baseElement.href = pathUtils.getBasePath();
+        document.head.appendChild(baseElement);
+    </script>
     <style>
         body {
             margin: 0;

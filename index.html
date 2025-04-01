@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
     <title>Cursed Depths</title>
+    <script src="pathUtils.js"></script>
+    <script>
+        // Dynamically set base URL based on current path
+        const baseElement = document.createElement('base');
+        baseElement.href = pathUtils.getBasePath();
+        document.head.appendChild(baseElement);
+    </script>
     <style>
         body {
             margin: 0;
@@ -87,12 +94,13 @@
         }
     </style>
     <script>
-        // Check if coming directly to this page, if so, redirect to driving game
-        if (!sessionStorage.getItem('fromDrivingGame')) {
-            window.location.href = './driving-game/start.html';
-        } else {
-            // Clear the flag once redirected back to main game
+        // Check if we're coming from the driving game
+        const fromDrivingGame = sessionStorage.getItem('fromDrivingGame');
+        if (fromDrivingGame === 'true') {
+            // Clear the flag
             sessionStorage.removeItem('fromDrivingGame');
+            // Redirect to visual novel
+            window.location.href = pathUtils.resolveAssetPath('visual-novel/index.html');
         }
     </script>
     <!-- Add nipple.js library -->
