@@ -482,36 +482,35 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     init();
     animate();
     
-    // Create and preload audio element
-    const audio = new Audio();
+    // Create audio element early to prepare it
+    const audio = new Audio('/museum3d/audio/intro_voice.mp3');
     
-    // Set up audio element for immediate playback
-    audio.src = 'audio/intro_voice.mp3';
-    audio.preload = 'auto';
-    audio.volume = 1.0;
+    // Flag to track if we've attempted to play audio
+    let audioAttempted = false;
     
-    // Flag to track if audio has played
-    let audioPlayed = false;
-    
-    // Play audio on first click
-    function playAudioOnClick() {
-        if (audioPlayed) return;
-        
-        console.log("Click detected, playing audio");
-        audio.play()
-            .then(() => {
-                console.log("Audio started playing successfully");
-                audioPlayed = true;
-                // Remove event listener after successful play
-                document.removeEventListener('click', playAudioOnClick);
-            })
-            .catch(error => {
-                console.error("Audio playback failed:", error);
+    // Play audio on first user interaction (click) and also after 4 seconds
+    document.addEventListener('click', function playAudioOnUserInteraction() {
+        if (!audioAttempted) {
+            audio.play().catch(error => {
+                console.error("Audio playback failed on user interaction:", error);
             });
-    }
+            audioAttempted = true;
+            // Remove the event listener after first attempt
+            document.removeEventListener('click', playAudioOnUserInteraction);
+        }
+    });
     
-    // Add event listener for click
-    document.addEventListener('click', playAudioOnClick);
+    // Also try to play after 4 seconds
+    setTimeout(() => {
+        if (!audioAttempted) {
+            audio.play().catch(error => {
+                console.error("Audio playback failed on timeout:", error);
+                // If auto-play fails, we'll need user interaction
+                console.log("Browser requires user interaction for audio playback");
+            });
+            audioAttempted = true;
+        }
+    }, 4000);
     
     // Redirect to visual novel after 26 seconds
     setTimeout(() => {
