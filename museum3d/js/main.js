@@ -176,7 +176,7 @@ const museumTexts = [
 ];
 
 // Simple audio setup - exactly matching the visual novel approach
-const introVoice = new Audio('/museum3d/audio/intro_voice.mp3');
+const introVoice = new Audio('../audio/intro_voice.mp3');
 introVoice.volume = 0.7;
 
 // Initialize audio (will be called from first user interaction)
