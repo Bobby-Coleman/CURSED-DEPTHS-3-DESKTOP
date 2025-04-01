@@ -129,8 +129,8 @@ export class UI {
         this.bloodCounter = document.createElement('div');
         this.bloodCounter.style.position = 'absolute';
         this.bloodCounter.style.top = '120px';
-        this.bloodCounter.style.left = '50%';
-        this.bloodCounter.style.transform = 'translateX(-50%)';
+        this.bloodCounter.style.right = '20px';
+        this.bloodCounter.style.transform = 'none';
         this.bloodCounter.style.color = '#FFFFFF';
         this.bloodCounter.style.fontSize = '24px';
         this.bloodCounter.style.fontWeight = 'bold';
@@ -158,8 +158,8 @@ export class UI {
         this.requiredBloodDisplay = document.createElement('div');
         this.requiredBloodDisplay.style.position = 'absolute';
         this.requiredBloodDisplay.style.top = '80px'; // Move down slightly from top
-        this.requiredBloodDisplay.style.left = '50%';
-        this.requiredBloodDisplay.style.transform = 'translateX(-50%)';
+        this.requiredBloodDisplay.style.right = '20px';
+        this.requiredBloodDisplay.style.transform = 'none';
         this.requiredBloodDisplay.style.color = '#FFFFFF';
         this.requiredBloodDisplay.style.fontSize = '24px';
         this.requiredBloodDisplay.style.fontWeight = 'bold';
