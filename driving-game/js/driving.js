@@ -1741,7 +1741,7 @@ class DrivingGame {
         this.settings.carSpeed = Math.max(minSpeed, Math.min(maxSpeed, this.settings.carSpeed));
         
         // Add only ONE fog patch per beer collected
-        // this.createFogPatch(this.beersCollected); // Commented out the blur effect
+        this.createFogPatch(this.beersCollected); // Re-enabled the blur effect with reduced strength
     }
     
     createSpeedVisualEffect(isSpeedUp) {
@@ -1820,13 +1820,14 @@ class DrivingGame {
         fogPatch.style.height = '100%';
         fogPatch.style.borderRadius = '0';
         
-        // Apply stronger blur effect based on beer count
-        // Start more subtle (1px) and build up more gradually
-        const blurAmount = Math.min(beerCount * 2, 52); // Increased max blur by 30% to 52px
+        // Apply blur effect based on beer count - REDUCED BY HALF
+        // Original: blurAmount = Math.min(beerCount * 2, 52)
+        const blurAmount = Math.min(beerCount * 1, 26); // Reduced by half
         fogPatch.style.backdropFilter = `blur(${blurAmount}px)`;
         
-        // Add a color tint that gets stronger with more beers
-        const tintOpacity = Math.min(beerCount * 0.15, 0.6); // Increased max opacity to 0.6
+        // Add a color tint that gets stronger with more beers - REDUCED BY HALF
+        // Original: tintOpacity = Math.min(beerCount * 0.15, 0.6)
+        const tintOpacity = Math.min(beerCount * 0.075, 0.3); // Reduced by half
         fogPatch.style.backgroundColor = `rgba(255, 255, 255, ${tintOpacity})`;
         
         fogPatch.style.zIndex = '1000';
