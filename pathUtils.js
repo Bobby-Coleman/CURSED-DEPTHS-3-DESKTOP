@@ -1,19 +1,11 @@
 // Utility function to resolve paths based on the current environment
 function getBasePath() {
-    // Get the current path segments
-    const pathSegments = window.location.pathname.split('/').filter(Boolean);
-    
-    // If we're on GitHub Pages, the first segment is the repo name
+    // If we're on GitHub Pages, use the repository name
     if (window.location.hostname.includes('github.io')) {
-        return '/' + pathSegments[0] + '/';
+        return '/CURSED-DEPTHS-3-DESKTOP/';
     }
     
-    // For local development, use the current path up to the last segment
-    if (pathSegments.length > 1) {
-        return '/' + pathSegments.slice(0, -1).join('/') + '/';
-    }
-    
-    // Default to root
+    // For local development, use root
     return '/';
 }
 
