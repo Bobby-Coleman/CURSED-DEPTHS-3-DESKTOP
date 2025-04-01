@@ -87,9 +87,18 @@
         }
     </style>
     <script>
+        // Determine base path based on environment
+        const BASE_PATH = window.location.hostname.includes('github.io') 
+            ? '/CURSED-DEPTHS-3-DESKTOP'
+            : '';
+        
+        function getPath(path) {
+            return BASE_PATH + path;
+        }
+
         // Check if coming directly to this page, if so, redirect to driving game
         if (!sessionStorage.getItem('fromDrivingGame')) {
-            window.location.href = './driving-game/start.html';
+            window.location.href = getPath('/driving-game/start.html');
         } else {
             // Clear the flag once redirected back to main game
             sessionStorage.removeItem('fromDrivingGame');
