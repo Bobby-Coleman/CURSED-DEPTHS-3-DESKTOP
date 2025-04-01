@@ -1,21 +1,21 @@
 // Dialog data
 const dialog = [
-    { speaker: "W", text: "You show up at 2AM reeking of bars. You hear him cry and just… sit there." },
-    { speaker: "H", text: "It's a couple drinks after work, okay?" },
-    { speaker: "W", text: "Couple? There are bottles everywhere. Oh and I found your messages with Cursor. Who the hell is she??"},
-    { speaker: "W", text: "Look at all these. There are thousands of them. You're cheating on me??", showChat: true },
-    { speaker: "H", text: "So you're spying on me now? I need something that isn't this." },
-    { speaker: "W", text: "This? You mean your child? Me? You haven’t been the same since it happened." },
-    { speaker: "H", text: "Don't act like you know what it's like to wish you hadn’t woken up." },
-    { speaker: "W", text: "I do. I wonder where the man I married went." },
-    { speaker: "H", text: "[quiet] You sound like my mother." },
-    { speaker: "W", text: "And you sound like your father." },
-    { speaker: "H", text: "Say that again." },
-    { speaker: "W", text: "[cold] You heard me." },
-    { speaker: "H", text: "[unsteady] I’m done. I’m leaving." },
-    { speaker: "W", text: "You’re drunk. Sit down." },
-    { speaker: "H", text: "[controlled] Back off." },
-    { speaker: "W", text: "[cracking] Fine. Go to hell." }
+    { speaker: "Emily", text: "You show up at 2AM reeking of bars. You hear him cry and just… sit there." },
+    { speaker: "Mark", text: "It's a couple drinks after work, okay?" },
+    { speaker: "Emily", text: "Couple? There are bottles everywhere. Oh and I found your messages with Cursor. Who the hell is she??" },
+    { speaker: "Emily", text: "Look at all these. There are thousands of them. You're cheating on me??", showChat: true },
+    { speaker: "Mark", text: "So you're spying on me now? I need something that isn't this." },
+    { speaker: "Emily", text: "This? You mean your child? Me? You haven’t been the same since it happened." },
+    { speaker: "Mark", text: "Don't act like you know what it's like to wish you hadn’t woken up." },
+    { speaker: "Emily", text: "I do. I wonder where the man I married went." },
+    { speaker: "Mark", text: "[quiet] You sound like my mother." },
+    { speaker: "Emily", text: "And you sound like your father." },
+    { speaker: "Mark", text: "Say that again." },
+    { speaker: "Emily", text: "[cold] You heard me." },
+    { speaker: "Mark", text: "[unsteady] I’m done. I’m leaving." },
+    { speaker: "Emily", text: "You’re drunk. Sit down." },
+    { speaker: "Mark", text: "[controlled] Back off." },
+    { speaker: "Emily", text: "[cracking] Fine. Go to hell." }
 ];
 
 let currentLine = 0;
