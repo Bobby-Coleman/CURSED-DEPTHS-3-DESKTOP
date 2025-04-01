@@ -1,11 +1,56 @@
 import * as THREE from 'three';
 import { drunkThoughts } from './drunk_thoughts.js';
 
+// Set up loading manager to track progress
+const loadingManager = new THREE.LoadingManager();
+let totalAssets = 3; // Beer texture, audio, and general scene assets
+let loadedAssets = 0;
+
+loadingManager.onLoad = function() {
+    // Hide loading screen when everything is loaded
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.style.opacity = '0';
+    setTimeout(() => {
+        loadingScreen.style.display = 'none';
+    }, 500);
+};
+
+loadingManager.onProgress = function(url, itemsLoaded, itemsTotal) {
+    loadedAssets++;
+    const progressPercent = Math.min(Math.round((loadedAssets / totalAssets) * 100), 100);
+    
+    // Update loading bar
+    const loadingBar = document.getElementById('loading-bar');
+    if (loadingBar) {
+        loadingBar.style.width = progressPercent + '%';
+    }
+    
+    // Update loading text
+    const loadingText = document.getElementById('loading-text');
+    if (loadingText) {
+        loadingText.textContent = `Loading Night Drive... ${progressPercent}%`;
+    }
+};
+
 // Play background music at the start of the game
 const backgroundMusic = new Audio();
 backgroundMusic.src = 'assets/audio/background_music_enter.mp3';
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.7;
+
+// Track when audio is loaded
+backgroundMusic.addEventListener('canplaythrough', () => {
+    loadingManager.itemEnd('audio');
+});
+
+// Increment loading counter on error too
+backgroundMusic.addEventListener('error', (e) => {
+    console.error('Audio error:', e);
+    loadingManager.itemEnd('audio');
+});
+
+// Start loading audio
+loadingManager.itemStart('audio');
 
 // Check URL parameters for playMusic flag
 const urlParams = new URLSearchParams(window.location.search);
@@ -30,10 +75,6 @@ const tryPlayMusic = () => {
 
 // Add event listeners for the audio element
 backgroundMusic.addEventListener('canplaythrough', tryPlayMusic);
-
-backgroundMusic.addEventListener('error', (e) => {
-    console.error('Audio error:', e);
-});
 
 // Use multiple events to try to start audio
 document.addEventListener('click', tryPlayMusic);
@@ -122,7 +163,10 @@ class DrivingGame {
         this.setupControls();
         
         // Load beer texture
-        this.beerTexture = new THREE.TextureLoader().load('assets/sprites/beer.png');
+        loadingManager.itemStart('beerTexture');
+        this.beerTexture = new THREE.TextureLoader(loadingManager).load('assets/sprites/beer.png', () => {
+            loadingManager.itemEnd('beerTexture');
+        });
         
         // Add trippy effect overlay
         this.trippyOverlay = document.createElement('div');
@@ -137,7 +181,11 @@ class DrivingGame {
         document.body.appendChild(this.trippyOverlay);
         
         // Start the animation loop
-        this.animate();
+        loadingManager.itemStart('scene');
+        setTimeout(() => {
+            loadingManager.itemEnd('scene');
+            this.animate();
+        }, 500);
     }
     
     initScene() {

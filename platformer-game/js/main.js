@@ -113,7 +113,7 @@ function loadBackgrounds() {
     // Start with the first two backgrounds
     const initialBackgrounds = [
         'assets/images/background_1.PNG',
-        'assets/images/background_2.png'
+        'assets/images/background_2.PNG'
     ];
     
     // Load initial backgrounds
@@ -125,7 +125,7 @@ function loadBackgrounds() {
             calculateBackgroundWidths();
         };
         img.onerror = function() {
-            console.log(`Background ${index + 1} failed to load`);
+            console.error(`Background ${index + 1} failed to load: ${src}`);
         };
         backgrounds.push(img);
     });
@@ -134,7 +134,7 @@ function loadBackgrounds() {
     let nextIndex = 3;
     function tryLoadNextBackground() {
         const img = new Image();
-        img.src = `assets/images/background_${nextIndex}.png`;
+        img.src = `assets/images/background_${nextIndex}.PNG`;
         img.onload = function() {
             console.log(`Background ${nextIndex} loaded successfully`);
             backgrounds.push(img);
@@ -143,7 +143,7 @@ function loadBackgrounds() {
             tryLoadNextBackground();
         };
         img.onerror = function() {
-            console.log(`No more backgrounds found after ${nextIndex - 1}`);
+            console.error(`No more backgrounds found after ${nextIndex - 1}: ${img.src}`);
             hasMoreBackgrounds = false;
             showExitDoor();
         };
