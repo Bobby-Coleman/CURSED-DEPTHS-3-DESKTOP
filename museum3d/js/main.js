@@ -493,29 +493,25 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     // Flag to track if audio has played
     let audioPlayed = false;
     
-    // Play audio on movement keys (WASD)
-    function playAudioOnMovement(e) {
+    // Play audio on first click
+    function playAudioOnClick() {
         if (audioPlayed) return;
         
-        if (e.key === 'w' || e.key === 'a' || e.key === 's' || e.key === 'd' || 
-            e.key === 'W' || e.key === 'A' || e.key === 'S' || e.key === 'D') {
-            
-            console.log("Movement detected, playing audio");
-            audio.play()
-                .then(() => {
-                    console.log("Audio started playing successfully");
-                    audioPlayed = true;
-                    // Remove event listener after successful play
-                    document.removeEventListener('keydown', playAudioOnMovement);
-                })
-                .catch(error => {
-                    console.error("Audio playback failed:", error);
-                });
-        }
+        console.log("Click detected, playing audio");
+        audio.play()
+            .then(() => {
+                console.log("Audio started playing successfully");
+                audioPlayed = true;
+                // Remove event listener after successful play
+                document.removeEventListener('click', playAudioOnClick);
+            })
+            .catch(error => {
+                console.error("Audio playback failed:", error);
+            });
     }
     
-    // Add event listener for movement keys
-    document.addEventListener('keydown', playAudioOnMovement);
+    // Add event listener for click
+    document.addEventListener('click', playAudioOnClick);
     
     // Redirect to visual novel after 26 seconds
     setTimeout(() => {
