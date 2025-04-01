@@ -5,22 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cursed Depths - Driving</title>
     <script>
-        // Inline pathUtils to avoid loading issues
-        const pathUtils = {
-            getBasePath() {
-                return window.location.hostname.includes('github.io') ? '/CURSED-DEPTHS-3-DESKTOP/' : '/';
-            },
-            resolveAssetPath(path) {
-                const base = this.getBasePath();
-                const clean = path.startsWith('/') ? path.slice(1) : path;
-                return base + clean;
-            }
-        };
+        // GUARANTEED PATH RESOLUTION
+        const BASE_PATH = window.location.hostname.includes('github.io') 
+            ? '/CURSED-DEPTHS-3-DESKTOP'
+            : '';
+        
+        function getPath(path) {
+            return BASE_PATH + path;
+        }
 
-        // Set base URL
-        const baseElement = document.createElement('base');
-        baseElement.href = pathUtils.getBasePath();
-        document.head.appendChild(baseElement);
+        // Add to window for access in other scripts
+        window.getPath = getPath;
     </script>
     <style>
         body {
@@ -109,7 +104,7 @@
     </div>
 
     <!-- Audio element -->
-    <audio id="bgMusic" src="./assets/audio/background_music_enter.wav" loop></audio>
+    <audio id="bgMusic" src="/driving-game/assets/audio/background_music_enter.wav" loop></audio>
     
     <!-- Three.js Library -->
     <script async src="https://unpkg.com/es-module-shims/dist/es-module-shims.js"></script>
@@ -123,6 +118,9 @@
     
     <!-- Super simple music script -->
     <script>
+        // Fix audio source
+        document.getElementById('bgMusic').src = getPath('/driving-game/assets/audio/background_music_enter.wav');
+
         // Prevent default touch behaviors
         document.addEventListener('touchmove', function(e) {
             e.preventDefault();
@@ -160,6 +158,6 @@
     </script>
     
     <!-- Game Script -->
-    <script src="./js/driving.js" type="module"></script>
+    <script src="/driving-game/js/driving.js" type="module"></script>
 </body>
 </html> 

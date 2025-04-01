@@ -3,7 +3,7 @@ import { drunkThoughts } from './drunk_thoughts.js';
 import pathUtils from './pathUtils.js';
 
 // Play background music at the start of the game
-const backgroundMusic = new Audio('assets/audio/background_music_enter.wav');
+const backgroundMusic = new Audio(pathUtils.resolveAssetPath('assets/audio/background_music_enter.wav'));
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.7;
 backgroundMusic.play();
