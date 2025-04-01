@@ -231,21 +231,16 @@ function init() {
     // Controls setup
     controls = new PointerLockControls(camera, document.body);
 
-    const blocker = document.getElementById('blocker');
-    const instructions = document.getElementById('instructions');
-
-    instructions.addEventListener('click', () => {
+    // Automatically lock controls when game starts
+    document.addEventListener('click', () => {
         controls.lock();
     });
 
-    controls.addEventListener('lock', () => {
-        blocker.style.display = 'none';
-        instructions.style.display = 'none';
-    });
-
     controls.addEventListener('unlock', () => {
-        blocker.style.display = 'flex';
-        instructions.style.display = '';
+        // Re-lock on next click
+        document.addEventListener('click', () => {
+            controls.lock();
+        }, { once: true });
     });
 
     document.addEventListener('keydown', onKeyDown);
