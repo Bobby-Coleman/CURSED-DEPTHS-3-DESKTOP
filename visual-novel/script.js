@@ -5,15 +5,15 @@ const dialog = [
     { speaker: "Emily", text: "Couple? There are bottles everywhere. Oh and I found your messages with Cursor. Who the hell is she??" },
     { speaker: "Emily", text: "Look at all these. There are thousands of them. You're cheating on me??", showChat: true },
     { speaker: "Mark", text: "So you're spying on me now? I need something that isn't this." },
-    { speaker: "Emily", text: "This? You mean your child? Me? You haven’t been the same since it happened." },
-    { speaker: "Mark", text: "Don't act like you know what it's like to wish you hadn’t woken up." },
+    { speaker: "Emily", text: "This? You mean your child? Me? You haven't been the same since it happened." },
+    { speaker: "Mark", text: "Don't act like you know what it's like to wish you hadn't woken up." },
     { speaker: "Emily", text: "I do. I wonder where the man I married went." },
     { speaker: "Mark", text: "[quiet] You sound like my mother." },
     { speaker: "Emily", text: "And you sound like your father." },
     { speaker: "Mark", text: "Say that again." },
     { speaker: "Emily", text: "[cold] You heard me." },
-    { speaker: "Mark", text: "[unsteady] I’m done. I’m leaving." },
-    { speaker: "Emily", text: "You’re drunk. Sit down." },
+    { speaker: "Mark", text: "[unsteady] I'm done. I'm leaving." },
+    { speaker: "Emily", text: "You're drunk. Sit down." },
     { speaker: "Mark", text: "[controlled] Back off." },
     { speaker: "Emily", text: "[cracking] Fine. Go to hell." }
 ];
@@ -371,12 +371,12 @@ function updateCharacterStates(speaker) {
     wifeSad.classList.remove('shaking');
     husband.classList.remove('shaking');
     
-    if (speaker === "W") {
+    if (speaker === "Emily") {
         // Show mad wife by default when speaking
         wifeMad.style.opacity = "1";
         // Start shaking only during typing
         wifeMad.classList.add('shaking');
-    } else if (speaker === "H") {
+    } else if (speaker === "Mark") {
         // When husband speaks, show sad wife in background
         wifeSad.style.opacity = "0.8";
         husband.style.opacity = "1";
