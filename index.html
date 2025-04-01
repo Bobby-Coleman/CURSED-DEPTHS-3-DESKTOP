@@ -4,6 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
     <title>Cursed Depths</title>
+    <!-- Dynamic base URL for GitHub Pages compatibility -->
+    <script>
+        (function() {
+            // Create base element for proper path resolution
+            const baseElement = document.createElement('base');
+            
+            // Check if we're on GitHub Pages
+            if (window.location.hostname.includes('github.io')) {
+                // Get repository name from path
+                const pathSegments = window.location.pathname.split('/').filter(Boolean);
+                if (pathSegments.length > 0) {
+                    // Set base to repo root
+                    baseElement.href = '/' + pathSegments[0] + '/';
+                }
+            } else {
+                // Local development
+                baseElement.href = '/';
+            }
+            
+            document.head.appendChild(baseElement);
+            console.log('Base URL set to:', baseElement.href);
+        })();
+    </script>
     <style>
         body {
             margin: 0;
@@ -85,20 +108,107 @@
                 display: block;
             }
         }
+        /* Game Hub styles for GitHub Pages root */
+        #hub-container {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: black;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        .game-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 2rem 0;
+        }
+        .game-button {
+            background-color: #300;
+            color: #fff;
+            border: 2px solid #500;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .game-button:hover {
+            background-color: #500;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+        h1 {
+            color: #ff0000;
+            font-size: 3rem;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+        }
     </style>
     <script>
-        // Check if coming directly to this page, if so, redirect to driving game
-        if (!sessionStorage.getItem('fromDrivingGame')) {
-            window.location.href = './driving-game/start.html';
-        } else {
-            // Clear the flag once redirected back to main game
-            sessionStorage.removeItem('fromDrivingGame');
+        // On GitHub Pages, we'll display a hub UI first
+        document.addEventListener('DOMContentLoaded', function() {
+            // If we have the fromDrivingGame flag set, just proceed to the main game
+            if (sessionStorage.getItem('fromDrivingGame')) {
+                // Clear the flag once redirected back to main game
+                sessionStorage.removeItem('fromDrivingGame');
+                document.getElementById('hub-container').style.display = 'none';
+                // Game will start as normal
+            } else if (window.location.hostname.includes('github.io')) {
+                // We're on GitHub Pages, show the hub by default
+                document.getElementById('hub-container').style.display = 'flex';
+            } else {
+                // Local development - use default server.js behavior
+                document.getElementById('hub-container').style.display = 'none';
+                // Go to driving game if not coming from there
+                if (!sessionStorage.getItem('fromDrivingGame')) {
+                    window.location.href = 'driving-game/start.html';
+                } else {
+                    // Clear the flag once redirected back to main game
+                    sessionStorage.removeItem('fromDrivingGame');
+                }
+            }
+        });
+
+        function startGame(fromHub) {
+            if (fromHub) {
+                // If coming from the hub, just hide it
+                document.getElementById('hub-container').style.display = 'none';
+                // Game will start as normal when script below executes
+            }
         }
     </script>
     <!-- Add nipple.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 </head>
 <body>
+    <!-- Game Hub for GitHub Pages -->
+    <div id="hub-container">
+        <h1>CURSED DEPTHS</h1>
+        
+        <p>Welcome to the Cursed Depths game hub. Choose your adventure:</p>
+        
+        <div class="game-buttons">
+            <a href="visual-novel/index.html" class="game-button">Start with Visual Novel</a>
+            <a href="driving-game/start.html" class="game-button">Driving Game</a>
+            <button onclick="startGame(true)" class="game-button">Main Game</button>
+            <a href="museum3d/index.html" class="game-button">Museum 3D</a>
+        </div>
+        
+        <p>For the full experience, start with the Visual Novel, which will guide you through all the games.</p>
+    </div>
+
+    <!-- Main Game UI -->
     <div id="mobileControls"></div>
     <div id="shootButton"></div>
     <div id="game-ui">

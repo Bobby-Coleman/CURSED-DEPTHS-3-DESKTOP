@@ -4,6 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cursed Depths - Driving</title>
+    <!-- Dynamic base URL for GitHub Pages compatibility -->
+    <script>
+        (function() {
+            // Create base element for proper path resolution
+            const baseElement = document.createElement('base');
+            
+            // Check if we're on GitHub Pages
+            if (window.location.hostname.includes('github.io')) {
+                // Get repository name from path
+                const pathSegments = window.location.pathname.split('/').filter(Boolean);
+                // Handle both repo root and subdirectory paths
+                if (pathSegments.length > 0) {
+                    if (pathSegments.includes('driving-game')) {
+                        // We're in the driving-game directory
+                        const repoIndex = pathSegments.indexOf('driving-game') - 1;
+                        if (repoIndex >= 0) {
+                            baseElement.href = '/' + pathSegments[repoIndex] + '/';
+                        }
+                    } else {
+                        // Set base to repo root
+                        baseElement.href = '/' + pathSegments[0] + '/';
+                    }
+                }
+            } else {
+                // Local development
+                baseElement.href = '/';
+            }
+            
+            document.head.appendChild(baseElement);
+            console.log('Driving Game - Base URL set to:', baseElement.href);
+        })();
+    </script>
     <style>
         body {
             margin: 0;

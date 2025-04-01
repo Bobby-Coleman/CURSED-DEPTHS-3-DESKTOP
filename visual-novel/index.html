@@ -4,6 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visual Novel</title>
+    <!-- Dynamic base URL for GitHub Pages compatibility -->
+    <script>
+        (function() {
+            // Create base element for proper path resolution
+            const baseElement = document.createElement('base');
+            
+            // Check if we're on GitHub Pages
+            if (window.location.hostname.includes('github.io')) {
+                // Get repository name from path
+                const pathSegments = window.location.pathname.split('/').filter(Boolean);
+                // Handle both repo root and /visual-novel/ paths
+                if (pathSegments.length > 0) {
+                    if (pathSegments.includes('visual-novel')) {
+                        // We're in the visual-novel directory
+                        const repoIndex = pathSegments.indexOf('visual-novel') - 1;
+                        if (repoIndex >= 0) {
+                            baseElement.href = '/' + pathSegments[repoIndex] + '/';
+                        }
+                    } else {
+                        // Set base to repo root
+                        baseElement.href = '/' + pathSegments[0] + '/';
+                    }
+                }
+            } else {
+                // Local development
+                baseElement.href = '/';
+            }
+            
+            document.head.appendChild(baseElement);
+            console.log('Visual Novel - Base URL set to:', baseElement.href);
+        })();
+    </script>
     <style>
         * {
             margin: 0;
