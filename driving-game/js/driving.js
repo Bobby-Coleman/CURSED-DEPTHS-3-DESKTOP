@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { drunkThoughts } from './drunk_thoughts.js';
 
 // Play background music at the start of the game
-const backgroundMusic = new Audio('assets/audio/background_music_enter.wav');
+const backgroundMusic = new Audio('assets/audio/background_music_enter.mp3');
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.7;
 backgroundMusic.play();
