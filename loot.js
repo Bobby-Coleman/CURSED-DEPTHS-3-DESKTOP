@@ -407,4 +407,25 @@ export class LootSystem {
         }
         this.bloodDrops = [];
     }
+    
+    update(player, gameState) {
+        // Update existing drops
+        for (let i = this.drops.length - 1; i >= 0; i--) {
+            const drop = this.drops[i];
+            
+            // Check distance to player
+            const dx = drop.mesh.position.x - player.mesh.position.x;
+            const dy = drop.mesh.position.y - player.mesh.position.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Auto-pickup hearts when close enough
+            if (drop.type === 'heart' && distance < 30) {
+                const result = this.pickupDrop(player, drop, gameState);
+                if (result.success) {
+                    this.scene.remove(drop.mesh);
+                    this.drops.splice(i, 1);
+                }
+            }
+        }
+    }
 }

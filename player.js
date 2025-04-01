@@ -3,8 +3,8 @@ import * as THREE from 'three';
 export class Player {
     constructor(scene) {
         this.scene = scene;
-        this.hp = 8;
-        this.maxHp = 8;
+        this.hp = 15;
+        this.maxHp = 15;
         this.ammo = 300;
         this.maxAmmo = 300;
         this.isDead = false;

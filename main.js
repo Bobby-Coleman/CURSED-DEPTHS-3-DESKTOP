@@ -553,6 +553,9 @@ function animate() {
             // Update player
             player.update(keys, mouse, enemies);
             
+            // Update loot system for auto-pickup
+            lootSystem.update(player, gameState);
+            
             // Check tomb/wall collisions for player
             if (currentLevel.checkTombCollision(player)) {
                 // Collision occurred, revert player position
