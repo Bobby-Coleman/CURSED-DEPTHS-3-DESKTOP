@@ -482,35 +482,40 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     init();
     animate();
     
-    // Create audio element early to prepare it
-    const audio = new Audio('/museum3d/audio/intro_voice.mp3');
+    // Create and preload audio element
+    const audio = new Audio();
     
-    // Flag to track if we've attempted to play audio
-    let audioAttempted = false;
+    // Set up audio element for immediate playback
+    audio.src = '/museum3d/audio/intro_voice.mp3';
+    audio.preload = 'auto';
+    audio.volume = 1.0;
     
-    // Play audio on first user interaction (click) and also after 4 seconds
-    document.addEventListener('click', function playAudioOnUserInteraction() {
-        if (!audioAttempted) {
-            audio.play().catch(error => {
-                console.error("Audio playback failed on user interaction:", error);
+    // Function to try playing audio in different ways
+    const playAudio = () => {
+        // Try multiple play methods to maximize chance of success
+        const playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.error("Audio play failed, trying alternative method:", error);
+                
+                // If autoplay fails, try again with user interaction
+                document.addEventListener('click', function playOnClick() {
+                    audio.play().catch(e => console.error("Even click-based play failed:", e));
+                    document.removeEventListener('click', playOnClick);
+                }, { once: true });
+                
+                // Also try with user gesture events
+                document.addEventListener('keydown', function playOnKey() {
+                    audio.play().catch(e => console.error("Keyboard-based play failed:", e));
+                    document.removeEventListener('keydown', playOnKey);
+                }, { once: true });
             });
-            audioAttempted = true;
-            // Remove the event listener after first attempt
-            document.removeEventListener('click', playAudioOnUserInteraction);
         }
-    });
+    };
     
-    // Also try to play after 4 seconds
-    setTimeout(() => {
-        if (!audioAttempted) {
-            audio.play().catch(error => {
-                console.error("Audio playback failed on timeout:", error);
-                // If auto-play fails, we'll need user interaction
-                console.log("Browser requires user interaction for audio playback");
-            });
-            audioAttempted = true;
-        }
-    }, 4000);
+    // Try to play as soon as possible
+    playAudio();
     
     // Redirect to visual novel after 26 seconds
     setTimeout(() => {
