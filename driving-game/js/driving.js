@@ -2,10 +2,36 @@ import * as THREE from 'three';
 import { drunkThoughts } from './drunk_thoughts.js';
 
 // Play background music at the start of the game
-const backgroundMusic = new Audio('assets/audio/background_music_enter.mp3');
+const backgroundMusic = new Audio();
+backgroundMusic.src = 'assets/audio/background_music_enter.mp3';
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.7;
-backgroundMusic.play();
+
+// Check URL parameters for playMusic flag
+const urlParams = new URLSearchParams(window.location.search);
+const shouldPlayMusic = urlParams.get('playMusic') !== 'false'; // Default to playing music
+
+// Add event listeners for the audio element
+backgroundMusic.addEventListener('canplaythrough', () => {
+    if (shouldPlayMusic) {
+        backgroundMusic.play().catch(error => {
+            console.error('Audio playback failed:', error);
+        });
+    }
+});
+
+backgroundMusic.addEventListener('error', (e) => {
+    console.error('Audio error:', e);
+});
+
+// Autoplay fallback - many browsers require user interaction before playing audio
+document.addEventListener('click', () => {
+    if (shouldPlayMusic && backgroundMusic.paused) {
+        backgroundMusic.play().catch(error => {
+            console.error('Audio playback failed after user interaction:', error);
+        });
+    }
+});
 
 class DrivingGame {
     constructor() {
