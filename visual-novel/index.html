@@ -4,9 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visual Novel</title>
-    <script src="../pathUtils.js"></script>
     <script>
-        // Dynamically set base URL based on current path
+        // Inline pathUtils to avoid loading issues
+        const pathUtils = {
+            getBasePath() {
+                return window.location.hostname.includes('github.io') ? '/CURSED-DEPTHS-3-DESKTOP/' : '/';
+            },
+            resolveAssetPath(path) {
+                const base = this.getBasePath();
+                const clean = path.startsWith('/') ? path.slice(1) : path;
+                return base + clean;
+            }
+        };
+
+        // Set base URL
         const baseElement = document.createElement('base');
         baseElement.href = pathUtils.getBasePath();
         document.head.appendChild(baseElement);
@@ -37,7 +48,7 @@
 
         .background {
             z-index: 1;
-            background: url('assets/background.jpg') center center;
+            background: url('./assets/background.jpg') center center;
             background-size: cover;
             opacity: 1;
         }
@@ -167,15 +178,15 @@
     <div class="visual-novel">
         <div class="scene-layer background"></div>
         <div class="scene-layer wife-layer">
-            <img class="character wife" src="assets/mad.png" alt="Wife Mad" id="wifeMad">
-            <img class="character wife" src="assets/sad.png" alt="Wife Sad" id="wifeSad">
+            <img class="character wife" src="./assets/mad.png" alt="Wife Mad" id="wifeMad">
+            <img class="character wife" src="./assets/sad.png" alt="Wife Sad" id="wifeSad">
         </div>
         <div class="scene-layer husband-layer">
-            <img class="character husband" src="assets/husband.png" alt="Husband" id="husband">
+            <img class="character husband" src="./assets/husband.png" alt="Husband" id="husband">
         </div>
         <div id="dialogBox"></div>
         <button id="choiceButton">Take the keys and leave</button>
     </div>
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
 </body>
 </html> 
