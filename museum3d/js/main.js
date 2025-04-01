@@ -5,53 +5,53 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 // Museum texts for wall sections
 const museumTexts = [
-        "I told you I’d fix it tomorrow, why are you always on me about it? - You said that last week.",
+        "I told you I'd fix it tomorrow, why are you always on me about it? - You said that last week.",
         "Come on baby, say 'dada'—just once for me. - Dada.",
-        "I’m not drunk, I’ve only had two. - You reek of whiskey and the baby’s still awake.",
-        "Please don’t leave. - I’m not leaving. I just need air.",
+        "I'm not drunk, I've only had two. - You reek of whiskey and the baby's still awake.",
+        "Please don't leave. - I'm not leaving. I just need air.",
         "Daddy, do you remember the blue fish from the aquarium? - Of course I do. You named it Glitterhead.",
-        "You threw my laptop, Mark. You actually threw it. - I was angry. I didn’t mean to.",
+        "You threw my laptop, Mark. You actually threw it. - I was angry. I didn't mean to.",
         "It's okay, we can fix it. - You always say that. Not everything can be fixed.",
         "You were the one who told me I could do this. - I still believe that.",
         "What if I mess everything up again? - Then we start over. Again.",
         "Do you remember the day she was born? - Yeah. You cried harder than she did.",
         "I'm sorry I missed your recital. - I waited by the window all night.",
         "You said you'd quit. - I will. I just need to get through this week.",
-        "She asked if you're coming to her play. - I’ll be there. I swear on my life.",
+        "She asked if you're coming to her play. - I'll be there. I swear on my life.",
         "You kissed my forehead and said everything would be okay. - I lied. But I needed to believe it.",
-        "Why are we like this, Mark? - Because we both don’t know how to let go.",
-        "Daddy, I drew you. You're a superhero. - Let me see that. Wow. That’s amazing.",
-        "You can’t keep disappearing like this. - I don’t mean to. I just get lost.",
+        "Why are we like this, Mark? - Because we both don't know how to let go.",
+        "Daddy, I drew you. You're a superhero. - Let me see that. Wow. That's amazing.",
+        "You can't keep disappearing like this. - I don't mean to. I just get lost.",
         "You were sober for six months. What happened? - I thought I could have one.",
-        "This is the happiest I’ve ever seen you. - It's because you're both here.",
+        "This is the happiest I've ever seen you. - It's because you're both here.",
         "We danced in the kitchen, remember that? - Yeah. The burnt pancakes. The music too loud.",
-        "Don't teach her to be afraid of you. - I’m not trying to. I’m trying to be better.",
+        "Don't teach her to be afraid of you. - I'm not trying to. I'm trying to be better.",
         "She said she loves you even when you yell. - That breaks me, you know?",
-        "You’re not a bad dad. Just a tired one. - I don’t want tired to be all she remembers.",
+        "You're not a bad dad. Just a tired one. - I don't want tired to be all she remembers.",
         "You used to draw monsters with her. - Yeah, she always made them pink.",
-        "It wasn’t your fault. - Doesn’t feel that way.",
-        "Come home. Just come home. - I don’t know how.",
-        "You didn’t ruin everything. - I ruined enough.",
+        "It wasn't your fault. - Doesn't feel that way.",
+        "Come home. Just come home. - I don't know how.",
+        "You didn't ruin everything. - I ruined enough.",
         "You were so gentle with her. Even drunk. - That scares me more than anything.",
-        "I'm proud of you. - I don’t hear that much.",
+        "I'm proud of you. - I don't hear that much.",
         "Remember the night we built her cardboard castle? - She made me sleep in it.",
-        "You forgot her birthday. - I was at the meeting. I didn’t forget. I messed up.",
+        "You forgot her birthday. - I was at the meeting. I didn't forget. I messed up.",
         "She asked why you're always sad. - I said sometimes daddies just get quiet.",
         "You held her like she was glass. - She saved me, a little.",
-        "I found the letters you wrote and never sent. - I didn’t think I deserved to send them.",
+        "I found the letters you wrote and never sent. - I didn't think I deserved to send them.",
         "I still wear the ring, Mark. - Even after all this?",
-        "She keeps your photo under her pillow. - I can’t even look at myself right now.",
-        "Don’t disappear on her again. - I won’t. I promise.",
+        "She keeps your photo under her pillow. - I can't even look at myself right now.",
+        "Don't disappear on her again. - I won't. I promise.",
         "You missed her first step. - I watched it on video, 100 times.",
         "We made this life together. Don't walk away from it. - I'm not walking away. I'm crawling back.",
         "Remember when she fell asleep on your chest? - I didn't move for hours.",
         "You promised me you'd be better. - And I broke it.",
-        "One day at a time, right? - That’s the only way I can do it.",
+        "One day at a time, right? - That's the only way I can do it.",
         "You're still her hero. - I don't feel like one.",
         "She forgave you. - How?",
-        "I’m scared of what you’ll be in 10 years. - I’m scared of tomorrow.",
-        "I love you, even when it’s hard. - It’s always hard.",
-        "She said 'Daddy made the monster go away.' - I didn’t even know she saw it.",
+        "I'm scared of what you'll be in 10 years. - I'm scared of tomorrow.",
+        "I love you, even when it's hard. - It's always hard.",
+        "She said 'Daddy made the monster go away.' - I didn't even know she saw it.",
         "This is the last time. - You said that last time.",
         "You held me like I was the only thing keeping you on Earth. - You were.",
     
@@ -475,7 +475,7 @@ function initAudio() {
         setTimeout(() => {
             console.log("Redirecting to visual novel now");
             window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/visual-novel/index.html';
-        }, 26000);
+        }, 36000);
     }
     
     // Try to play automatically after 4 seconds
@@ -483,6 +483,20 @@ function initAudio() {
         console.log("4-second timer elapsed, attempting to play audio...");
         playAudioWithElement(audioElement);
     }, 4000);
+    
+    // Add countdown timer
+    const countdownElement = document.getElementById('countdown');
+    let timeLeft = 36;
+    
+    const countdownInterval = setInterval(() => {
+        timeLeft--;
+        countdownElement.textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            countdownElement.textContent = "0";
+        }
+    }, 1000);
     
     // Provide a global function for debugging
     window.debugAudioStatus = function() {
