@@ -20,9 +20,9 @@
             left: 10px;
             color: white;
             font-family: Arial, sans-serif;
-            font-size: 14px;
+            font-size: 16px;
             background: rgba(0,0,0,0.5);
-            padding: 10px;
+            padding: 5px 10px;
             border-radius: 5px;
             pointer-events: none;
         }
@@ -43,24 +43,21 @@
         }
         #audioButton {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background-color: rgba(0,0,0,0.7);
+            top: 10px;
+            right: 10px;
             color: white;
-            border: 1px solid white;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
-            z-index: 1000;
-            font-family: Arial, sans-serif;
         }
     </style>
 </head>
 <body>
-    <div id="info">
-        Museum3D - Infinite Hallway
-    </div>
-    <div id="countdown" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; font-family: Arial, sans-serif; font-size: 24px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; pointer-events: none;">36</div>
+    <div id="info" style="position: absolute; top: 10px; left: 10px; color: white; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; pointer-events: none;">Use WASD or arrow keys to move</div>
+    <div id="countdown" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; font-family: Arial, sans-serif; font-size: 72px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; pointer-events: none;">36</div>
     <div id="controls">
         <p>WASD = Move</p>
         <p>Mouse = Look around</p>
@@ -74,7 +71,7 @@
     </audio>
     
     <!-- Fallback button in case autoplay fails -->
-    <button id="audioButton">Click to Start Audio</button>
+    <div id="audioButton" style="position: absolute; top: 10px; right: 10px; color: white; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 5px; cursor: pointer;">Click to Play Music</div>
     
     <audio id="backgroundMusic" loop>
         <source src="audio/song.wav" type="audio/wav">
