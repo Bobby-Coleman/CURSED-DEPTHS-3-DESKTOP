@@ -666,6 +666,639 @@ These changes keep all the functionality of the relic intact while removing the 
 
 ---
 
+_**User**_
+
+push to heroku
+
+---
+
+_**Assistant**_
+
+I'll help you deploy your game to Heroku. First, I need to check if your project is ready for deployment by looking for important files like a package.json and server.js.
+
+---
+
+<details>
+            <summary>Listed current directory • **32** results</summary>
+        
+| Name |
+|-------|
+| 📄 `player.js` |
+| 📄 `main.js` |
+| 📄 `ui.js` |
+| 📄 `shop.js` |
+| 📄 `loot.js` |
+| 📄 `relics.js` |
+| 📄 `enemy.js` |
+| 📁 `.git` |
+| 📄 `level.js` |
+| 📁 `assets` |
+| 📄 `Procfile` |
+| 📄 `server.js` |
+| 📄 `index.html` |
+| 📄 `.DS_Store` |
+| 📁 `driving-game` |
+| 📁 `node_modules` |
+| 📁 `visual-novel` |
+| 📁 `.specstory` |
+| 📄 `dialog.js` |
+| 📄 `playerDialog.js` |
+| 📄 `satan_dialog.js` |
+| 📄 `tesseract.js` |
+| 📁 `museum3d` |
+| 📄 `start.html` |
+| 📄 `package-lock.json` |
+| 📄 `package.json` |
+| 📁 `platformer-game` |
+| 📄 `.nojekyll` |
+| 📁 `.github` |
+| 📄 `.gitignore` |
+| 📄 `Cursed_Depths_Chat01.md` |
+| 📄 `README.md` |
+
+</details>
+
+---
+
+Great! I can see you have the necessary files for a Heroku deployment:
+
+1. `server.js` - Your Node.js server file
+2. `package.json` - Dependencies and project configuration
+3. `Procfile` - Heroku deployment configuration file
+
+Let's check your package.json to make sure it has the correct dependencies:
+
+---
+
+Read file: package.json
+
+---
+
+Now let's check your server.js file:
+
+---
+
+Read file: server.js
+
+---
+
+Let's check your Procfile too:
+
+---
+
+Read file: Procfile
+
+---
+
+Now let's check if you already have a Heroku CLI setup and if you're logged in:
+
+---
+
+```bash
+heroku -v
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % heroku -v
+ ›   Warning: heroku update available from 8.7.1 to 10.4.0.
+heroku/8.7.1 darwin-x64 node-v23.10.0
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Good! You have Heroku CLI already installed. Let's check if you're already logged in:
+
+---
+
+```bash
+heroku auth:whoami
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % heroku auth:whoami
+ ›   Warning: heroku update available from 8.7.1 to 10.4.0.
+colemankidding@gmail.com
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Perfect! You're already logged in as colemankidding@gmail.com. Let's check if you already have an app created on Heroku:
+
+---
+
+```bash
+heroku apps
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % heroku apps
+ ›   Warning: heroku update available from 8.7.1 to 10.4.0.
+=== colemankidding@gmail.com Apps
+cursed-depths-3
+demon-dungeon-3d
+
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+I see you already have a Heroku app called `cursed-depths-3`. Let's check if your local Git repository is already connected to it:
+
+---
+
+```bash
+git remote -v
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % git remote -v
+heroku  https://git.heroku.com/cursed-depths-3.git (fetch)
+heroku  https://git.heroku.com/cursed-depths-3.git (push)
+origin  https://github.com/Bobby-Coleman/CURSED-DEPTHS-3-DESKTOP.git (fetch)
+origin  https://github.com/Bobby-Coleman/CURSED-DEPTHS-3-DESKTOP.git (push)
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Great! Your Git repository is already connected to both GitHub and Heroku.
+
+Now, let's deploy to Heroku. Here's what we'll do:
+
+1. Commit any changes to your local repository
+2. Push the committed changes to Heroku
+
+Let's first check if there are any uncomitted changes:
+
+---
+
+```bash
+git status
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % git status
+On branch main
+Your branch and 'origin/main' have diverged,
+and have 11 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .specstory/history/2025-04-01_03-06-github-pages-deployment-analysis.md
+        modified:   loot.js
+        modified:   main.js
+        modified:   player.js
+        modified:   relics.js
+        modified:   shop.js
+        modified:   ui.js
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .specstory/history/2025-04-01_18-48-player-initialization-issue-with-relic.md
+        assets/audio/Through the Labyrinth.mp3
+        assets/sprites/twoheadedgoat.png
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+I see there are some changes that need to be committed. Let's commit them:
+
+---
+
+```bash
+git add .
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % 
+
+```
+
+---
+
+```bash
+git commit -m "Fixed Two Headed Goat relic initialization and improved UI text color"
+```
+
+```
+<oat relic initialization and improved UI text color"
+[main 87de412] Fixed Two Headed Goat relic initialization and improved UI text color
+ 10 files changed, 4349 insertions(+), 52 deletions(-)
+ create mode 100644 .specstory/history/2025-04-01_18-48-player-initialization-issue-with-relic.md
+ create mode 100644 assets/audio/Through the Labyrinth.mp3
+ create mode 100644 assets/sprites/twoheadedgoat.png
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Now that we've committed the changes, let's push them to Heroku:
+
+---
+
+```bash
+git push heroku main
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % git push heroku main
+Enumerating objects: 30, done.
+Counting objects: 100% (30/30), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (17/17), done.
+Writing objects: 100% (17/17), 6.88 MiB | 824.00 KiB/s, done.
+Total 17 (delta 10), reused 0 (delta 0), pack-reused 0
+remote: Updated 127 paths from 27c6a79
+remote: Compressing source files... done.
+remote: Building source:
+remote: 
+remote: -----> Building on the Heroku-24 stack
+remote: -----> Using buildpack: heroku/nodejs
+remote: -----> Node.js app detected
+remote:        
+remote: -----> Creating runtime environment
+remote:        
+remote:        NPM_CONFIG_LOGLEVEL=error
+remote:        NODE_VERBOSE=false
+remote:        NODE_ENV=production
+remote:        NODE_MODULES_CACHE=true
+remote:        
+remote: -----> Installing binaries
+remote:        engines.node (package.json):   unspecified
+remote:        engines.npm (package.json):    unspecified (use default)
+remote:        
+remote:        Resolving node version 22.x...
+remote:        Downloading and installing node 22.14.0...
+remote:        Using default npm version: 10.9.2
+remote:        
+remote: -----> Restoring cache
+remote:        - npm cache
+remote:        
+remote: -----> Installing dependencies
+remote:        Installing node modules
+remote:        
+remote:        added 81 packages, and audited 82 packages in 1s
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        
+remote: -----> Build
+remote:        
+remote: -----> Caching build
+remote:        - npm cache
+remote:        
+remote: -----> Pruning devDependencies
+remote:        
+remote:        up to date, audited 82 packages in 421ms
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        npm notice
+remote:        npm notice New major version of npm available! 10.9.2 -> 11.2.0
+remote:        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.2.0
+remote:        npm notice To update run: npm install -g npm@11.2.0
+remote:        npm notice
+remote:        
+remote: -----> Build succeeded!
+remote: -----> Discovering process types
+remote:        Procfile declares types -> web
+remote: 
+remote: -----> Compressing...
+remote:        Done: 254M
+remote: -----> Launching...
+remote:        Released v13
+remote:        https://cursed-depths-3-de6de9e234ae.herokuapp.com/ deployed to Heroku
+remote: 
+remote: Verifying deploy... done.
+To https://git.heroku.com/cursed-depths-3.git
+   7bbfd6d..87de412  main -> main
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Great! Your code has been successfully deployed to Heroku. Here's a summary of what we did:
+
+1. We verified that you had all the necessary files for Heroku deployment (server.js, package.json, and Procfile)
+2. We confirmed that you were already logged in to Heroku as colemankidding@gmail.com
+3. We checked that your repository was already connected to a Heroku app named cursed-depths-3
+4. We committed your recent changes (including the Two Headed Goat relic initialization fix and UI text color improvements)
+5. We pushed those changes to Heroku, which triggered a successful deployment
+
+Your game is now live at:
+https://cursed-depths-3-de6de9e234ae.herokuapp.com/
+
+The deployment was successful, and you can now access your game online. This URL is accessible to anyone on the internet, so you can share it with others to play your game.
+
+Would you like me to explain any part of the deployment process in more detail, or would you like me to help you with anything else related to your game?
+
+---
+
+_**User**_
+
+the relic ui should say press R to sell for 1 hp. 
+
+---
+
+_**Assistant**_
+
+I'll update the tooltip text to correctly say "Press R to sell for 1 HP" instead of "5 HP". Let me search for the relevant code:
+
+---
+
+<details>
+            <summary>Grep search for "Press R to sell for" • **3** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2386 | `⟪ 101 characters skipped ⟫se ? '\nCurse: ' + relic.curse : ''}\n\nPress R to sell for 5 Gold`;` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2397 | `3. Updated the tooltip text to show "Press R to sell for 5 Gold"` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L4580 | `⟪ 101 characters skipped ⟫se ? '\nCurse: ' + relic.curse : ''}\n\nPress R to sell for 5 Gold`;` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L4585 | `+                         <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10931 | `<div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/ui.js` | L349 | `<div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2386 | `⟪ 101 characters skipped ⟫se ? '\nCurse: ' + relic.curse : ''}\n\nPress R to sell for 5 Gold`;` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2397 | `3. Updated the tooltip text to show "Press R to sell for 5 Gold"` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L4580 | `⟪ 101 characters skipped ⟫se ? '\nCurse: ' + relic.curse : ''}\n\nPress R to sell for 5 Gold`;` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L4585 | `+                         <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10931 | `<div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 gold</div>` |
+
+</details>
+
+---
+
+Also, let me check for any other places in the UI where the sell price might be mentioned:
+
+---
+
+<details>
+            <summary>Grep search for "sell for.*HP" • **1** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/ui.js` | L349 | `<div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>` |
+
+</details>
+
+---
+
+<details>
+            <summary>Grep search for "sell.*HP" • **3** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3323 | `3. Also cleaned up the selling code to properly handle HP gain and UI updates` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3981 | `I'll modify the shop and relic selling logic to make all relics cost 2 HP to buy and heal 1 HP when sold.` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L4033 | `Now let me modify the relic selling logic in main.js to heal 1 HP when selling:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L4065 | `- Selling only recovers half the cost (1 HP)` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_17-11-launching-game-on-localhost-port-8080.md` | L178 | `⟪ 159 characters skipped ⟫L3981 | `I'll modify the shop and relic selling logic to make all relics cost 2 HP to buy and heal 1 HP when sold.` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_17-11-launching-game-on-localhost-port-8080.md` | L181 | `⟪ 130 characters skipped ⟫er-closing-cursor-chat.md` | L4065 | `- Selling only recovers half the cost (1 HP)` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/ui.js` | L349 | `<div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>` |
+
+</details>
+
+---
+
+Let's check the main.js file to see how much HP selling actually gives:
+
+---
+
+<details>
+            <summary>Grep search for "sellRelic" • **7** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/player.js` | L11 | `this.canSellRelics = true; // Can sell relics by default` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/main.js` | L104 | `// Make sellRelic function globally accessible` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/main.js` | L105 | `window.sellRelic = function(index) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/main.js` | L108 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/main.js` | L110 | `if (relicSystem.sellRelic(player, index)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/main.js` | L780 | `// Use the window.sellRelic function which properly handles onUnequip` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/main.js` | L781 | `window.sellRelic(gameState.hoveredRelicIndex);` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/relics.js` | L74 | `player.canSellRelics = false;` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/relics.js` | L280 | `player.canSellRelics = true;` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/relics.js` | L287 | `canSellRelic(player, relic) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/relics.js` | L300 | `sellRelic(player, relicIndex) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/relics.js` | L304 | `if (!this.canSellRelic(player, relic)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2111 | `+                         onclick="window.sellRelic(${i})">` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2131 | `+ // Make sellRelic function globally accessible` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2132 | `+ window.sellRelic = function(index) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2135 | `+         if (relicSystem.canSellRelic(player, player.relics[index])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2137 | `+             if (relicSystem.sellRelic(player, index)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2202 | `2. Added a global `sellRelic` function that:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2203 | `- Checks if the relic can be sold (using existing `canSellRelic` method)` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2248 | `-                         onclick="window.sellRelic(${i})">` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2287 | `+                     if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L2288 | `+                         if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10822 | `<summary>Grep search for "sellRelic|relic.*sell" • **4** files</summary>` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10826 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L63 | `player.canSellRelics = false;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10827 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L214 | `player.canSellRelics = true;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10828 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L221 | `canSellRelic(player, relic) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10829 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L234 | `sellRelic(player, relicIndex) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10830 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L238 | `if (!this.canSellRelic(player, relic)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10831 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L62 | `// Make sellRelic function globally accessible` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10832 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L63 | `window.sellRelic = function(index) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10833 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L66 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10834 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L68 | `if (relicSystem.sellRelic(player, index)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10836 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L314 | `if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10837 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L315 | `if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10838 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L62 | `// Make sellRelic function globally accessible` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10839 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L63 | `window.sellRelic = function(index) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10840 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L66 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10841 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L68 | `if (relicSystem.sellRelic(player, index)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10843 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L314 | `if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10844 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L315 | `if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10845 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L63 | `player.canSellRelics = false;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10846 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L214 | `player.canSellRelics = true;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10847 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L221 | `canSellRelic(player, relic) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10848 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L234 | `sellRelic(player, relicIndex) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10849 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L238 | `if (!this.canSellRelic(player, relic)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10903 | `-                     if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10904 | `-                         if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10905 | `+                 if (relicSystem.canSellRelic(player, player.relics[gameState.hoveredRelicIndex])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L10906 | `+                     if (relicSystem.sellRelic(player, gameState.hoveredRelicIndex)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L11010 | `if (relicSystem.canSellRelic(player, player.relics[gameState.hoveredRelicIndex])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/Cursed_Depths_Chat01.md` | L11011 | `if (relicSystem.sellRelic(player, gameState.hoveredRelicIndex)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_17-34-game-development-sprite-and-relic-modifications.md` | L2378 | `// Make sellRelic function globally accessible` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L1064 | `+         this.canSellRelics = true; // Can sell relics by default` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2242 | `3. Updating the `RelicSystem.sellRelic` method to use `player.removeRelic` instead of directly modifying the array` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2327 | `Looking at the code, I see that we need to update how relics are sold. The issue is in the `sellRelic` function in `relics.js`. Let me fix this:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2333 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2340 | `if (relicSystem.sellRelic(player, index)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2368 | `⟪ 101 characters skipped ⟫ relic selling code instead of our new `sellRelic` function. Let me fix that:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2391 | `+             // Use the window.sellRelic function which properly handles onUnequip` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2392 | `+             window.sellRelic(gameState.hoveredRelicIndex);` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2402 | `1. The `window.sellRelic` function (which properly calls `onUnequip`)` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L2405 | `I've updated the keydown event listener to use our `window.sellRelic` function, which:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3245 | `⟪ 100 characters skipped ⟫e `removeRelic` method and once in the `sellRelic` method. Let me fix this by removing the duplicate call:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3292 | `I see the issue now. In `main.js`, the `sellRelic` function is calling `onUnequip` twice - once directly and once through the `relicSystem.sellRelic` call. Let me fix that:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3298 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3306 | `if (relicSystem.sellRelic(player, index)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3321 | `1. Removing the direct `onUnequip` call in the `window.sellRelic` function` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L3322 | `2. Letting `relicSystem.sellRelic` handle the `onUnequip` call (which it already does through `player.removeRelic`)` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-28_00-36-reverting-changes-after-closing-cursor-chat.md` | L4039 | `if (relicSystem.sellRelic(player, index)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2111 | `+                         onclick="window.sellRelic(${i})">` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2131 | `+ // Make sellRelic function globally accessible` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2132 | `+ window.sellRelic = function(index) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2135 | `+         if (relicSystem.canSellRelic(player, player.relics[index])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2137 | `+             if (relicSystem.sellRelic(player, index)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2202 | `2. Added a global `sellRelic` function that:` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2203 | `- Checks if the relic can be sold (using existing `canSellRelic` method)` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2248 | `-                         onclick="window.sellRelic(${i})">` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2287 | `+                     if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L2288 | `+                         if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10822 | `<summary>Grep search for "sellRelic|relic.*sell" • **4** files</summary>` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10826 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L63 | `player.canSellRelics = false;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10827 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L214 | `player.canSellRelics = true;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10828 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L221 | `canSellRelic(player, relic) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10829 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L234 | `sellRelic(player, relicIndex) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10830 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L238 | `if (!this.canSellRelic(player, relic)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10831 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L62 | `// Make sellRelic function globally accessible` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10832 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L63 | `window.sellRelic = function(index) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10833 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L66 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10834 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L68 | `if (relicSystem.sellRelic(player, index)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10836 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L314 | `if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10837 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L315 | `if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10838 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L62 | `// Make sellRelic function globally accessible` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10839 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L63 | `window.sellRelic = function(index) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10840 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L66 | `if (relicSystem.canSellRelic(player, player.relics[index])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10841 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L68 | `if (relicSystem.sellRelic(player, index)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10843 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L314 | `if (relicSystem.canSellRelic(player, player.relics[hoveredRelicIndex])) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10844 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/main.js` | L315 | `if (relicSystem.sellRelic(player, hoveredRelicIndex)) {` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10845 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L63 | `player.canSellRelics = false;` |` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-03-21_00-24-creating-file-structure-for-cursed-depths.md` | L10846 | `| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED%20DEPTHS%203/relics.js` | L214 | `player.canSellRelics = true;` |` |
+
+</details>
+
+---
+
+Let's check the actual sellRelic function in main.js to see how much HP the player gets for selling a relic:
+
+---
+
+Read file: main.js
+
+---
+
+Now I'll modify the UI file to update the tooltip text to show "Press R to sell for 1 HP" instead of "5 HP":
+
+---
+
+```diff
+                          <div>Blessing: ${relic.blessing}</div>
+                          ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
+-                         <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>
++                         <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 1 HP</div>
+                      `;
+                      this.tooltip.style.display = 'block';
+```
+
+---
+
+I've updated the tooltip text in the UI to correctly say "Press R to sell for 1 HP" instead of "5 HP".
+
+Looking at the code in `main.js`, I can confirm that when a player sells a relic, they receive 1 HP (not 5 HP), as shown in these lines:
+
+```javascript
+if (relicSystem.sellRelic(player, index)) {
+    player.hp = Math.min(player.maxHp, player.hp + 1);
+    ui.updateStats(player, gameState);
+    ui.showMessage("Relic sold for 1 HP!");
+}
+```
+
+This change helps maintain consistency between the tooltip text and the actual game mechanics, making the user interface more accurate and less confusing for players.
+
+---
+
+_**User**_
+
+what's the current chance that the two headed goat relic will appear in the shop. 
+
+---
+
+_**Assistant**_
+
+I'll check the code to find the current probability of the Two Headed Goat relic appearing in the shop.
+
+---
+
+<details>
+            <summary>Grep search for "two headed goat.*chance" • **2** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-04-01_03-06-github-pages-deployment-analysis.md` | L3999 | `please add a relic called the two headed goat (loacated in assets/sprites/twoheadedgoat.png that is VERY rare. has a 5% chance to spawn as one of the relics in the shop. (however, please put one in the first shop for now so i can` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-04-01_18-48-player-initialization-issue-with-relic.md` | L74 | `⟪ 160 characters skipped ⟫ L3999 | `please add a relic called the two headed goat (loacated in assets/sprites/twoheadedgoat.png that is VERY rare. has a 5% chance to spawn as one of the relics in the shop. (however, please put one in the first shop for now so i can` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-04-01_18-48-player-initialization-issue-with-relic.md` | L204 | `⟪ 160 characters skipped ⟫ L3999 | `please add a relic called the two headed goat (loacated in assets/sprites/twoheadedgoat.png that is VERY rare. has a 5% chance to spawn as one of the relics in the shop. (however, please put one in the first shop for now so i can` |
+
+</details>
+
+---
+
+Let me look at the actual implementation in the relics.js file to confirm:
+
+---
+
+<details>
+            <summary>Grep search for "chance.*two headed goat|two headed goat.*chance" • **2** files</summary>
+        
+| File | Line | Match |
+|------|------|-------|
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-04-01_03-06-github-pages-deployment-analysis.md` | L3999 | `please add a relic called the two headed goat (loacated in assets/sprites/twoheadedgoat.png that is VERY rare. has a 5% chance to spawn as one of the relics in the shop. (however, please put one in the first shop for now so i can` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-04-01_18-48-player-initialization-issue-with-relic.md` | L74 | `⟪ 160 characters skipped ⟫ L3999 | `please add a relic called the two headed goat (loacated in assets/sprites/twoheadedgoat.png that is VERY rare. has a 5% chance to spawn as one of the relics in the shop. (however, please put one in the first shop for now so i can` |
+| `file:///Users/Admin%201/Desktop/CURSOR%20PROJECTS/CURSED-DEPTHS-3-DESKTOP-main%202/.specstory/history/2025-04-01_18-48-player-initialization-issue-with-relic.md` | L204 | `⟪ 160 characters skipped ⟫ L3999 | `please add a relic called the two headed goat (loacated in assets/sprites/twoheadedgoat.png that is VERY rare. has a 5% chance to spawn as one of the relics in the shop. (however, please put one in the first shop for now so i can` |
+
+</details>
+
+---
+
+Let me check the shop generation logic in relics.js more broadly:
+
+---
+
+Read file: relics.js
+
+---
+
+Based on the code in relics.js, the Two Headed Goat relic has:
+
+1. A 100% chance to appear in the first shop (when gameState.level === 2)
+2. A 5% chance to appear in any other shop
+
+This is implemented in the `getShopRelics` method where:
+
+```javascript
+// Special case: For the first shop, include the Two-Headed Goat
+// This is for testing purposes
+if (window.gameState && window.gameState.level === 2) {
+    // Code to add the Two-Headed Goat with 100% chance
+} else {
+    // For other shops, give Two-Headed Goat a 5% chance to appear
+    const roll = Math.random();
+    if (roll < 0.05) { // 5% chance
+        // Code to add the Two-Headed Goat if random roll succeeds
+    }
+}
+```
+
+So to answer your question:
+- The Two Headed Goat relic currently has a 5% chance to appear in any shop after the first one.
+- It always appears in the first shop (level 2) for testing purposes.
+
+---
+
 
 
 ---

@@ -153,21 +153,23 @@ export class RelicSystem {
         const shopRelics = [];
         const availableRelics = [...this.relicDefinitions];
         
-        // Special case: For the first shop, include the Two-Headed Goat
-        // This is for testing purposes
+        // First shop: give Two-Headed Goat a 10% chance to appear (no longer 100%)
         if (window.gameState && window.gameState.level === 2) {
-            const twoHeadedGoatRelic = this.relicDefinitions.find(r => r.id === 'twoHeadedGoat');
-            if (twoHeadedGoatRelic) {
-                shopRelics.push(this.createRelic(twoHeadedGoatRelic));
-                
-                // Remove it from available relics
-                const index = availableRelics.findIndex(r => r.id === 'twoHeadedGoat');
-                if (index !== -1) {
-                    availableRelics.splice(index, 1);
+            const roll = Math.random();
+            if (roll < 0.1) { // 10% chance
+                const twoHeadedGoatRelic = this.relicDefinitions.find(r => r.id === 'twoHeadedGoat');
+                if (twoHeadedGoatRelic) {
+                    shopRelics.push(this.createRelic(twoHeadedGoatRelic));
+                    
+                    // Remove it from available relics
+                    const index = availableRelics.findIndex(r => r.id === 'twoHeadedGoat');
+                    if (index !== -1) {
+                        availableRelics.splice(index, 1);
+                    }
+                    
+                    // Get one less relic than requested since we already added the goat
+                    num--;
                 }
-                
-                // Get one less relic than requested since we already added the goat
-                num--;
             }
         } else {
             // For other shops, give Two-Headed Goat a 5% chance to appear

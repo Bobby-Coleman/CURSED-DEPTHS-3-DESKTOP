@@ -30,12 +30,18 @@ export class Shop {
 
         // Add Satan sprite below button
         const satanImage = document.createElement('img');
-        satanImage.src = 'assets/sprites/satan.png';
+        satanImage.src = 'assets/sprites/satan.PNG';
         satanImage.style.position = 'absolute';
         satanImage.style.left = '20%';
         satanImage.style.top = 'calc(50% + 50px)'; // Position below button
         satanImage.style.width = '64px'; // Set appropriate size
         satanImage.style.height = '64px';
+        satanImage.onerror = () => {
+            console.error('Failed to load Satan image:', satanImage.src);
+        };
+        satanImage.onload = () => {
+            console.log('Satan image loaded successfully');
+        };
         document.body.appendChild(satanImage);
         this.satanImage = satanImage;
 

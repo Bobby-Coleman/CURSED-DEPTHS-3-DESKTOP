@@ -347,7 +347,7 @@ export class UI {
                         <div style="color: #FFFFFF;">${relic.name}</div>
                         <div>Blessing: ${relic.blessing}</div>
                         ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
-                        <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 5 HP</div>
+                        <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 1 HP</div>
                     `;
                     this.tooltip.style.display = 'block';
                 };
