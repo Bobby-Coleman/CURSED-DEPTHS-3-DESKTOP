@@ -490,32 +490,32 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     audio.preload = 'auto';
     audio.volume = 1.0;
     
-    // Function to try playing audio in different ways
-    const playAudio = () => {
-        // Try multiple play methods to maximize chance of success
-        const playPromise = audio.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.error("Audio play failed, trying alternative method:", error);
-                
-                // If autoplay fails, try again with user interaction
-                document.addEventListener('click', function playOnClick() {
-                    audio.play().catch(e => console.error("Even click-based play failed:", e));
-                    document.removeEventListener('click', playOnClick);
-                }, { once: true });
-                
-                // Also try with user gesture events
-                document.addEventListener('keydown', function playOnKey() {
-                    audio.play().catch(e => console.error("Keyboard-based play failed:", e));
-                    document.removeEventListener('keydown', playOnKey);
-                }, { once: true });
-            });
-        }
-    };
+    // Flag to track if audio has played
+    let audioPlayed = false;
     
-    // Try to play as soon as possible
-    playAudio();
+    // Play audio on movement keys (WASD)
+    function playAudioOnMovement(e) {
+        if (audioPlayed) return;
+        
+        if (e.key === 'w' || e.key === 'a' || e.key === 's' || e.key === 'd' || 
+            e.key === 'W' || e.key === 'A' || e.key === 'S' || e.key === 'D') {
+            
+            console.log("Movement detected, playing audio");
+            audio.play()
+                .then(() => {
+                    console.log("Audio started playing successfully");
+                    audioPlayed = true;
+                    // Remove event listener after successful play
+                    document.removeEventListener('keydown', playAudioOnMovement);
+                })
+                .catch(error => {
+                    console.error("Audio playback failed:", error);
+                });
+        }
+    }
+    
+    // Add event listener for movement keys
+    document.addEventListener('keydown', playAudioOnMovement);
     
     // Redirect to visual novel after 26 seconds
     setTimeout(() => {
