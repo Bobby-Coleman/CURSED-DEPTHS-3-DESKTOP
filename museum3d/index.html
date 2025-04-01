@@ -53,9 +53,18 @@
         <p>ESC = Pause</p>
     </div>
     
-    <!-- Simple audio element -->
-    <audio id="introVoice">
+    <!-- Multiple audio elements with different paths -->
+    <audio id="introVoice1" preload="auto">
+        <source src="../audio/intro_voice.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="introVoice2" preload="auto">
+        <source src="/museum3d/audio/intro_voice.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="introVoice3" preload="auto">
         <source src="audio/intro_voice.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="introVoice4" preload="auto">
+        <source src="./audio/intro_voice.mp3" type="audio/mpeg">
     </audio>
     
     <script type="importmap">

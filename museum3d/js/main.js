@@ -175,15 +175,39 @@ const museumTexts = [
     "everything is black it broke the game. why is a single tilesheet breaking the game? - Looking at the code, I see the issue.",
 ];
 
-// Simple audio setup - exactly matching the visual novel approach
+// Multiple brute force attempts to play audio
+const audioElement = document.createElement('audio');
+audioElement.src = '../audio/intro_voice.mp3';
+document.body.appendChild(audioElement);
+
+const audioElement2 = document.createElement('audio');
+audioElement2.src = '/museum3d/audio/intro_voice.mp3';
+document.body.appendChild(audioElement2);
+
+const audioElement3 = document.createElement('audio');
+audioElement3.src = 'audio/intro_voice.mp3';
+document.body.appendChild(audioElement3);
+
 const introVoice = new Audio('../audio/intro_voice.mp3');
 introVoice.volume = 0.7;
 
 // Initialize audio (will be called from first user interaction)
 function initAudio() {
     console.log('Initializing audio...');
-    // Play background music
-    introVoice.play().catch(err => console.log('Audio play failed:', err));
+    
+    // Try all possible audio elements
+    introVoice.play().catch(err => {
+        console.log('First attempt failed:', err);
+        audioElement.play().catch(err => {
+            console.log('Second attempt failed:', err);
+            audioElement2.play().catch(err => {
+                console.log('Third attempt failed:', err);
+                audioElement3.play().catch(err => {
+                    console.log('All audio attempts failed:', err);
+                });
+            });
+        });
+    });
     
     // Schedule redirect after audio duration
     setTimeout(() => {
