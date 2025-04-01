@@ -1,5 +1,9 @@
 // Dialog data
 const dialog = [
+    { speaker: "W", text: "You show up at 2AM reeking of bars. You hear him cry and just… sit there." },
+    { speaker: "H", text: "It's a couple drinks after work, okay?" },
+    { speaker: "W", text: "Couple? There are bottles everywhere. Oh and I found your messages with Cursor. Who the hell is she??"},
+    { speaker: "W", text: "Look at all these. There are thousands of them. You're cheating on me??", showChat: true },
     { speaker: "H", text: "So you're spying on me now? I need something that isn't this." },
     { speaker: "W", text: "This? You mean your child? Me? You haven’t been the same since it happened." },
     { speaker: "H", text: "Don't act like you know what it's like to wish you hadn’t woken up." },
@@ -12,8 +16,7 @@ const dialog = [
     { speaker: "W", text: "You’re drunk. Sit down." },
     { speaker: "H", text: "[controlled] Back off." },
     { speaker: "W", text: "[cracking] Fine. Go to hell." }
-  ]
-  ;
+];
 
 let currentLine = 0;
 let isTyping = false;
