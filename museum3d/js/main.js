@@ -486,7 +486,7 @@ fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.
     const audio = new Audio();
     
     // Set up audio element for immediate playback
-    audio.src = '/museum3d/audio/intro_voice.mp3';
+    audio.src = 'audio/intro_voice.mp3';
     audio.preload = 'auto';
     audio.volume = 1.0;
     
