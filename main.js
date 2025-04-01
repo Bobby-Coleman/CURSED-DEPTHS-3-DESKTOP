@@ -182,6 +182,8 @@ function init() {
     
     // Initialize player
     player = new Player(scene);
+    player.ammo = 3000; // Set initial ammo to 3000
+    player.maxAmmo = 3000; // Set max ammo to 3000
     
     // Initialize player dialog
     playerDialog = new PlayerDialogManager(scene, player, camera);
@@ -881,6 +883,8 @@ function restartGame() {
     
     // Initialize player
     player = new Player(scene);
+    player.ammo = 3000; // Set initial ammo to 3000
+    player.maxAmmo = 3000; // Set max ammo to 3000
     
     // Initialize player dialog with new player instance
     playerDialog = new PlayerDialogManager(scene, player, camera);
