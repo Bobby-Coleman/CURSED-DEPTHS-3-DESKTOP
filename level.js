@@ -19,6 +19,9 @@ export class Level {
         if (!window.gameState || !window.gameState.isShopLevel) {
             this.createTomb();
         }
+        
+        // Add hell door at the top of the battlefield
+        this.createHellDoor();
     }
     
     // Calculate required blood based on level number
@@ -587,6 +590,48 @@ export class Level {
         return distance < 40; // Pentagram collision radius
     }
     
+    // Add a new method to create the hell door
+    createHellDoor() {
+        // Create hell door at the top center of the room
+        const hellDoorGeometry = new THREE.PlaneGeometry(120, 120);
+        const hellDoorMaterial = new THREE.MeshBasicMaterial({
+            map: new THREE.TextureLoader().load('assets/helldoor.png'),
+            transparent: true
+        });
+        this.hellDoor = new THREE.Mesh(hellDoorGeometry, hellDoorMaterial);
+        
+        // Position at the top center of the room, slightly below the wall
+        this.hellDoor.position.set(0, this.roomSize/2 - 80, 0.9);
+        this.scene.add(this.hellDoor);
+    }
+    
+    // Add a method to check for collision with the hell door
+    checkHellDoorCollision(player) {
+        if (!this.hellDoor) return false;
+        
+        // Get player and hell door positions
+        const dx = player.mesh.position.x - this.hellDoor.position.x;
+        const dy = player.mesh.position.y - this.hellDoor.position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Check if player is close enough to the hell door
+        const isColliding = distance < 50;
+        
+        if (isColliding) {
+            // Get the current battle level from gameState
+            const battleLevel = window.gameState ? window.gameState.level : 1;
+            
+            // Return different results based on battle level
+            if (battleLevel >= 10) {
+                return { canRedirect: true }; // Level 10+ can redirect
+            } else {
+                return { canRedirect: false, message: "Door unlocks at level 10" }; // Lower levels show message
+            }
+        }
+        
+        return false; // No collision
+    }
+    
     cleanup() {
         // Remove all level objects from scene
         this.scene.remove(this.floor);
@@ -634,6 +679,11 @@ export class Level {
         if (this.innerGlow) {
             this.scene.remove(this.innerGlow);
             this.innerGlow = null;
+        }
+        
+        // Remove hell door if it exists
+        if (this.hellDoor) {
+            this.scene.remove(this.hellDoor);
         }
         
         // Remove all obstacles and other level objects

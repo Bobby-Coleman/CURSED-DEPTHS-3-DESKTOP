@@ -585,6 +585,18 @@ function animate() {
                 window.location.href = 'platformer-game/index.html';
             }
             
+            // Check for hell door collision
+            const hellDoorCollision = currentLevel.checkHellDoorCollision && currentLevel.checkHellDoorCollision(player);
+            if (hellDoorCollision) {
+                if (hellDoorCollision.canRedirect) {
+                    // At level 10+, redirect to the demon dungeon
+                    window.location.href = 'https://demon-dungeon-3d-fc586e1baa7e.herokuapp.com';
+                } else if (hellDoorCollision.message) {
+                    // Not at level 10 yet, show message
+                    ui.showMessage(hellDoorCollision.message);
+                }
+            }
+            
             if (!gameState.isShopLevel) {
                 // Update enemies
                 for (let i = enemies.length - 1; i >= 0; i--) {
