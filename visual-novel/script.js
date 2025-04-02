@@ -310,9 +310,19 @@ function init() {
             } else {
                 backgroundMusic.pause();
                 clearInterval(fadeOut);
-                // Use absolute URL with origin for better mobile compatibility
-                const baseUrl = window.location.origin;
-                window.location.href = baseUrl + '/driving-game/driving.html?playMusic=true&beerCount=3';
+                
+                // Check if we're on a mobile device
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+                
+                // Use relative path for mobile, absolute path for desktop
+                if (isMobile) {
+                    // Simple relative path for mobile
+                    window.location.href = '../driving-game/driving.html?playMusic=true&beerCount=3';
+                } else {
+                    // Keep original approach for desktop
+                    const baseUrl = window.location.origin;
+                    window.location.href = baseUrl + '/driving-game/driving.html?playMusic=true&beerCount=3';
+                }
             }
         }, 50);
     });
