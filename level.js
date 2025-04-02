@@ -383,6 +383,12 @@ export class Level {
         }
     }
     
+    update(deltaTime) {
+        // Call specific update functions for the level here
+        this.updateTombGlow(deltaTime);
+        // Add other time-dependent level updates here if needed in the future
+    }
+    
     activatePortal(x, y) {
         this.portalActive = true;
         
