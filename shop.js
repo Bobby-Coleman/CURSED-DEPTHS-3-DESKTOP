@@ -87,12 +87,17 @@ export class Shop {
             dialogElement.appendChild(contentWrapper);
             document.body.appendChild(dialogElement);
 
-            // Keep track of which line we're on (stored as a property of the shop)
-            if (this.currentDialogIndex === undefined) {
-                this.currentDialogIndex = 0;
+            // Initialize global state if it doesn't exist
+            if (!window.gameState) {
+                window.gameState = {};
+            }
+            
+            // Keep track of which line we're on (stored in global window.gameState)
+            if (window.gameState.satanDialogIndex === undefined) {
+                window.gameState.satanDialogIndex = 0;
             } else {
                 // Move to the next dialog in the list
-                this.currentDialogIndex = (this.currentDialogIndex + 1) % satanDialogs.length;
+                window.gameState.satanDialogIndex = (window.gameState.satanDialogIndex + 1) % satanDialogs.length;
             }
             
             // Store the dialog element reference for cleanup
@@ -101,8 +106,8 @@ export class Shop {
             let text = '';
             let charIndex = 0;
             const interval = setInterval(() => {
-                if (charIndex < satanDialogs[this.currentDialogIndex].length) {
-                    text += satanDialogs[this.currentDialogIndex][charIndex];
+                if (charIndex < satanDialogs[window.gameState.satanDialogIndex].length) {
+                    text += satanDialogs[window.gameState.satanDialogIndex][charIndex];
                     contentWrapper.textContent = text;
                     charIndex++;
                 } else {
@@ -320,8 +325,7 @@ export class Shop {
             this.dialogElement.remove();
         }
         
-        // Reset dialog index to start from the beginning next time
-        this.currentDialogIndex = undefined;
+        // Don't reset the dialog index anymore, let it persist in window.gameState
         
         // Also check for any dialog element by ID as a fallback
         const existingDialog = document.getElementById('dialog');
