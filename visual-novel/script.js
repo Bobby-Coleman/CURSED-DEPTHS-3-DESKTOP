@@ -310,7 +310,9 @@ function init() {
             } else {
                 backgroundMusic.pause();
                 clearInterval(fadeOut);
-                window.location.href = '/driving-game/driving.html?playMusic=true&beerCount=3';
+                // Use absolute URL with origin for better mobile compatibility
+                const baseUrl = window.location.origin;
+                window.location.href = baseUrl + '/driving-game/driving.html?playMusic=true&beerCount=3';
             }
         }, 50);
     });
