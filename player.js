@@ -429,6 +429,9 @@ export class Player {
             window.gameState.killStreak = 0;
         }
         
+        // Play damage sound
+        this.playDamageSound();
+        
         // Visual damage effect - turn red
         this.mesh.material.color.set(0xFF0000); // Set to red
         
@@ -440,6 +443,35 @@ export class Player {
         // Set invulnerability
         this.isInvulnerable = true;
         this.lastDamageTime = performance.now();
+    }
+    
+    // Play a simple sound when player is damaged
+    playDamageSound() {
+        // Create an audio context if it doesn't exist
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create oscillator for a quick sound effect
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        // Connect the oscillator to gain node and to audio output
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        // Configure the sound
+        oscillator.type = 'square'; // Square wave for harsher sound
+        oscillator.frequency.setValueAtTime(220, this.audioContext.currentTime); // A low frequency
+        oscillator.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.2); // Drop pitch
+        
+        // Set volume
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime); // Start at 30% volume
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3); // Fade out
+        
+        // Play sound
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 0.3); // Sound duration: 0.3 seconds
     }
     
     addRelic(relic) {
