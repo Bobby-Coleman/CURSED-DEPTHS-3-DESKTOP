@@ -76,12 +76,22 @@ let hasMoreBackgrounds = true;
 
 // Add memory text system
 const memoryTexts = [
-    "The first time I saw the darkness, it was just a shadow in the corner of my eye.",
-    "The whispers started as gentle murmurs, growing louder with each step.",
-    "The ground beneath my feet felt different here, like walking on memories.",
-    "The air was thick with the scent of old books and forgotten dreams.",
-    "The walls seemed to breathe, pulsing with an ancient rhythm."
-];
+    "Image 1 - From the outside, it looked like a normal childhood.",
+    "Image 2 - Cardboard forts. Plastic swords. Playing until the sun went down.",
+    "Image 3 - Kite strings tangled with your dad’s cigarette smoke.",
+    "Image 4 - But he drank. And sometimes he wasn’t just drunk. He was mean.",
+    "Image 5 - You didn’t question it. You caught the bus. Memorized locker combos.",
+    "Image 6 - And then—her. The kind of girl you think only exists in movies.",
+    "Image 7 - You proposed way too fast. But it felt like a win.",
+    "Image 8 - Then came your daughter. Tiny fists. Loud lungs. Everything.",
+    "Image 9 - But life doesn’t hand out happy endings. It just...moves.",
+    "Image 10 - And it echoes. The things you never fixed get louder.",
+    "Image 11 - One day, you blink—and it’s all different. Irreversibly different.",
+    "Image 12 - The day you lost her. Your daughter. Like the air got punched out of the world.",
+    "Image 13 - You defaulted. Slipped into the only blueprint you had.",
+    "Image 14 - And the cycle finished what it started."
+  ];
+  
 
 let currentMemoryText = "";
 let isTyping = false;
