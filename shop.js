@@ -87,13 +87,16 @@ export class Shop {
             dialogElement.appendChild(contentWrapper);
             document.body.appendChild(dialogElement);
 
-            // Keep track of which line we're on (stored as a property of the dialog element)
-            if (!this.currentDialogIndex) {
+            // Keep track of which line we're on (stored as a property of the shop)
+            if (this.currentDialogIndex === undefined) {
                 this.currentDialogIndex = 0;
             } else {
                 // Move to the next dialog in the list
                 this.currentDialogIndex = (this.currentDialogIndex + 1) % satanDialogs.length;
             }
+            
+            // Store the dialog element reference for cleanup
+            this.dialogElement = dialogElement;
             
             let text = '';
             let charIndex = 0;
@@ -310,6 +313,20 @@ export class Shop {
         }
         if (this.satanImage) {
             this.satanImage.remove();
+        }
+        
+        // Remove any dialog element if it exists
+        if (this.dialogElement) {
+            this.dialogElement.remove();
+        }
+        
+        // Reset dialog index to start from the beginning next time
+        this.currentDialogIndex = undefined;
+        
+        // Also check for any dialog element by ID as a fallback
+        const existingDialog = document.getElementById('dialog');
+        if (existingDialog) {
+            existingDialog.remove();
         }
     }
 }

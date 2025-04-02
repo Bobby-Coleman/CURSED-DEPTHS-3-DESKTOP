@@ -20,7 +20,8 @@ export class LootSystem {
             const offsetX = (Math.random() - 0.5) * 80; // -40 to +40 pixels X offset
             const offsetY = (Math.random() - 0.5) * 80; // -40 to +40 pixels Y offset
             
-            const heartDrop = this.createHeartDrop(x + offsetX, y + offsetY);
+            // Always offset heart 3 units to the right to ensure it's not under blood
+            const heartDrop = this.createHeartDrop(x + offsetX + 3, y + offsetY);
             if (heartDrop) {
                 this.drops.push(heartDrop);
             }
