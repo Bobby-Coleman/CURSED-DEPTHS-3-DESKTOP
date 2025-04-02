@@ -152,8 +152,8 @@
                 switch(direction) {
                     case 'forward':
                         // Move forward 1 unit in facing direction
-                        camera.position.x += Math.sin(playerFacingAngle) * 1;
-                        camera.position.z += Math.cos(playerFacingAngle) * 1;
+                        camera.position.x -= Math.sin(playerFacingAngle) * 1;
+                        camera.position.z -= Math.cos(playerFacingAngle) * 1;
                         // Mark as moved for main loop to sync
                         window.movePlayerMoved = true;
                         break;
@@ -269,8 +269,8 @@
                         e.preventDefault();
                         if (window.camera) {
                             const angleY = window.camera.rotation.y || 0;
-                            window.camera.position.x += Math.sin(angleY) * 1;
-                            window.camera.position.z += Math.cos(angleY) * 1;
+                            window.camera.position.x -= Math.sin(angleY) * 1;
+                            window.camera.position.z -= Math.cos(angleY) * 1;
                         }
                     });
                     
