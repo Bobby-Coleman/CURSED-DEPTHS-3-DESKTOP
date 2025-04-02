@@ -60,7 +60,7 @@ const player = {
     height: 40,
     velocityX: 0,
     velocityY: 0,
-    speed: 2.5, // Reduced from 5 to 2.5 (half speed)
+    speed: 5.0,
     jumpForce: 12,
     gravity: 0.5,
     grounded: false,
@@ -76,12 +76,23 @@ let hasMoreBackgrounds = true;
 
 // Add memory text system
 const memoryTexts = [
-    "The first time I saw the darkness, it was just a shadow in the corner of my eye.",
-    "The whispers started as gentle murmurs, growing louder with each step.",
-    "The ground beneath my feet felt different here, like walking on memories.",
-    "The air was thick with the scent of old books and forgotten dreams.",
-    "The walls seemed to breathe, pulsing with an ancient rhythm."
-];
+    "Oh, this room. I didn't want you to see this yet.",
+    "From the outside, it looked like a normal childhood.",
+    "Cardboard forts. Plastic swords. Playing until the sun went down.",
+    "Kite strings tangled with your dad’s cigarette smoke.",
+    "But he drank. And sometimes he wasn’t just drunk. He was mean.",
+    "You didn’t question it. You caught the bus. Memorized locker combos.",
+    "And then—her. The kind of girl you think only exists in movies.",
+    "You proposed way too fast. But it felt like a win.",
+    "Then came your daughter. Tiny fists. Loud lungs. Everything.",
+    "But life doesn’t hand out happy endings. It just...moves.",
+    "And it echoes. The things you never fixed get louder.",
+    "One day, you blink—and it’s all different. Irreversibly different.",
+    "The day you lost her. Your daughter. Like the air got punched out of the world.",
+    "You defaulted. Slipped into the only blueprint you had.",
+    "And the cycle finished what it started."
+  ];
+  
 
 let currentMemoryText = "";
 let isTyping = false;
