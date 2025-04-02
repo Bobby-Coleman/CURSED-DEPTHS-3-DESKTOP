@@ -35,7 +35,7 @@ export class LootSystem {
     createBloodDrop(x, y) {
         // Create blood drop group to hold both the blood and glow
         const group = new THREE.Group();
-        group.position.set(x, y, 1);
+        group.position.set(x, y, 0.5); // Lower z-index to 0.5 (below hearts at 1000)
         
         // Create glow effect
         const glowGeometry = new THREE.CircleGeometry(24, 32); // Larger radius for glow
