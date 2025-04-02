@@ -273,6 +273,16 @@ style.textContent = `
     background: #444;
     border-radius: 4px;
 }
+
+@media (max-width: 768px) {
+    .chat-box {
+        width: 200px;
+        height: 40vh;
+        right: 10px;
+        font-size: 12px;
+        padding: 10px;
+    }
+}
 `;
 document.head.appendChild(style);
 
