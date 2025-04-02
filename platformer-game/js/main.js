@@ -60,7 +60,7 @@ const player = {
     height: 40,
     velocityX: 0,
     velocityY: 0,
-    speed: 2.5, // Reduced from 5 to 2.5 (half speed)
+    speed: 5.0,
     jumpForce: 12,
     gravity: 0.5,
     grounded: false,
