@@ -107,29 +107,45 @@ export class LootSystem {
     }
     
     createHeartDrop(x, y) {
-        // Create heart using sprite texture with heart.png
-        const heartTexture = new THREE.TextureLoader().load('./assets/sprites/heart.png');
-        const material = new THREE.SpriteMaterial({ 
-            map: heartTexture,
+        // Create a heart shape using custom geometry
+        const heartShape = new THREE.Shape();
+        
+        // Draw heart shape
+        heartShape.moveTo(0, 0);
+        heartShape.bezierCurveTo(0, -5, -10, -15, -20, 0);
+        heartShape.bezierCurveTo(-30, 15, -10, 35, 0, 20);
+        heartShape.bezierCurveTo(10, 35, 30, 15, 20, 0);
+        heartShape.bezierCurveTo(10, -15, 0, -5, 0, 0);
+        
+        // Create geometry from heart shape
+        const geometry = new THREE.ShapeGeometry(heartShape);
+        
+        // Create material with purple color
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x9932CC, // Deep purple
             transparent: true,
-            depthTest: false
+            depthTest: false,
+            side: THREE.DoubleSide // Render both sides
         });
         
-        // Create sprite with moderate z-index
-        const sprite = new THREE.Sprite(material);
-        sprite.position.set(x, y, 20); // Set z to 20 to be above blood but not too high
+        // Create mesh with moderate z-index
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, y, 20); // Set z to 20 to be above blood but not too high
         
-        // Set sprite size to match blood drops (approximately 24 units)
-        sprite.scale.set(24, 24, 1);
+        // Scale up the heart to make it larger (1.5x larger)
+        mesh.scale.set(1.5, 1.5, 1);
         
-        this.scene.add(sprite);
+        // Rotate to orient properly
+        mesh.rotation.z = Math.PI;
+        
+        this.scene.add(mesh);
         
         return {
             type: 'heart',
             data: {
                 amount: 1
             },
-            mesh: sprite
+            mesh: mesh
         };
     }
     
