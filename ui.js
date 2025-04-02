@@ -448,4 +448,15 @@ export class UI {
         
         // Don't reset required blood - it will be set separately
     }
+
+    // Add the missing updateRelicHover method definition
+    updateRelicHover(mouseX, mouseY, player, gameState) {
+        // This function is called in main.js animate loop for desktop hover effects.
+        // The actual logic for showing tooltips and setting gameState.hoveredRelicIndex
+        // is currently handled by mouseover/mouseout listeners added directly to 
+        // the relic slots in the updateStats method. 
+        // So, this function can remain empty for now just to prevent the TypeError.
+        // If more complex hover logic based on raw coordinates is needed later, 
+        // it can be added here.
+    }
 }
