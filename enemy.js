@@ -103,12 +103,37 @@ export class Enemy {
             this.shootCooldown = 4000;
             this.lastShotTime = 0;
             
-            const geometry = new THREE.CircleGeometry(20, 32);
+            // Create mesh with sprite sheet
+            const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0xFF6600,
-                transparent: true
+                color: 0xFFFFFF, // White color to show sprite properly
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
+            
+            // Load bomber enemy sprite sheet
+            const texture = new THREE.TextureLoader().load('assets/sprites/bomber_enemy.png', 
+                // Success callback
+                (loadedTexture) => {
+                    console.log('Bomber enemy sprite sheet loaded successfully');
+                    this.mesh.material.map = loadedTexture;
+                    this.mesh.material.needsUpdate = true;
+                },
+                // Progress callback
+                undefined,
+                // Error callback
+                (error) => {
+                    console.error('Error loading bomber sprite sheet:', error);
+                    this.mesh.material.color.setHex(0xFF6600); // Fallback to orange if sprite fails to load
+                }
+            );
+            texture.magFilter = THREE.NearestFilter;
+            texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames
+            this.setupAnimationFrames();
             
             // Create explosion effect mesh
             const explosionGeometry = new THREE.CircleGeometry(50, 32);
@@ -120,6 +145,9 @@ export class Enemy {
             this.explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
             this.explosionMesh.visible = false;
             scene.add(this.explosionMesh);
+            
+            // Create audio context for explosion sound
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             
         } else if (type === 4) { // Charger
             this.baseHp = 7;
@@ -669,15 +697,30 @@ export class Enemy {
                 }
                 
                 // Move to maintain distance if too close or too far
-                const optimalRange = 400; // Half screen distance (typical screen is ~800 units)
+                const optimalRange = 400;
                 if (distanceToPlayer < optimalRange - 50) {
-                    // Move away from player
-                    this.mesh.position.x -= (dx / distanceToPlayer) * this.speed * 0.5;
-                    this.mesh.position.y -= (dy / distanceToPlayer) * this.speed * 0.5;
+                    // Move away from player, but check wall collision first
+                    const newX = this.mesh.position.x - (dx / distanceToPlayer) * this.speed;
+                    const newY = this.mesh.position.y - (dy / distanceToPlayer) * this.speed;
+                    
+                    // Only move if not hitting walls
+                    const roomSize = 800;
+                    const boundaryPadding = 70;
+                    const halfWidth = this.mesh.geometry.parameters.width / 2;
+                    const halfHeight = this.mesh.geometry.parameters.height / 2;
+                    
+                    if (newX - halfWidth >= -roomSize/2 + boundaryPadding && 
+                        newX + halfWidth <= roomSize/2 - boundaryPadding) {
+                        this.mesh.position.x = newX;
+                    }
+                    if (newY - halfHeight >= -roomSize/2 + boundaryPadding && 
+                        newY + halfHeight <= roomSize/2 - boundaryPadding) {
+                        this.mesh.position.y = newY;
+                    }
                 } else if (distanceToPlayer > optimalRange + 50) {
                     // Move toward player
-                    this.mesh.position.x += (dx / distanceToPlayer) * this.speed * 0.5;
-                    this.mesh.position.y += (dy / distanceToPlayer) * this.speed * 0.5;
+                    this.mesh.position.x += (dx / distanceToPlayer) * this.speed;
+                    this.mesh.position.y += (dy / distanceToPlayer) * this.speed;
                 }
                 
                 // Shoot at player if in range and cooldown is over
@@ -710,6 +753,30 @@ export class Enemy {
                     // Move toward player
                     this.mesh.position.x += (dx / distanceToPlayer) * this.speed;
                     this.mesh.position.y += (dy / distanceToPlayer) * this.speed;
+                }
+                
+                // Update animation for bomber
+                if (currentTime - this.frameTime > this.animationSpeed) {
+                    this.frameTime = currentTime;
+                    this.currentFrame = (this.currentFrame + 1) % 4;
+                    
+                    // Calculate direction based on movement
+                    let direction;
+                    const angle = Math.atan2(dy, dx);
+                    const degrees = ((angle * 180 / Math.PI) + 360) % 360;
+                    
+                    // Map angles to directions (same as other enemies)
+                    if (degrees >= 225 && degrees < 315) {
+                        direction = 1; // Right (when going up)
+                    } else if (degrees >= 315 || degrees < 45) {
+                        direction = 2; // Down (when going right)
+                    } else if (degrees >= 45 && degrees < 135) {
+                        direction = 3; // Left (when going down)
+                    } else {
+                        direction = 0; // Up (when going left)
+                    }
+                    
+                    this.updateUVs(direction * 4 + this.currentFrame);
                 }
                 
                 // Shoot bombs at player if in range
@@ -906,15 +973,24 @@ export class Enemy {
             if (currentTime - this.lastShotTime > this.shootCooldown) {
                 this.lastShotTime = currentTime;
                 
-                // Create bomb
+                // Create bomb with blinking effect
+                const bombGeometry = new THREE.CircleGeometry(8, 16);
+                const bombMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xFF0000,
+                    transparent: true 
+                });
+                
                 const bomb = {
-                    mesh: new THREE.Mesh(this.bulletGeometry, this.bulletMaterial),
+                    mesh: new THREE.Mesh(bombGeometry, bombMaterial),
                     dx: 0,
                     dy: 0,
                     speed: 3,
                     damage: this.attackDamage,
                     explosionDamage: this.explosionDamage,
-                    timeCreated: currentTime
+                    timeCreated: currentTime,
+                    blinkInterval: 1000, // Start with slow blink
+                    blinkCounter: 0,
+                    lastBlinkTime: currentTime
                 };
                 
                 // Position bomb at enemy
@@ -1003,10 +1079,42 @@ export class Enemy {
                     bullet.dx = 0;
                     bullet.dy = 0;
                     bullet.timeStopped = currentTime;
+                    
+                    // Start blink interval faster once stopped
+                    bullet.blinkInterval = 500; // Start slow blink (every 500ms)
+                }
+                
+                // Handle blinking effect
+                if (bullet.timeStopped) {
+                    // Decrease blink interval as bomb gets closer to exploding
+                    const timeSinceStopped = currentTime - bullet.timeStopped;
+                    
+                    // Speed up blinking as it gets closer to exploding
+                    if (timeSinceStopped > 1000) {
+                        bullet.blinkInterval = 250; // Medium blink rate (every 250ms)
+                    }
+                    if (timeSinceStopped > 1500) {
+                        bullet.blinkInterval = 100; // Fast blink rate (every 100ms)
+                    }
+                    
+                    // Blink the bomb
+                    if (currentTime - bullet.lastBlinkTime > bullet.blinkInterval) {
+                        bullet.lastBlinkTime = currentTime;
+                        bullet.mesh.visible = !bullet.mesh.visible; // Toggle visibility
+                        
+                        // Play beep sound when visible (blinking on)
+                        if (bullet.mesh.visible) {
+                            // Play beep sound with higher pitch as time goes on
+                            this.playBeepSound(1000 + (timeSinceStopped / 2000) * 500);
+                        }
+                    }
                 }
                 
                 // Explode only after stopping and waiting 2 seconds
                 if (bullet.timeStopped && currentTime - bullet.timeStopped > 2000) {
+                    // Play explosion sound
+                    this.playExplosionSound();
+                    
                     // Show explosion effect
                     this.explosionMesh.position.copy(bullet.mesh.position);
                     this.explosionMesh.visible = true;
@@ -1133,6 +1241,15 @@ export class Enemy {
                     this.shadow.material.needsUpdate = true;
                 }
             );
+        } else if (this.type === 3) { // Bomber enemy
+            new THREE.TextureLoader().load('assets/sprites/bomber_enemy.png', 
+                (texture) => {
+                    texture.magFilter = THREE.NearestFilter;
+                    texture.minFilter = THREE.NearestFilter;
+                    this.shadow.material.map = texture;
+                    this.shadow.material.needsUpdate = true;
+                }
+            );
         }
     }
 
@@ -1190,5 +1307,75 @@ export class Enemy {
         
         // Return the enemy so it can be added to the main enemies array
         return smallEnemy;
+    }
+
+    // Method to play beep sound for bomb countdown
+    playBeepSound(frequency) {
+        // Check if audioContext is available
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create oscillator for beep sound
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        // Connect nodes
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        // Configure oscillator
+        oscillator.type = 'sine';
+        oscillator.frequency.value = frequency || 1000; // Default 1000Hz
+        
+        // Set volume
+        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime); // Low volume
+        
+        // Play short beep
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 0.1); // 100ms duration
+    }
+    
+    // Method to play explosion sound
+    playExplosionSound() {
+        // Check if audioContext is available
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create noise for explosion
+        const bufferSize = 4096;
+        const noiseBuffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        
+        // Fill buffer with noise
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        
+        // Create noise source
+        const noise = this.audioContext.createBufferSource();
+        noise.buffer = noiseBuffer;
+        
+        // Create low-pass filter for rumble effect
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 400;
+        
+        // Create gain node for volume control
+        const gainNode = this.audioContext.createGain();
+        
+        // Connect nodes
+        noise.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        // Set volume with fade-out
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+        
+        // Play explosion sound
+        noise.start();
+        noise.stop(this.audioContext.currentTime + 0.5); // 500ms duration
     }
 }
