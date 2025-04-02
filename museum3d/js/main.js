@@ -70,6 +70,14 @@ let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let font;
 
+// Expose movement variables to window for mobile controls
+window.game = {
+    moveForward,
+    moveBackward,
+    moveLeft,
+    moveRight
+};
+
 // Constants
 const HALLWAY_LENGTH = 40;  // Longer segments for better performance
 const HALLWAY_WIDTH = 10;

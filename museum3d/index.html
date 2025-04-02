@@ -140,35 +140,59 @@
             const leftBtn = document.getElementById('leftBtn');
             const rightBtn = document.getElementById('rightBtn');
             
-            // Forward button
-            forwardBtn.addEventListener('touchstart', () => {
-                window.moveForward = true;
-            });
-            forwardBtn.addEventListener('touchend', () => {
-                window.moveForward = false;
-            });
-            
-            // Left button
-            leftBtn.addEventListener('touchstart', () => {
-                window.moveLeft = true;
-            });
-            leftBtn.addEventListener('touchend', () => {
-                window.moveLeft = false;
-            });
-            
-            // Right button
-            rightBtn.addEventListener('touchstart', () => {
-                window.moveRight = true;
-            });
-            rightBtn.addEventListener('touchend', () => {
-                window.moveRight = false;
-            });
+            // Function to get the game's movement variables
+            const getGameVars = () => {
+                // Wait for the game to initialize
+                if (!window.game) {
+                    setTimeout(getGameVars, 100);
+                    return;
+                }
+                
+                // Forward button
+                forwardBtn.addEventListener('touchstart', () => {
+                    window.game.moveForward = true;
+                    // Lock pointer on first touch
+                    if (document.pointerLockElement !== document.body) {
+                        document.body.requestPointerLock();
+                    }
+                });
+                forwardBtn.addEventListener('touchend', () => {
+                    window.game.moveForward = false;
+                });
+                
+                // Left button
+                leftBtn.addEventListener('touchstart', () => {
+                    window.game.moveLeft = true;
+                    // Lock pointer on first touch
+                    if (document.pointerLockElement !== document.body) {
+                        document.body.requestPointerLock();
+                    }
+                });
+                leftBtn.addEventListener('touchend', () => {
+                    window.game.moveLeft = false;
+                });
+                
+                // Right button
+                rightBtn.addEventListener('touchstart', () => {
+                    window.game.moveRight = true;
+                    // Lock pointer on first touch
+                    if (document.pointerLockElement !== document.body) {
+                        document.body.requestPointerLock();
+                    }
+                });
+                rightBtn.addEventListener('touchend', () => {
+                    window.game.moveRight = false;
+                });
 
-            // Prevent default touch behaviors
-            [forwardBtn, leftBtn, rightBtn].forEach(btn => {
-                btn.addEventListener('touchstart', (e) => e.preventDefault());
-                btn.addEventListener('touchend', (e) => e.preventDefault());
-            });
+                // Prevent default touch behaviors
+                [forwardBtn, leftBtn, rightBtn].forEach(btn => {
+                    btn.addEventListener('touchstart', (e) => e.preventDefault());
+                    btn.addEventListener('touchend', (e) => e.preventDefault());
+                });
+            };
+
+            // Start checking for game variables
+            getGameVars();
         }
     </script>
 </body>

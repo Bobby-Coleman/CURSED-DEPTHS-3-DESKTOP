@@ -4491,6 +4491,201 @@ You can now test the mobile controls by visiting the site on your mobile device.
 
 ---
 
+_**User**_
+
+its perfect except its not actually MOVING the player on mobile. Look at why this is
+
+---
+
+_**Assistant**_
+
+Let me check the mobile controls implementation. The issue might be that we're not properly connecting the button events to the game's movement system. Let me check the code:
+
+1. We're setting `window.game.keys` correctly in the touch events, but we need to make sure the game is actually checking these keys for movement.
+
+Let me check the main.js file to see how movement is handled:
+
+
+---
+
+Read file: museum3d/js/main.js
+
+---
+
+Read file: museum3d/js/main.js
+
+---
+
+I see the issue. The game is using `moveForward`, `moveBackward`, `moveLeft`, and `moveRight` boolean variables for movement, but our mobile controls are setting `window.game.keys` instead. We need to modify our mobile controls to set these movement variables directly.
+
+Let me update the mobile controls code:
+
+
+---
+
+```diff
+              // Forward button
+              forwardBtn.addEventListener('touchstart', () => {
+-                 window.game.keys.w = true;
++                 window.moveForward = true;
+              });
+              forwardBtn.addEventListener('touchend', () => {
+-                 window.game.keys.w = false;
++                 window.moveForward = false;
+              });
+              
+              // Left button
+              leftBtn.addEventListener('touchstart', () => {
+-                 window.game.keys.a = true;
++                 window.moveLeft = true;
+              });
+              leftBtn.addEventListener('touchend', () => {
+-                 window.game.keys.a = false;
++                 window.moveLeft = false;
+              });
+              
+              // Right button
+              rightBtn.addEventListener('touchstart', () => {
+-                 window.game.keys.d = true;
++                 window.moveRight = true;
+              });
+              rightBtn.addEventListener('touchend', () => {
+-                 window.game.keys.d = false;
++                 window.moveRight = false;
+              });
+  
+```
+
+---
+
+Now let's push these changes to Heroku:
+
+
+---
+
+```bash
+git add .
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % 
+
+```
+
+---
+
+```bash
+git commit -m "Fixed mobile controls to use correct movement variables"
+```
+
+```
+<d mobile controls to use correct movement variables"
+[main 106c245] Fixed mobile controls to use correct movement variables
+ 2 files changed, 406 insertions(+), 6 deletions(-)
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+```bash
+git push heroku main
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % git push heroku main
+Enumerating objects: 13, done.
+Counting objects: 100% (13/13), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (7/7), done.
+Writing objects: 100% (7/7), 2.82 KiB | 1.41 MiB/s, done.
+Total 7 (delta 4), reused 0 (delta 0), pack-reused 0
+remote: Updated 143 paths from 37c9fe5
+remote: Compressing source files... done.
+remote: Building source:
+remote: 
+remote: -----> Building on the Heroku-24 stack
+remote: -----> Using buildpack: heroku/nodejs
+remote: -----> Node.js app detected
+remote:        
+remote: -----> Creating runtime environment
+remote:        
+remote:        NPM_CONFIG_LOGLEVEL=error
+remote:        NODE_VERBOSE=false
+remote:        NODE_ENV=production
+remote:        NODE_MODULES_CACHE=true
+remote:        
+remote: -----> Installing binaries
+remote:        engines.node (package.json):   unspecified
+remote:        engines.npm (package.json):    unspecified (use default)
+remote:        
+remote:        Resolving node version 22.x...
+remote:        Downloading and installing node 22.14.0...
+remote:        Using default npm version: 10.9.2
+remote:        
+remote: -----> Restoring cache
+remote:        - npm cache
+remote:        
+remote: -----> Installing dependencies
+remote:        Installing node modules
+remote:        
+remote:        added 81 packages, and audited 82 packages in 1s
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        
+remote: -----> Build
+remote:        
+remote: -----> Caching build
+remote:        - npm cache
+remote:        
+remote: -----> Pruning devDependencies
+remote:        
+remote:        up to date, audited 82 packages in 425ms
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        npm notice
+remote:        npm notice New major version of npm available! 10.9.2 -> 11.2.0
+remote:        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.2.0
+remote:        npm notice To update run: npm install -g npm@11.2.0
+remote:        npm notice
+remote:        
+remote: -----> Build succeeded!
+remote: -----> Discovering process types
+remote:        Procfile declares types -> web
+remote: 
+remote: -----> Compressing...
+remote:        Done: 315.5M
+remote: -----> Launching...
+remote:  !     Warning: Your slug size (315 MB) exceeds our soft limit (300 MB) which may affect boot time.
+remote:        Released v46
+remote:        https://cursed-depths-3-de6de9e234ae.herokuapp.com/ deployed to Heroku
+remote: 
+remote: Verifying deploy... done.
+To https://git.heroku.com/cursed-depths-3.git
+   5ed5425..106c245  main -> main
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+I've fixed the issue. The problem was that we were setting `window.game.keys` variables, but the game actually uses `moveForward`, `moveLeft`, and `moveRight` variables for movement. I've updated the mobile controls to set these variables directly.
+
+The changes are now live at https://cursed-depths-3-de6de9e234ae.herokuapp.com/
+
+The mobile controls should now work properly:
+1. Up arrow (↑) sets `moveForward` for moving forward
+2. Left arrow (←) sets `moveLeft` for turning left
+3. Right arrow (→) sets `moveRight` for turning right
+
+Please test it on your mobile device and let me know if the movement is working correctly now.
+
+---
+
 
 
 ---
