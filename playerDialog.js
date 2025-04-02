@@ -54,7 +54,7 @@ export class PlayerDialogManager {
         this.player = player;
         this.camera = camera;
         this.lastDialogTime = 0;
-        this.dialogInterval = 15000; // 15 seconds
+        this.dialogInterval = 25000; // 25 seconds (changed from 15)
         this.currentDialog = null;
         
         // Create dialog bubble
