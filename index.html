@@ -106,6 +106,98 @@
             }
         }
 
+        /* Media Query for Mobile Devices (Portrait and Landscape) */
+        @media (max-width: 768px) {
+            #game-ui {
+                font-size: 12px; /* Smaller font */
+                top: 5px;
+                left: 5px;
+            }
+            #game-ui > div { /* Add spacing between stat lines */
+                 margin-bottom: 2px;
+            }
+
+             /* Make museum portal smaller and move it */
+             #museum-portal {
+                top: 5px !important;
+                right: 5px !important;
+                width: 35px !important; 
+                height: 35px !important;
+            }
+
+            /* Adjust dynamically created elements */
+            #weapon-stats-container {
+                top: 5px !important; /* Align with game-ui */
+                left: auto !important; /* Reset left */
+                right: 50px !important; /* Position near top right */
+                transform: translateX(0); /* Reset transform */
+                font-size: 10px !important;
+                padding: 5px !important;
+                max-width: 120px; /* Limit width */
+                z-index: 100 !important;
+            }
+             /* Stack weapon stats vertically */
+            #weapon-stats-container > div {
+                margin-bottom: 2px;
+            }
+
+            #relic-slots-container {
+                top: 5px !important; /* Align with others */
+                left: 50% !important; 
+                transform: translateX(-50%) !important;
+                gap: 5px !important; /* Reduce gap */
+                z-index: 100 !important;
+            }
+             /* Make relic slots smaller */
+            #relic-slots-container > div { /* Target slots directly */
+                width: 30px !important;
+                height: 30px !important;
+            }
+
+            /* Adjust right-side UI */
+            #level-indicator { /* Battle Level */
+                 top: 50px !important; /* Move down below weapon stats */
+                 right: 10px !important;
+                 font-size: 18px !important;
+                 z-index: 100 !important;
+                 display: block !important; /* Ensure it's visible if created */
+            }
+            #required-blood-display {
+                top: 80px !important; /* Move down */
+                right: 10px !important;
+                font-size: 16px !important;
+                 z-index: 100 !important;
+            }
+            #blood-counter {
+                top: 105px !important; /* Move down */
+                right: 10px !important;
+                font-size: 16px !important;
+                 z-index: 100 !important;
+            }
+
+             /* Adjust Joysticks for smaller screens */
+            #left-joystick, #right-joystick {
+                width: 120px !important; /* Smaller joysticks */
+                height: 120px !important;
+                bottom: 10px !important;
+            }
+            #left-joystick {
+                left: 10px !important;
+            }
+            #right-joystick {
+                right: 10px !important;
+            }
+
+            /* Make popups/tooltips smaller */
+            .popup-style, .tooltip-style { /* Assuming these might be classes, or need to target specific IDs/elements */
+                font-size: 12px !important;
+                padding: 6px !important;
+            }
+
+             /* Ensure dynamically added styles respect these overrides */
+             /* Using !important judiciously as inline styles are being set by JS */
+        }
+
     </style>
   
     <!-- Nipple.js Library -->
