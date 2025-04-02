@@ -47,6 +47,12 @@ export class Shop {
 
         // Add click handler
         talkButton.onclick = () => {
+            // Remove any existing dialog
+            const existingDialog = document.getElementById('dialog');
+            if (existingDialog) {
+                existingDialog.remove();
+            }
+            
             const dialogElement = document.createElement('div');
             dialogElement.id = 'dialog';
             dialogElement.style.position = 'absolute';
@@ -81,18 +87,24 @@ export class Shop {
             dialogElement.appendChild(contentWrapper);
             document.body.appendChild(dialogElement);
 
+            // Keep track of which line we're on (stored as a property of the dialog element)
+            if (!this.currentDialogIndex) {
+                this.currentDialogIndex = 0;
+            } else {
+                // Move to the next dialog in the list
+                this.currentDialogIndex = (this.currentDialogIndex + 1) % satanDialogs.length;
+            }
+            
             let text = '';
             let charIndex = 0;
             const interval = setInterval(() => {
-                if (charIndex < satanDialogs[0].length) {
-                    text += satanDialogs[0][charIndex];
+                if (charIndex < satanDialogs[this.currentDialogIndex].length) {
+                    text += satanDialogs[this.currentDialogIndex][charIndex];
                     contentWrapper.textContent = text;
                     charIndex++;
                 } else {
                     clearInterval(interval);
-                    setTimeout(() => {
-                        dialogElement.remove();
-                    }, 5000);
+                    // Don't auto-remove, let the user click again to see the next dialog
                 }
             }, 50);
         };
