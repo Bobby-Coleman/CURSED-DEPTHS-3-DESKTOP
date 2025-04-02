@@ -20,8 +20,8 @@ export class LootSystem {
             const offsetX = (Math.random() - 0.5) * 80; // -40 to +40 pixels X offset
             const offsetY = (Math.random() - 0.5) * 80; // -40 to +40 pixels Y offset
             
-            // Always offset heart 3 units to the right to ensure it's not under blood
-            const heartDrop = this.createHeartDrop(x + offsetX + 3, y + offsetY);
+            // Always offset heart 10 units to the right to ensure it's not under blood
+            const heartDrop = this.createHeartDrop(x + offsetX + 10, y + offsetY);
             if (heartDrop) {
                 this.drops.push(heartDrop);
             }
@@ -107,30 +107,26 @@ export class LootSystem {
     }
     
     createHeartDrop(x, y) {
-        // Create heart using sprite texture with ABSOLUTE path
-        const heartTexture = new THREE.TextureLoader().load('./assets/sprites/heart.png');
-        
-        // Make sure texture is visible by adjusting material
-        const material = new THREE.SpriteMaterial({ 
-            map: heartTexture,
-            color: 0xffffff, // White to keep original color
+        // Create heart using simple geometry instead of sprite
+        const geometry = new THREE.CircleGeometry(10, 32);
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0xFF69B4, // Pink color
             transparent: true,
             depthTest: false, // Ensure heart is always visible
             depthWrite: false // Prevent z-fighting with other sprites
         });
         
-        // Create larger sprite to be more visible
-        const heartSprite = new THREE.Sprite(material);
-        heartSprite.scale.set(40, 40, 1); // Double size to be more visible (was 20x20)
-        heartSprite.position.set(x, y, 1000); // Set z to 1000 to ensure it's on top of everything
-        this.scene.add(heartSprite);
+        // Create mesh with high z-index
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(x, y, 1000); // Set z to 1000 to ensure it's on top of everything
+        this.scene.add(mesh);
         
         return {
             type: 'heart',
             data: {
                 amount: 1
             },
-            mesh: heartSprite
+            mesh: mesh
         };
     }
     
