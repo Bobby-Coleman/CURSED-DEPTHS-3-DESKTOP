@@ -106,19 +106,20 @@ export class Enemy {
             // Create mesh with sprite sheet
             const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0xFFFFFF, // White color to show sprite properly
+                color: 0xFF6600, // Temporary color until texture loads
                 transparent: true,
                 alphaTest: 0.1,
                 side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
             
-            // Load bomber enemy sprite sheet
+            // Load bomber enemy sprite sheet - use the same pattern as other enemies
             const texture = new THREE.TextureLoader().load('assets/sprites/bomber_enemy.png', 
                 // Success callback
                 (loadedTexture) => {
                     console.log('Bomber enemy sprite sheet loaded successfully');
                     this.mesh.material.map = loadedTexture;
+                    this.mesh.material.color.setHex(0xFFFFFF); // Reset to white when texture loads
                     this.mesh.material.needsUpdate = true;
                 },
                 // Progress callback
@@ -126,7 +127,7 @@ export class Enemy {
                 // Error callback
                 (error) => {
                     console.error('Error loading bomber sprite sheet:', error);
-                    this.mesh.material.color.setHex(0xFF6600); // Fallback to orange if sprite fails to load
+                    // Keep orange color as fallback
                 }
             );
             texture.magFilter = THREE.NearestFilter;
