@@ -12,6 +12,7 @@ import { PlayerDialogManager } from './playerDialog.js';
 
 // Game constants
 const ROOM_SIZE = 800;
+const CAMERA_PADDING = 80; // Extra padding to view walls
 
 // Create crosshair mesh
 let crosshair;
@@ -31,6 +32,25 @@ let gameState = {
     enemies: [] // Reference to enemies array
 };
 
+// Mobile detection
+// Detects touch capabilities and common mobile user agents. Also checks screen size as a fallback.
+// The landscape check should happen dynamically via CSS media queries.
+const isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) 
+                 || (window.innerWidth <= 812 && window.innerHeight <= 812); // Fallback size check
+
+// Mobile Input State (initialized regardless, used if isMobile is true)
+let mobileInputState = {
+    moveVector: { x: 0, y: 0 }, // Normalized vector from left joystick
+    aimAngle: 0,       // Angle in radians from right joystick
+    aimVector: { x: 0, y: 0 }, // Normalized vector from right joystick (optional)
+    isMoving: false,   // True if left joystick is active
+    isAiming: false,   // True if right joystick is active
+    isShooting: false  // True if right joystick is active (shoot on aim)
+};
+let mobileDebugOverlay = null; // Reference to the debug overlay element
+let leftJoystick = null;
+let rightJoystick = null;
+
 // Create game object to expose to window
 const game = {
     player: null,
@@ -38,7 +58,9 @@ const game = {
     mouse: null,
     level: null,
     enemies: [],
-    gameState: gameState
+    gameState: gameState,
+    isMobile: isMobile, // Expose mobile status
+    mobileInput: mobileInputState // Expose mobile input state
 };
 
 // Expose game object to window for mobile controls
@@ -57,7 +79,6 @@ directionalLight.position.set(5, 5, 5);
 scene.add(directionalLight);
 
 // Create camera with slightly larger view to include walls
-const CAMERA_PADDING = 80; // Extra padding to view walls
 const camera = new THREE.OrthographicCamera(
     (ROOM_SIZE + CAMERA_PADDING) / -2, 
     (ROOM_SIZE + CAMERA_PADDING) / 2, 
@@ -185,7 +206,7 @@ function init() {
     currentLevel = new Level(scene, ROOM_SIZE, gameState.level);
     
     // Initialize player
-    player = new Player(scene);
+    player = new Player(scene, isMobile);
     player.ammo = 3000; // Set initial ammo to 3000
     player.maxAmmo = 3000; // Set max ammo to 3000
     
@@ -228,6 +249,15 @@ function init() {
     // Show level message and update UI after everything is initialized
     ui.showLevelMessage(gameState.level);
     ui.updateStats(player, gameState);
+
+    // --- Setup Input Listeners Based on Device ---
+    if (isMobile) {
+        console.log("Mobile device detected, initializing mobile controls.");
+        initMobileControls();
+    } else {
+        console.log("Desktop device detected, initializing desktop controls.");
+        initDesktopControls();
+    }
 }
 
 function spawnEnemies() {
@@ -526,255 +556,235 @@ function updateUI() {
 function animate() {
     requestAnimationFrame(animate);
     
-    // Keep enemies reference updated in gameState for use by other components
+    // Update game state references (ensure arrays/objects are current)
     gameState.enemies = enemies;
-    
-    // Update the enemies reference in the game object for auto-aim
-    game.enemies = enemies;
-    
+    game.enemies = enemies; // Update reference in global game object if needed
+    game.mobileInput = mobileInputState; // Ensure global ref is up-to-date
+
     if (!gameState.gameOver) {
-        // Only update player and enemies if game is not paused
         if (!gameState.isPaused) {
-            // Update tesseract
-            if (tesseract) {
-                tesseract.update();
-            }
-            
-            // Update player dialog
-            if (playerDialog) {
-                playerDialog.update();
-            }
-            
-            // Calculate delta time for animations
+            // Calculate delta time (time since last frame in seconds)
             const currentTime = performance.now();
-            const deltaTime = currentTime - (lastTime || currentTime);
+            const deltaTime = (currentTime - (lastTime || currentTime)) / 1000; 
             lastTime = currentTime;
-            
+
+            // Update systems that depend on time
+            if (tesseract) tesseract.update(); // Assuming tesseract doesn't need deltaTime
+            if (playerDialog) playerDialog.update(); // Assuming playerDialog doesn't need deltaTime
+            currentLevel.update(deltaTime); // Pass deltaTime for level animations (e.g., tomb glow)
+
             // Store player's previous position for collision rollback
-            const prevPlayerPosX = player.mesh.position.x;
-            const prevPlayerPosY = player.mesh.position.y;
-            
-            // Update player
-            player.update(keys, mouse, enemies);
-            
-            // Update loot system for auto-pickup
-            lootSystem.update(player, gameState);
-            
-            // Check tomb/wall collisions for player
-            if (currentLevel.checkTombCollision(player)) {
-                // Collision occurred, revert player position
-                player.mesh.position.x = prevPlayerPosX;
-                player.mesh.position.y = prevPlayerPosY;
-                
-                // Update shadow position
-                if (player.shadow) {
-                    player.shadow.position.x = prevPlayerPosX + 12;
-                    player.shadow.position.y = prevPlayerPosY + 12;
-                }
+            const prevPlayerPos = player.mesh.position.clone();
+
+            // --- Player Update --- 
+            // Pass relevant input state and deltaTime based on device
+            if (isMobile) {
+                // Pass null for keys/mouse, pass mobileInputState
+                player.update(null, null, mobileInputState, enemies, deltaTime);
+            } else {
+                // Pass keys/mouse, pass null for mobileInputState
+                player.update(keys, mouse, null, enemies, deltaTime);
             }
-            
-            // Check exact wall collision
+
+            // Update loot system (auto-pickup, etc.)
+            lootSystem.update(player, gameState); // Needs player pos, potentially deltaTime?
+
+            // --- Collision Checks --- 
+            // Check player collision with walls and tombs
             const wallCollision = currentLevel.checkWallCollision(player);
-            if (wallCollision) {
-                // Handle collision based on which wall was hit
-                if (wallCollision.axis === 'x') {
-                    // X-axis collision (left/right walls)
-                    player.mesh.position.x = prevPlayerPosX;
-                    if (player.shadow) player.shadow.position.x = prevPlayerPosX + 12;
-                } else if (wallCollision.axis === 'y') {
-                    // Y-axis collision (top/bottom walls)
-                    player.mesh.position.y = prevPlayerPosY;
-                    if (player.shadow) player.shadow.position.y = prevPlayerPosY + 12;
+            const tombCollision = currentLevel.checkTombCollision(player);
+            if (wallCollision || tombCollision) {
+                 // Revert player position if collision detected
+                 player.mesh.position.copy(prevPlayerPos);
+                 // Also revert shadow position
+                 if (player.shadow) {
+                     player.shadow.position.x = prevPlayerPos.x + 12;
+                     player.shadow.position.y = prevPlayerPos.y + 12;
+                 }
+            } else {
+                // Only update shadow position if NO collision occurred
+                if (player.shadow) {
+                     player.shadow.position.x = player.mesh.position.x + 12;
+                     player.shadow.position.y = player.mesh.position.y + 12;
+                     // Match player rotation if necessary (unlikely for top-down shadow)
+                     // player.shadow.rotation.z = player.mesh.rotation.z;
                 }
             }
             
-            // Check for pentagram portal collision
-            if (currentLevel.checkPentagramPortal && currentLevel.checkPentagramPortal(player)) {
-                // Check if the player has the Two-Headed Goat relic
-                const hasTwoHeadedGoat = player.hasTwoHeadedGoat || player.relics.some(r => r.id === 'twoHeadedGoat');
-                
+            // --- Portal/Interaction Checks ---
+            // Pentagram Portal (to Platformer Game)
+            if (currentLevel.isPentagramActive && currentLevel.checkPentagramPortal(player)) {
+                const hasTwoHeadedGoat = player.relics.some(r => r.id === 'twoHeadedGoat');
                 if (hasTwoHeadedGoat) {
-                    // Transition to platformer game if they have the relic
-                    // Pass current battle level so player can return later
-                    window.location.href = 'platformer-game/index.html?battleLevel=' + gameState.level;
+                    window.location.href = 'platformer-game/index.html?returnToLevel=' + gameState.level; // Pass return level
                 } else {
-                    // Show message that they need the relic
-                    ui.showMessage("Please find the Two Headed Goat relic to enter");
+                    ui.showMessage("Find the Two Headed Goat relic first.");
                 }
             }
-            
-            // Check for hell door collision
+            // Hell Door (to Demon Dungeon)
             const hellDoorCollision = currentLevel.checkHellDoorCollision && currentLevel.checkHellDoorCollision(player);
             if (hellDoorCollision) {
-                if (hellDoorCollision.canRedirect) {
-                    // At level 10+, redirect to the demon dungeon
-                    window.location.href = 'https://demon-dungeon-3d-fc586e1baa7e.herokuapp.com';
-                } else if (hellDoorCollision.message) {
-                    // Not at level 10 yet, show message
-                    ui.showMessage(hellDoorCollision.message);
-                }
+                 if (hellDoorCollision.canRedirect) {
+                     window.location.href = 'https://demon-dungeon-3d-fc586e1baa7e.herokuapp.com';
+                 } else if (hellDoorCollision.message) {
+                     ui.showMessage(hellDoorCollision.message);
+                 }
             }
-            
-            if (!gameState.isShopLevel) {
-                // Update enemies
-                for (let i = enemies.length - 1; i >= 0; i--) {
-                    // Store enemy's position before updates
-                    const prevEnemyPosX = enemies[i].mesh.position.x;
-                    const prevEnemyPosY = enemies[i].mesh.position.y;
-                    
-                    enemies[i].update(player);
-                    
-                    // Check if the nest has spawned a new enemy
-                    if (enemies[i].type === 5 && enemies[i].newSpawnedEnemy) {
-                        // Add the newly spawned enemy to the main enemies array
-                        enemies.push(enemies[i].newSpawnedEnemy);
-                        // Reset the newSpawnedEnemy property
-                        enemies[i].newSpawnedEnemy = null;
-                    }
-                    
-                    // Check for tomb collision for enemies too
-                    if (currentLevel.checkTombCollision(enemies[i])) {
-                        // Collision occurred, revert enemy position
-                        enemies[i].mesh.position.x = prevEnemyPosX;
-                        enemies[i].mesh.position.y = prevEnemyPosY;
-                        
-                        // Update shadow position if it exists
-                        if (enemies[i].shadow) {
-                            enemies[i].shadow.position.x = prevEnemyPosX + 12;
-                            enemies[i].shadow.position.y = prevEnemyPosY + 12;
-                        }
-                    }
-                    
-                    // Also check wall collision for enemies
-                    const enemyWallCollision = currentLevel.checkWallCollision(enemies[i]);
-                    if (enemyWallCollision) {
-                        // Revert enemy position based on collision axis
-                        if (enemyWallCollision.axis === 'x') {
-                            enemies[i].mesh.position.x = prevEnemyPosX;
-                            if (enemies[i].shadow) enemies[i].shadow.position.x = prevEnemyPosX + 12;
-                        } else if (enemyWallCollision.axis === 'y') {
-                            enemies[i].mesh.position.y = prevEnemyPosY;
-                            if (enemies[i].shadow) enemies[i].shadow.position.y = prevEnemyPosY + 12;
-                        }
-                    }
-                    
-                    // Check if enemy is dead
-                    if (enemies[i].hp <= 0) {
-                        // Generate loot drop (including blood)
-                        const dropX = enemies[i].mesh.position.x;
-                        const dropY = enemies[i].mesh.position.y;
-                        lootSystem.generateDrop(dropX, dropY);
-                        
-                        // Remove enemy
-                        enemies[i].cleanup();
-                        enemies.splice(i, 1);
-                        
-                        // Increment kill streak
-                        gameState.killStreak++;
+             // Museum Portal (to Museum 3D)
+             if (currentLevel.isMuseumPortalActive && currentLevel.checkMuseumPortalCollision(player)) {
+                 window.location.href = `museum3d/index.html?returnToLevel=${gameState.level}`;
+             }
 
-                        // If this was the last enemy and player has Blood Amplifier, add blood
+            // --- Enemy Updates & Interactions (Combat Levels Only) ---
+            if (!gameState.isShopLevel) {
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    const prevEnemyPos = enemy.mesh.position.clone(); // Store position before update
+                    
+                    // Update enemy logic, passing player and deltaTime
+                    enemy.update(player, deltaTime); 
+
+                    // Handle Nest Spawning (if applicable)
+                    if (enemy.type === 5 && enemy.newSpawnedEnemy) {
+                        enemies.push(enemy.newSpawnedEnemy);
+                        enemy.newSpawnedEnemy = null; // Reset flag
+                    }
+                    
+                    // Enemy Collision Checks (Tombs/Walls)
+                    const enemyWallCollision = currentLevel.checkWallCollision(enemy);
+                    const enemyTombCollision = currentLevel.checkTombCollision(enemy);
+                    if (enemyWallCollision || enemyTombCollision) {
+                        // Revert enemy position on collision
+                        enemy.mesh.position.copy(prevEnemyPos);
+                        if (enemy.shadow) {
+                             enemy.shadow.position.x = prevEnemyPos.x + 12;
+                             enemy.shadow.position.y = prevEnemyPos.y + 12;
+                        }
+                    }
+
+                    // Check if enemy is dead
+                    if (enemy.hp <= 0) {
+                        const dropX = enemy.mesh.position.x;
+                        const dropY = enemy.mesh.position.y;
+                        lootSystem.generateDrop(dropX, dropY); // Generate loot
+                        
+                        enemy.cleanup(); // Remove enemy mesh, etc.
+                        enemies.splice(i, 1); // Remove from array
+                        
+                        gameState.killStreak++; // Increment kill streak
+                        player.onKill(); // Notify player (for relics like Heal on Kill)
+
+                        // Blood Amplifier Check (if last enemy killed)
                         if (enemies.length === 0) {
                             const bloodAmplifier = player.relics.find(r => r.id === 'bloodAmplifier');
                             if (bloodAmplifier) {
                                 gameState.blood += 20;
                             }
                         }
-                    }
-                }
-                
-                // Update blood drops animation
-                lootSystem.updateBloodDrops();
-                
-                // Check for blood pickups
-                lootSystem.checkBloodPickup(player);
-                
-                // Check if all enemies are defeated - activate tomb but don't open portal automatically
+                    } 
+                } // End enemy loop
+
+                // Update loot system aspects (e.g., blood drop animation, pickup checks)
+                lootSystem.updateBloodDrops(deltaTime);
+                lootSystem.checkBloodPickup(player, gameState); 
+
+                // Check level completion state (tomb activation, blood offering)
                 if (enemies.length === 0 && !currentLevel.tombActive) {
                     currentLevel.activateTomb();
                 }
-                
-                // Update tomb glow effect
-                currentLevel.updateTombGlow(deltaTime);
-                
-                // Check for blood offering at tomb
                 currentLevel.checkBloodOffering(player, gameState, ui);
                 
-                // Check for portal collision
+                // Check portal collision to next level
                 if (currentLevel.portalActive && currentLevel.checkPortalCollision(player)) {
-                    nextLevel();
+                    nextLevel(); // Transition to next level
+                    return; // Exit animate frame early after level transition
                 }
                 
-                // Check for item pickups
+                // Check item pickups (Desktop: E key)
                 gameState.currentPickup = lootSystem.checkPickup(player, ui);
-                
-                // Handle pickup button (E key)
-                if (keys.e && gameState.currentPickup) {
-                    const result = lootSystem.pickupDrop(player, gameState.currentPickup, gameState);
-                    
-                    if (result) {
-                        // Show pickup message
-                        console.log(result.message);
-                        
-                        // Hide popup
-                        ui.hidePopup();
-                        
-                        // Reset pickup
-                        gameState.currentPickup = null;
-                        
-                        // Update UI with new weapon stats
-                        ui.updateStats(player, gameState);
-                    }
+                if (!isMobile && keys.e && !keys.wasE && gameState.currentPickup) {
+                    keys.wasE = true; // Prevent holding E for repeated pickups
+                    handleItemPickup();
                 }
+                // TODO: Implement touch interaction for pickup on mobile?
                 
             } else {
-                // Shop level logic
-                // Check for shop item interaction
-                const shopItem = shop.checkItemInteraction(player, mouse.x, mouse.y, gameState);
-                
-                if (shopItem) {
-                    // Show item popup
-                    ui.showItemPopup(shopItem, mouse.x, mouse.y);
-                    
-                    // Handle purchase with E key
-                    if (keys.e && !keys.wasE) {
-                        const result = shop.buyItem(player, shopItem, gameState);
-                        
-                        if (result) {
-                            // Show purchase message
-                            ui.showMessage(result.message);
-                            
-                            // Update UI
-                            ui.updateStats(player, gameState);
-                        }
+                // --- Shop Level Logic ---
+                // Check for hovering over shop items (Desktop only for now)
+                let shopItem = null;
+                if (!isMobile) {
+                    shopItem = shop.checkItemInteraction(player, mouse.x, mouse.y, gameState);
+                    if (shopItem) {
+                        ui.showItemPopup(shopItem, mouse.x, mouse.y);
+                    } else {
+                        ui.hidePopup(); // Hide if not hovering
                     }
-                } else {
-                    ui.hidePopup();
                 }
                 
-                // Check for portal collision
-                if (currentLevel.portalActive && currentLevel.checkPortalCollision(player)) {
-                    nextLevel();
+                // Handle purchase (Desktop: E key)
+                if (!isMobile && keys.e && !keys.wasE && shopItem) { 
+                    keys.wasE = true; // Prevent holding E
+                    handleShopPurchase(shopItem);
+                    shopItem = null; // Clear shop item after purchase attempt to prevent re-buy
+                    ui.hidePopup(); // Hide popup after purchase attempt
                 }
+                // TODO: Implement touch interaction for shop purchase on mobile?
+                
+                 // Check portal collision in shop
+                 if (currentLevel.portalActive && currentLevel.checkPortalCollision(player)) {
+                     nextLevel();
+                     return; // Exit animate frame early
+                 }
             }
             
-            // Track previous mouse state
-            mouse.wasDown = mouse.isDown;
-            
+            // Update relic hover state (Desktop only)
+            if (!isMobile) {
+                ui.updateRelicHover(mouse.x, mouse.y, player, gameState);
+                // Handle relic selling (Desktop: R key)
+                if (keys.r && !keys.wasR && gameState.hoveredRelicIndex !== -1) {
+                    keys.wasR = true; // Prevent holding R
+                    sellRelic(gameState.hoveredRelicIndex); // Call global sellRelic function
+                }
+            } else {
+                 gameState.hoveredRelicIndex = -1; // Ensure no relic is hovered on mobile
+                 // TODO: Implement touch interaction for selling relics on mobile?
+            }
+
             // Check game over conditions
             checkGameOver();
-        }
-        
-        // Update UI regardless of pause state
+
+        } // End if (!gameState.isPaused)
+
+        // Update UI regardless of pause state (e.g., to show pause menu, stats)
         updateUI();
-    }
-    
-    // Update crosshair position to follow mouse
-    if (crosshair) {
-        crosshair.position.x = mouse.x;
-        crosshair.position.y = mouse.y;
-    }
-    
+
+    } // End if (!gameState.gameOver)
+
+    // Render the scene
     renderer.render(scene, camera);
+}
+
+// --- Helper Functions ---
+
+function handleItemPickup() {
+    if (!gameState.currentPickup) return;
+    const result = lootSystem.pickupDrop(player, gameState.currentPickup, gameState);
+    if (result) {
+        ui.showMessage(result.message); // Use consistent message display
+        ui.hidePopup();
+        gameState.currentPickup = null;
+        updateUI(); // Update UI after pickup
+    }
+}
+
+function handleShopPurchase(shopItem) {
+    if (!shopItem || !shop) return;
+    const result = shop.buyItem(player, shopItem, gameState);
+    if (result) {
+        ui.showMessage(result.message); // Use consistent message display
+        updateUI(); // Update UI after purchase
+    }
+    // Popup hiding is handled in the main loop based on hover state
 }
 
 // Event listeners for keyboard
@@ -1181,3 +1191,199 @@ document.addEventListener('DOMContentLoaded', startGame);
 
 // Export game object for mobile controls
 export { game };
+
+// --- Desktop Input Handling ---
+function initDesktopControls() {
+    document.addEventListener('keydown', (event) => {
+        switch (event.key.toLowerCase()) { // Use toLowerCase for consistency
+            case 'w': keys.w = true; break;
+            case 'a': keys.a = true; break;
+            case 's': keys.s = true; break;
+            case 'd': keys.d = true; break;
+            case 'e': keys.e = true; break;
+            case 'r': keys.r = true; break;
+        }
+    });
+
+    document.addEventListener('keyup', (event) => {
+        switch (event.key.toLowerCase()) { // Use toLowerCase for consistency
+            case 'w': keys.w = false; break;
+            case 'a': keys.a = false; break;
+            case 's': keys.s = false; break;
+            case 'd': keys.d = false; break;
+            case 'e': keys.e = false; keys.wasE = false; break; // Reset wasE on key up
+            case 'r': keys.r = false; keys.wasR = false; break; // Reset wasR on key up
+        }
+    });
+
+    document.addEventListener('mousemove', (event) => {
+        // Convert mouse position to world coordinates relative to canvas center
+        const rect = renderer.domElement.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+        
+        // Project mouse coords to world space (using orthographic camera properties)
+        const worldX = (mouseX / window.innerWidth) * (camera.right - camera.left) + camera.left;
+        const worldY = -(mouseY / window.innerHeight) * (camera.top - camera.bottom) + camera.top;
+
+        mouse.x = worldX;
+        mouse.y = worldY;
+
+        // Update crosshair position
+        if (crosshair) {
+            crosshair.position.set(mouse.x, mouse.y, 2); // Keep crosshair slightly above player
+        }
+    });
+
+    document.addEventListener('mousedown', () => {
+        mouse.isDown = true;
+    });
+
+    document.addEventListener('mouseup', () => {
+        mouse.isDown = false;
+    });
+
+    // Prevent context menu on right-click for the canvas
+    renderer.domElement.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+}
+
+// --- Mobile Input Handling ---
+function initMobileControls() {
+    const leftJoystickZone = document.getElementById('left-joystick');
+    const rightJoystickZone = document.getElementById('right-joystick');
+    mobileDebugOverlay = document.getElementById('mobile-debug-overlay');
+
+    if (!leftJoystickZone || !rightJoystickZone) {
+        console.error("Joystick container elements not found! Aborting mobile controls init.");
+        return;
+    }
+    if (!mobileDebugOverlay) {
+        console.warn("Mobile debug overlay element not found.");
+    }
+
+    const joystickOptions = {
+        mode: 'static',             // Keep joystick fixed in its zone
+        position: { left: '50%', top: '50%' }, // Center nipple in the div
+        size: 100,                  // Base size of the joystick
+        color: 'grey',             // Default color
+        threshold: 0.1,             // Minimum movement threshold
+        fadeTime: 150,              // Faster fade time
+        dynamicPage: true,          // Adjusts to resizing/orientation changes
+        restJoystick: true          // Return joystick to center when released
+    };
+
+    // --- Left Joystick (Movement) ---
+    try {
+        leftJoystick = nipplejs.create({
+            ...joystickOptions,
+            zone: leftJoystickZone,
+            color: 'rgba(255, 255, 255, 0.5)' // Semi-transparent white
+        });
+
+        leftJoystick.on('start move', (evt, data) => {
+            if (data.vector) {
+                mobileInputState.moveVector.x = data.vector.x;
+                mobileInputState.moveVector.y = data.vector.y;
+                mobileInputState.isMoving = true;
+            } else {
+                 mobileInputState.isMoving = false;
+                 mobileInputState.moveVector = { x: 0, y: 0 };
+            }
+            updateDebugOverlay();
+        });
+
+        leftJoystick.on('end', (evt, data) => {
+            mobileInputState.isMoving = false;
+            mobileInputState.moveVector = { x: 0, y: 0 };
+            updateDebugOverlay();
+        });
+        console.log("Left joystick initialized.");
+    } catch (error) {
+        console.error("Error initializing left joystick:", error);
+    }
+
+    // --- Right Joystick (Aiming & Shooting) ---
+    try {
+        rightJoystick = nipplejs.create({
+            ...joystickOptions,
+            zone: rightJoystickZone,
+            color: 'rgba(255, 0, 0, 0.5)' // Semi-transparent red
+        });
+
+        rightJoystick.on('start move', (evt, data) => {
+            if (data.angle && data.angle.radian && data.distance > joystickOptions.threshold * joystickOptions.size * 0.5) { // Check distance threshold
+                // NippleJS angle: 0=right, PI/2=up, PI=left, -PI/2=down
+                // THREE.js angle (atan2): Same convention
+                mobileInputState.aimAngle = data.angle.radian;
+                mobileInputState.aimVector = data.vector; // Store normalized vector
+                mobileInputState.isAiming = true;
+                mobileInputState.isShooting = true; // Shoot while aiming
+            } else {
+                // If joystick is touched but not moved beyond threshold, consider it aiming center?
+                // Or treat as not aiming/shooting?
+                mobileInputState.isAiming = false;
+                mobileInputState.isShooting = false; // Don't shoot if not aiming actively
+                // Keep last aimAngle? Reset?
+            }
+            updateDebugOverlay();
+        });
+
+        rightJoystick.on('end', (evt, data) => {
+            mobileInputState.isShooting = false; // Stop shooting when released
+            mobileInputState.isAiming = false;
+            // Keep the last aim angle? Let's reset the vector for clarity.
+            mobileInputState.aimVector = { x: 0, y: 0 };
+            updateDebugOverlay();
+        });
+         console.log("Right joystick initialized.");
+    } catch (error) {
+        console.error("Error initializing right joystick:", error);
+    }
+}
+
+// --- Debug Overlay Update ---
+function updateDebugOverlay() {
+    if (!mobileDebugOverlay || !isMobile) return;
+
+    const moveVec = mobileInputState.moveVector;
+    const aimVec = mobileInputState.aimVector;
+    const aimAngleDeg = (mobileInputState.aimAngle * 180 / Math.PI).toFixed(1);
+
+    mobileDebugOverlay.innerHTML = `
+        Move: (${moveVec.x.toFixed(2)}, ${moveVec.y.toFixed(2)}) ${mobileInputState.isMoving ? 'MOVING' : ''}<br>
+        Aim: (${aimVec.x.toFixed(2)}, ${aimVec.y.toFixed(2)}) ${mobileInputState.isAiming ? 'AIMING' : ''}<br>
+        Angle: ${aimAngleDeg}°<br>
+        ${mobileInputState.isShooting ? 'SHOOTING' : ''}
+    `;
+}
+
+// --- Window Resize Handling ---
+function onWindowResize() {
+    // Update camera aspect ratio & projection
+    const aspect = window.innerWidth / window.innerHeight;
+    const viewSizeY = ROOM_SIZE + CAMERA_PADDING; // Base vertical view size
+    const viewSizeX = viewSizeY * aspect; 
+
+    camera.left = -viewSizeX / 2;
+    camera.right = viewSizeX / 2;
+    camera.top = viewSizeY / 2;
+    camera.bottom = -viewSizeY / 2;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Update floating text positions 
+    if (player && player.updateHPTextPosition) {
+         player.updateHPTextPosition();
+    }
+    // Update other UI elements if necessary
+    if (ui && ui.onResize) {
+        ui.onResize(window.innerWidth, window.innerHeight);
+    }
+    
+    // Re-initialize or update joysticks if necessary on resize/orientation change
+    // Nipplejs dynamicPage handles some resizing, but zone position might need manual update
+    // if layout changes significantly.
+}

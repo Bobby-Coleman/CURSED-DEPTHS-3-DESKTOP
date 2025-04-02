@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3030;
+const port = process.env.PORT || 4040;
 
 // Serve static files from the root directory
 app.use(express.static('./'));
@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Game server running at http://localhost:${port}`);
   console.log(`Start with the visual novel at: http://localhost:${port}/visual-novel/index.html`);
   console.log(`Access your driving game at: http://localhost:${port}/driving-game/driving.html`);

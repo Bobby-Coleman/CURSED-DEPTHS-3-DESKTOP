@@ -1,34 +1,31 @@
 import * as THREE from 'three';
 
 export class Player {
-    constructor(scene) {
+    constructor(scene, isMobile = false) {
         this.scene = scene;
+        this.isMobile = isMobile;
         this.hp = 15;
         this.maxHp = 15;
-        this.ammo = 300;
-        this.maxAmmo = 300;
+        this.ammo = 3000;
+        this.maxAmmo = 3000;
         this.isDead = false;
         this.relics = [];
-        this.canSellRelics = true; // Can sell relics by default
-        this.canHeal = true; // Can pick up hearts by default
-        this.baseDamage = 1; // Base weapon damage - can be affected by relics
-        this.damageMultiplier = 1; // Applied to damage calculations
-        this.damageTakenMultiplier = 1; // How much extra damage the player takes
-        this.fireRate = 3; // Bullets per second
+        this.canSellRelics = true;
+        this.canHeal = true;
+        this.baseDamage = 1;
+        this.damageMultiplier = 1;
+        this.damageTakenMultiplier = 1;
+        this.fireRate = 5;
         this.lastFireTime = 0;
-        this.weaponRange = 285; // Initial weapon range set to 285 units
-        this.healOnKill = 0; // Amount of health regained per kill
+        this.weaponRange = 350;
+        this.healOnKill = 0;
         
-        // Detect if on mobile and adjust speed accordingly
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        this.speed = isMobile ? 1.5 : 3; // Reduced from 2.5/5 to 1.5/3 for slower movement
+        this.speed = this.isMobile ? 2.5 : 4.0;
         
-        // Invulnerability tracking
         this.isInvulnerable = false;
-        this.invulnerabilityTime = 250; // 0.25 seconds in milliseconds (reduced from 1 second)
+        this.invulnerabilityTime = 250;
         this.lastDamageTime = 0;
         
-        // Create player mesh with sprite sheet
         const geometry = new THREE.PlaneGeometry(80, 80);
         const material = new THREE.MeshBasicMaterial({
             color: 0xFFFFFF,
@@ -39,60 +36,50 @@ export class Player {
             depthWrite: true
         });
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.position.set(0, 0, 1); // Start at center
+        this.mesh.position.set(0, 0, 1);
         scene.add(this.mesh);
 
-        // Load player sprite sheet
         const texture = new THREE.TextureLoader().load('assets/sprites/player.png',
-            // Success callback
             (loadedTexture) => {
                 console.log('Player sprite sheet loaded successfully');
                 this.mesh.material.map = loadedTexture;
                 this.mesh.material.needsUpdate = true;
                 
-                // Create shadow after texture is loaded
                 this.createShadow(scene, loadedTexture);
             },
-            // Progress callback
             undefined,
-            // Error callback
             (error) => {
                 console.error('Error loading player sprite sheet:', error);
-                this.mesh.material.color.setHex(0xFF0000); // Fallback to red if sprite fails to load
+                this.mesh.material.color.setHex(0xFF0000);
             }
         );
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
 
-        // Animation setup
         this.setupAnimationFrames();
         
-        // Weapon direction indicator (hidden)
         const indicatorGeometry = new THREE.PlaneGeometry(25, 6);
-        const indicatorMaterial = new THREE.MeshBasicMaterial({ 
+        const indicatorMaterial = new THREE.MeshBasicMaterial({
             color: 0xFFFFFF,
-            visible: false // Hide the indicator
+            visible: false
         });
         this.indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
-        this.indicator.position.set(50, 0, 1.1); // Adjusted for 80x80 sprite
+        this.indicator.position.set(40, 0, 1.1);
         this.mesh.add(this.indicator);
         
-        // Player bullets
         this.bullets = [];
-        this.bulletGeometry = new THREE.CircleGeometry(3, 8);
-        this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+        this.bulletGeometry = new THREE.CircleGeometry(4, 8);
+        this.bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFF00 });
+        this.bulletSpeed = 12;
         
-        // Auto-aim settings
         this.autoAimEnabled = false;
-        this.autoAimRange = 250; // How far to search for enemies to auto-aim at
+        this.autoAimRange = 250;
+        this.currentAimAngle = 0;
         
-        // Add floating HP text above player
         this.createFloatingHPText();
     }
     
-    // Create a shadow for the player
     createShadow(scene, texture) {
-        // Create a shadow mesh with the same geometry as the player
         const shadowGeometry = new THREE.PlaneGeometry(80, 80);
         const shadowMaterial = new THREE.MeshBasicMaterial({
             map: texture,
@@ -114,28 +101,27 @@ export class Player {
     }
     
     generateRandomDamage() {
-        return 3; // Fixed damage of 3
+        return 3;
     }
     
     generateRandomFireRate() {
-        return 5; // Fixed fire rate of 5/s
+        return 5;
     }
     
     generateRandomRange() {
-        return 285; // Fixed range of 285 units
+        return 350;
     }
     
     setupAnimationFrames() {
-        this.frameCount = 4; // 4 frames per direction
+        this.frameCount = 4;
         this.currentFrame = 0;
         this.frameTime = 0;
-        this.animationSpeed = 150; // milliseconds per frame
+        this.animationSpeed = 150;
         this.lastDirection = 0;
         
-        // Create UV coordinates for each frame
         this.frames = [];
-        const frameWidth = 1/4; // 4 frames horizontally
-        const frameHeight = 1/4; // 4 directions vertically
+        const frameWidth = 1/4;
+        const frameHeight = 1/4;
         
         for (let dir = 0; dir < 4; dir++) {
             for (let frame = 0; frame < 4; frame++) {
@@ -148,7 +134,6 @@ export class Player {
             }
         }
         
-        // Set initial UV coordinates
         this.updateUVs(0);
     }
 
@@ -166,7 +151,6 @@ export class Player {
         uvs.set(uvArray);
         uvs.needsUpdate = true;
         
-        // Update shadow UVs to match the current frame
         if (this.shadow && this.shadow.geometry.attributes.uv) {
             const shadowUvs = this.shadow.geometry.attributes.uv;
             shadowUvs.set(uvArray);
@@ -174,122 +158,119 @@ export class Player {
         }
     }
 
-    update(keys, mouse, enemies) {
-        // Check if invulnerability has expired
+    update(keys, mouse, mobileInput, enemies, deltaTime) {
         if (this.isInvulnerable) {
             const currentTime = performance.now();
             if (currentTime - this.lastDamageTime > this.invulnerabilityTime) {
                 this.isInvulnerable = false;
+                this.mesh.visible = true;
+                this.mesh.material.opacity = 1.0;
             } else {
-                // Flash the player sprite during invulnerability (every 100ms)
-                const flashInterval = 100;
-                const flashPhase = Math.floor((currentTime - this.lastDamageTime) / flashInterval) % 2;
-                this.mesh.visible = flashPhase === 0; // Toggle visibility for flashing effect
+                const flashPhase = Math.floor((currentTime - this.lastDamageTime) / 100) % 2; 
+                this.mesh.visible = flashPhase === 0;
             }
         } else {
-            // Ensure player is visible when not invulnerable
             this.mesh.visible = true;
+            this.mesh.material.opacity = 1.0; 
         }
         
-        // Movement
         let moveX = 0;
         let moveY = 0;
+        let aimAngle = this.currentAimAngle;
+        let shootInput = false;
         
-        if (keys.w) moveY += this.speed;
-        if (keys.s) moveY -= this.speed;
-        if (keys.a) moveX -= this.speed;
-        if (keys.d) moveX += this.speed;
-        
-        // Normalize diagonal movement
-        if (moveX !== 0 && moveY !== 0) {
-            const normalize = 1 / Math.sqrt(2);
-            moveX *= normalize;
-            moveY *= normalize;
+        if (this.isMobile && mobileInput) {
+            if (mobileInput.isMoving) {
+                moveX = mobileInput.moveVector.x * this.speed * (deltaTime * 60);
+                moveY = mobileInput.moveVector.y * this.speed * (deltaTime * 60);
+            }
+            if (mobileInput.isAiming) {
+                aimAngle = mobileInput.aimAngle;
+            }
+            shootInput = mobileInput.isShooting;
+            
+        } else if (keys && mouse) {
+            let dx = 0, dy = 0;
+            if (keys.w) dy += 1;
+            if (keys.s) dy -= 1;
+            if (keys.a) dx -= 1;
+            if (keys.d) dx += 1;
+
+            const magnitude = Math.sqrt(dx * dx + dy * dy);
+            if (magnitude > 0) {
+                moveX = (dx / magnitude) * this.speed * (deltaTime * 60);
+                moveY = (dy / magnitude) * this.speed * (deltaTime * 60);
+            }
+            
+            const aimDX = mouse.x - this.mesh.position.x;
+            const aimDY = mouse.y - this.mesh.position.y;
+            aimAngle = Math.atan2(aimDY, aimDX);
+
+            shootInput = mouse.isDown;
         }
         
-        // Update position
         this.mesh.position.x += moveX;
         this.mesh.position.y += moveY;
         
-        // Update shadow position
-        if (this.shadow) {
-            this.shadow.position.x = this.mesh.position.x + 12;
-            this.shadow.position.y = this.mesh.position.y + 12;
-            this.shadow.rotation.z = this.mesh.rotation.z;
-        }
+        this.currentAimAngle = aimAngle;
         
-        // Room boundary checks are now handled in main.js animation loop
+        this.updateAnimation(moveX, moveY, aimAngle, deltaTime);
         
-        // Calculate aim angle once for both animation and shooting
-        const dx = mouse.x - this.mesh.position.x;
-        const dy = mouse.y - this.mesh.position.y;
-        const angle = Math.atan2(dy, dx);
-        const degrees = ((angle * 180 / Math.PI) + 360) % 360;
-        
-        // Store current aim angle for shooting
-        this.currentAimAngle = angle;
-        
-        // Update animation based on movement and aim
-        const currentTime = performance.now();
-        if (currentTime - this.frameTime > this.animationSpeed) {
-            this.frameTime = currentTime;
-            
-            // Only animate if moving
-            if (moveX !== 0 || moveY !== 0) {
-                this.currentFrame = (this.currentFrame + 1) % 4;
-            }
-            
-            // Map angles to sprite sheet rows (up, right, down, left)
-            let direction;
-            if (degrees >= 225 && degrees < 315) {
-                direction = 1; // Right (when going up)
-            } else if (degrees >= 315 || degrees < 45) {
-                direction = 2; // Down (when going right)
-            } else if (degrees >= 45 && degrees < 135) {
-                direction = 3; // Left (when going down)
-            } else {
-                direction = 0; // Up (when going left)
-            }
-            
-            // Update sprite direction
-            this.updateUVs(direction * 4 + this.currentFrame);
-            
-            // Update indicator rotation to point at mouse
-            this.indicator.rotation.z = angle;
-        }
-        
-        // Shooting
-        if (mouse.isDown) {
+        if (shootInput) {
             this.shoot();
         }
         
-        // Update bullets
-        this.updateBullets(enemies);
+        this.updateBullets(enemies, deltaTime);
         
-        // Update the floating HP text position
         this.updateHPTextPosition();
     }
     
+    updateAnimation(moveX, moveY, aimAngle, deltaTime) {
+        this.frameTime += deltaTime * 1000;
+
+        if (this.frameTime >= this.animationSpeed) {
+            this.frameTime = 0;
+
+            if (moveX !== 0 || moveY !== 0) {
+                this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+            }
+
+            const degrees = ((aimAngle * 180 / Math.PI) + 360) % 360;
+            let direction;
+            if (degrees >= 45 && degrees < 135) {
+                direction = 0;
+            } else if (degrees >= 135 && degrees < 225) {
+                direction = 3;
+            } else if (degrees >= 225 && degrees < 315) {
+                direction = 2;
+            } else {
+                direction = 1;
+            }
+            
+            const frameIndex = direction * this.frameCount + this.currentFrame;
+            this.updateUVs(frameIndex);
+        }
+
+        this.indicator.rotation.z = aimAngle;
+    }
+
     shoot() {
         const currentTime = performance.now();
         const shootingInterval = 1000 / this.fireRate;
         
         if (currentTime - this.lastFireTime >= shootingInterval && this.ammo > 0) {
-            // Create new bullet
-            const bullet = new THREE.Mesh(this.bulletGeometry, this.bulletMaterial);
-            
-            // Set bullet position
+            this.lastFireTime = currentTime;
+            this.ammo--;
+
+            const bullet = new THREE.Mesh(this.bulletGeometry, this.bulletMaterial.clone());
             bullet.position.copy(this.mesh.position);
+            bullet.position.z = 0.8;
+
+            const velocityX = Math.cos(this.currentAimAngle) * this.bulletSpeed;
+            const velocityY = Math.sin(this.currentAimAngle) * this.bulletSpeed;
             
-            // Calculate velocity based on current aim angle
-            const speed = 10;
-            const velocityX = Math.cos(this.currentAimAngle) * speed;
-            const velocityY = Math.sin(this.currentAimAngle) * speed;
-            
-            // Calculate damage for this bullet
             const bulletDamage = this.calculateDamage();
             
-            // Add bullet to scene and tracking array
             this.scene.add(bullet);
             this.bullets.push({
                 mesh: bullet,
@@ -298,103 +279,81 @@ export class Player {
                 range: this.weaponRange,
                 distanceTraveled: 0
             });
-            
-            // Update last shot time and ammo
-            this.lastFireTime = currentTime;
-            this.ammo--;
         }
     }
     
     calculateDamage() {
-        // Start with base damage
         let damage = this.baseDamage;
         console.log('Starting base damage:', damage);
         console.log('Current kill streak:', window.gameState?.killStreak);
         
-        // First apply additive bonuses
         for (const relic of this.relics) {
             if (relic.id === 'ragingHeart' && window.gameState) {
-                damage += window.gameState.killStreak * 2; // Add +2 damage per kill in streak
+                damage += window.gameState.killStreak * 2;
             }
-            // Add other additive relic effects here
         }
         
-        // Then apply multiplicative effects
         let multiplier = 1;
         for (const relic of this.relics) {
             console.log('Checking relic:', relic.id);
             if (relic.id === 'hemoclawCharm') {
                 const missingHP = this.maxHp - this.hp;
-                multiplier *= (1 + (missingHP * 0.25)); // Multiply by (1 + 0.25 per missing HP)
+                multiplier *= (1 + (missingHP * 0.25));
             }
             if (relic.id === 'infernalCore') {
-                // +25% damage per equipped relic (including this one)
                 multiplier *= (1 + (this.relics.length * 0.25));
             }
             if (relic.id === 'executionersSeal') {
                 console.log('Found Executioners Seal');
                 if (window.gameState && window.gameState.killStreak > 20) {
                     console.log('Kill streak > 20, applying 3x multiplier');
-                    multiplier *= 3; // Triple damage when kill streak > 20
+                    multiplier *= 3;
                 }
             }
-            // Add other multiplicative relic effects here
         }
         
-        // Apply final multiplier
         console.log('Final multiplier:', multiplier);
         damage *= multiplier;
         console.log('Final damage after multiplier:', damage);
         
-        return Math.floor(damage); // Round down to nearest integer
+        return Math.floor(damage);
     }
     
-    updateBullets(enemies) {
+    updateBullets(enemies, deltaTime) {
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const bullet = this.bullets[i];
+            const speedScale = deltaTime * 60;
             
-            // Update bullet position
-            bullet.mesh.position.x += bullet.velocity.x;
-            bullet.mesh.position.y += bullet.velocity.y;
+            bullet.mesh.position.x += bullet.velocity.x * speedScale;
+            bullet.mesh.position.y += bullet.velocity.y * speedScale;
             
-            // Update distance traveled
-            bullet.distanceTraveled += Math.sqrt(
-                bullet.velocity.x * bullet.velocity.x + 
-                bullet.velocity.y * bullet.velocity.y
+            const distanceThisFrame = Math.sqrt(
+                (bullet.velocity.x * speedScale) ** 2 + 
+                (bullet.velocity.y * speedScale) ** 2
             );
+            bullet.distanceTraveled += distanceThisFrame;
             
-            // Check if bullet has exceeded its range
-            if (bullet.distanceTraveled >= bullet.range) {
-                this.scene.remove(bullet.mesh);
-                this.bullets.splice(i, 1);
-                continue;
-            }
-            
-            // Check if bullet is out of bounds
             const roomSize = 800;
-            if (
-                bullet.mesh.position.x < -roomSize / 2 || 
-                bullet.mesh.position.x > roomSize / 2 ||
-                bullet.mesh.position.y < -roomSize / 2 || 
-                bullet.mesh.position.y > roomSize / 2
-            ) {
+            if (bullet.distanceTraveled >= bullet.range ||
+                Math.abs(bullet.mesh.position.x) > roomSize / 2 ||
+                Math.abs(bullet.mesh.position.y) > roomSize / 2)
+            {
                 this.scene.remove(bullet.mesh);
                 this.bullets.splice(i, 1);
                 continue;
             }
             
-            // Check for collision with enemies
             for (const enemy of enemies) {
+                if (!enemy || !enemy.mesh) continue;
+                
                 const dx = bullet.mesh.position.x - enemy.mesh.position.x;
                 const dy = bullet.mesh.position.y - enemy.mesh.position.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
+                const collisionThreshold = (enemy.collisionRadius || 20) + (this.bulletGeometry.parameters.radius || 3); 
                 
-                // Collision detected (simple circle collision)
-                if (distance < 20) {
-                    // Apply damage to enemy
+                if (distance < collisionThreshold) {
                     enemy.takeDamage(bullet.damage);
                     
-                    // Remove bullet
                     this.scene.remove(bullet.mesh);
                     this.bullets.splice(i, 1);
                     break;
@@ -404,86 +363,68 @@ export class Player {
     }
     
     takeDamage(amount) {
-        // Check if player is currently invulnerable
         if (this.isInvulnerable) {
-            return; // Skip damage if invulnerable
+            return;
         }
         
-        // Calculate total damage multiplier from curses
         let damageMultiplier = 1;
         for (const relic of this.relics) {
             if (relic.id === 'executionersSeal') {
-                damageMultiplier *= 2; // Take x2 damage
+                damageMultiplier *= 2;
             }
             if (relic.id === 'doomsPromise') {
-                damageMultiplier *= 1.5; // Take +50% damage
+                damageMultiplier *= 1.5;
             }
         }
 
-        // Apply multiplied damage
         this.hp -= Math.ceil(amount * damageMultiplier);
-        this.hp = Math.max(0, this.hp); // Ensure HP doesn't go below 0
+        this.hp = Math.max(0, this.hp);
         
-        // Reset kill streak if hit
         if (window.gameState) {
             window.gameState.killStreak = 0;
         }
         
-        // Play damage sound
         this.playDamageSound();
         
-        // Visual damage effect - turn red
-        this.mesh.material.color.set(0xFF0000); // Set to red
+        this.mesh.material.color.set(0xFF0000);
         
-        // Reset color after a short delay
         setTimeout(() => {
-            this.mesh.material.color.set(0xFFFFFF); // Reset to white
+            this.mesh.material.color.set(0xFFFFFF);
         }, 200);
         
-        // Set invulnerability
         this.isInvulnerable = true;
         this.lastDamageTime = performance.now();
     }
     
-    // Play a simple sound when player is damaged
     playDamageSound() {
-        // Create an audio context if it doesn't exist
         if (!this.audioContext) {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         
-        // Create oscillator for a quick sound effect
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
         
-        // Connect the oscillator to gain node and to audio output
         oscillator.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
         
-        // Configure the sound
-        oscillator.type = 'square'; // Square wave for harsher sound
-        oscillator.frequency.setValueAtTime(220, this.audioContext.currentTime); // A low frequency
-        oscillator.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.2); // Drop pitch
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(220, this.audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.2);
         
-        // Set volume
-        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime); // Start at 30% volume
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3); // Fade out
+        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
         
-        // Play sound
         oscillator.start();
-        oscillator.stop(this.audioContext.currentTime + 0.3); // Sound duration: 0.3 seconds
+        oscillator.stop(this.audioContext.currentTime + 0.3);
     }
     
     addRelic(relic) {
-        // Add relic to player's collection
         this.relics.push(relic);
         
-        // Call onEquip if it exists
         if (relic.onEquip) {
             relic.onEquip(this);
         }
         
-        // Apply any static effects
         if (relic.apply) {
             relic.apply(this);
         }
@@ -492,18 +433,20 @@ export class Player {
     removeRelic(index) {
         const relic = this.relics[index];
         if (relic) {
-            // Call onUnequip if it exists
             if (relic.onUnequip) {
                 relic.onUnequip(this);
             }
-            // Remove the relic from the array
             this.relics.splice(index, 1);
         }
     }
+    
+    onKill() {
+        if (this.healOnKill > 0) {
+            this.hp = Math.min(this.maxHp, this.hp + this.healOnKill);
+        }
+    }
 
-    // Clean up player resources when needed
     cleanup() {
-        // Remove bullets
         for (const bullet of this.bullets) {
             if (bullet.mesh) {
                 this.scene.remove(bullet.mesh);
@@ -511,54 +454,45 @@ export class Player {
         }
         this.bullets = [];
         
-        // Remove shadow
         if (this.shadow) {
             this.scene.remove(this.shadow);
         }
         
-        // Remove player mesh
         this.scene.remove(this.mesh);
         
-        // Remove floating HP text
         if (this.hpText) {
             document.body.removeChild(this.hpText);
         }
     }
 
     createFloatingHPText() {
-        // Create HTML element for the floating HP text
         this.hpText = document.createElement('div');
         this.hpText.style.position = 'absolute';
-        this.hpText.style.color = '#FF0000'; // Red text
+        this.hpText.style.color = '#FF0000';
         this.hpText.style.fontFamily = 'Arial, sans-serif';
         this.hpText.style.fontWeight = 'bold';
         this.hpText.style.fontSize = '20px';
         this.hpText.style.textShadow = '2px 2px 2px #000000';
-        this.hpText.style.pointerEvents = 'none'; // Prevent interaction with the text
+        this.hpText.style.pointerEvents = 'none';
         this.hpText.style.zIndex = '1000';
         this.hpText.textContent = this.hp.toString();
         document.body.appendChild(this.hpText);
         
-        // Update the HP text position
         this.updateHPTextPosition();
     }
     
     updateHPTextPosition() {
-        if (!this.hpText) return;
+        if (!this.hpText || !this.mesh) return;
         
-        // Convert player's position to screen coordinates
         const width = window.innerWidth, height = window.innerHeight;
-        const pos = this.mesh.position.clone();
-        
-        // Calculate screen position (simple conversion for orthographic camera)
-        const x = (pos.x / 800 + 0.5) * width;
-        const y = (-pos.y / 800 + 0.5) * height;
-        
-        // Position the text above the player
-        this.hpText.style.left = `${x}px`;
-        this.hpText.style.top = `${y - 40}px`; // 40px above player
-        
-        // Update the text content
+        const vector = this.mesh.position.clone().project(camera);
+
+        const x = (vector.x * 0.5 + 0.5) * width;
+        const y = (-vector.y * 0.5 + 0.5) * height;
+
+        this.hpText.style.left = `${x - this.hpText.offsetWidth / 2}px`;
+        this.hpText.style.top = `${y - 50}px`;
+
         this.hpText.textContent = this.hp.toString();
     }
 }

@@ -2,12 +2,25 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Museum3D - Infinite Hallway</title>
+    <script src="js/nipplejs.min.js"></script>
     <style>
         body {
             margin: 0;
             overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
         }
         canvas {
             width: 100%;
@@ -96,22 +109,87 @@
             background: rgba(255, 255, 255, 0.5);
         }
 
+        /* Joystick Zone */
+        #joystickZone {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            width: 180px;
+            height: 180px;
+            z-index: 10000;
+            display: none; /* Hidden by default */
+            touch-action: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Second joystick for rotation */
+        #rotationJoystickZone {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 180px;
+            height: 180px;
+            z-index: 10000;
+            display: none; /* Hidden by default */
+            touch-action: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Media Queries */
         @media (max-width: 768px) {
+            #joystickZone, #rotationJoystickZone {
+                display: block;
+            }
             .mobile-controls {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                gap: 20px;
+                display: none; /* Hide original controls when joystick is active */
             }
             #controls {
                 display: none;
             }
+            #info {
+                display: none; /* Hide desktop controls info */
+            }
+            #mobileInfo {
+                display: block; /* Show mobile info */
+            }
+        }
+        
+        /* Mobile Info Instructions */
+        #mobileInfo {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            width: 100%;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 0;
+            pointer-events: none;
+            display: none; /* Hidden by default */
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
     <div id="info">Use WASD or arrow keys to move</div>
+    <div id="mobileInfo">Use left joystick to move and right joystick to rotate view</div>
     <div id="countdown" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; font-family: Arial, sans-serif; font-size: 72px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; pointer-events: none;">36</div>
+    
+    <!-- Mobile orientation toggle -->
+    <button id="orientationToggle" style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 5px; padding: 8px; font-size: 14px; z-index: 10001; display: none;">Rotate Screen</button>
+    
+    <!-- Joystick containers -->
+    <div id="joystickZone"></div>
+    <div id="rotationJoystickZone"></div>
+    
     <div class="mobile-controls">
         <button class="mobile-btn" id="leftBtn">←</button>
         <button class="mobile-btn" id="forwardBtn">↑</button>
@@ -142,166 +220,240 @@
     <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
     <a href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
     <script>
-        // BRUTE FORCE Mobile Controls - Guaranteed to work
-        if (window.innerWidth <= 768) {
-            const forwardBtn = document.getElementById('forwardBtn');
-            const leftBtn = document.getElementById('leftBtn');
-            const rightBtn = document.getElementById('rightBtn');
-            
-            // Initialize directly with global variables that are hard to break
-            let playerFacingAngle = 0; // in radians
-            
-            // Set up a global movement function that doesn't rely on any game internals
-            window.movePlayerInDirection = function(direction) {
-                // Get camera
-                const camera = document.querySelector('canvas')._threeCamera || window.camera;
-                if (!camera) return;
-                
-                switch(direction) {
-                    case 'forward':
-                        // Move forward 1 unit in facing direction
-                        camera.position.x -= Math.sin(playerFacingAngle) * 1;
-                        camera.position.z -= Math.cos(playerFacingAngle) * 1;
-                        // Mark as moved for main loop to sync
-                        window.movePlayerMoved = true;
-                        break;
-                    case 'left':
-                        // Rotate 90 degrees left
-                        playerFacingAngle += Math.PI / 2;
-                        camera.rotation.y = playerFacingAngle;
-                        // Mark as moved for main loop to sync
-                        window.movePlayerMoved = true;
-                        break;
-                    case 'right':
-                        // Rotate 90 degrees right
-                        playerFacingAngle -= Math.PI / 2;
-                        camera.rotation.y = playerFacingAngle;
-                        // Mark as moved for main loop to sync
-                        window.movePlayerMoved = true;
-                        break;
-                }
-            };
-            
-            // Super simple event listeners with direct action
-            forwardBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                // Move forward when touched
-                if (typeof window.movePlayerInDirection === 'function') {
-                    window.movePlayerInDirection('forward');
-                }
-            });
-            
-            leftBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                // Turn left when touched
-                if (typeof window.movePlayerInDirection === 'function') {
-                    window.movePlayerInDirection('left');
-                }
-            });
-            
-            rightBtn.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                // Turn right when touched
-                if (typeof window.movePlayerInDirection === 'function') {
-                    window.movePlayerInDirection('right');
-                }
-            });
-            
-            // Set up camera access as a fallback
-            // This ensures we have access to the camera directly
-            let setupInterval = setInterval(function() {
-                const canvas = document.querySelector('canvas');
-                if (canvas && canvas.__threeContext) {
-                    window.gameCanvas = canvas;
-                    
-                    // Try to directly access the camera
-                    try {
-                        const threeRenderer = canvas.__threeContext || 
-                                             canvas.__renderer || 
-                                             window.renderer;
-                        
-                        if (threeRenderer && threeRenderer.scene && threeRenderer.scene.camera) {
-                            window._camera = threeRenderer.scene.camera;
-                        }
-                    } catch(e) {
-                        console.log("Fallback camera access failed, still trying...");
-                    }
-                    
-                    if (window.controls || window._camera) {
-                        clearInterval(setupInterval);
-                    }
-                }
-            }, 500);
-            
-            // Prevent any default touch behaviors on controls
-            [forwardBtn, leftBtn, rightBtn].forEach(btn => {
-                btn.addEventListener('touchstart', (e) => e.preventDefault());
-                btn.addEventListener('touchend', (e) => e.preventDefault());
-            });
-            
-            // Inject direct camera control after 2 seconds as final fallback
+        // Only run the original mobile controls if joystick isn't initialized
+        window.addEventListener('load', function() {
+            // Wait a short time to see if joystick initializes
             setTimeout(function() {
-                // If game is loaded but our controls aren't working,
-                // directly patch the main.js animation loop
-                if (window.camera && !window._camera) {
-                    window._camera = window.camera;
-                    console.log("Direct camera access established");
+                if (!window.joystickInitialized) {
+                    console.log("Nipplejs not initialized, falling back to basic controls");
+                    
+                    // BRUTE FORCE Mobile Controls - Guaranteed to work
+                    if (window.innerWidth <= 768) {
+                        const forwardBtn = document.getElementById('forwardBtn');
+                        const leftBtn = document.getElementById('leftBtn');
+                        const rightBtn = document.getElementById('rightBtn');
+                        
+                        // Initialize directly with global variables that are hard to break
+                        let playerFacingAngle = 0; // in radians
+                        
+                        // Set up a global movement function that doesn't rely on any game internals
+                        window.movePlayerInDirection = function(direction) {
+                            // Get camera
+                            const camera = document.querySelector('canvas')._threeCamera || window.camera;
+                            if (!camera) return;
+                            
+                            switch(direction) {
+                                case 'forward':
+                                    // Move forward 1 unit in facing direction
+                                    camera.position.x -= Math.sin(playerFacingAngle) * 1;
+                                    camera.position.z -= Math.cos(playerFacingAngle) * 1;
+                                    // Mark as moved for main loop to sync
+                                    window.movePlayerMoved = true;
+                                    break;
+                                case 'left':
+                                    // Rotate 90 degrees left
+                                    playerFacingAngle += Math.PI / 2;
+                                    camera.rotation.y = playerFacingAngle;
+                                    // Mark as moved for main loop to sync
+                                    window.movePlayerMoved = true;
+                                    break;
+                                case 'right':
+                                    // Rotate 90 degrees right
+                                    playerFacingAngle -= Math.PI / 2;
+                                    camera.rotation.y = playerFacingAngle;
+                                    // Mark as moved for main loop to sync
+                                    window.movePlayerMoved = true;
+                                    break;
+                            }
+                        };
+                        
+                        // Super simple event listeners with direct action
+                        forwardBtn.addEventListener('touchstart', function(e) {
+                            e.preventDefault();
+                            // Move forward when touched
+                            if (typeof window.movePlayerInDirection === 'function') {
+                                window.movePlayerInDirection('forward');
+                            }
+                        });
+                        
+                        leftBtn.addEventListener('touchstart', function(e) {
+                            e.preventDefault();
+                            // Turn left when touched
+                            if (typeof window.movePlayerInDirection === 'function') {
+                                window.movePlayerInDirection('left');
+                            }
+                        });
+                        
+                        rightBtn.addEventListener('touchstart', function(e) {
+                            e.preventDefault();
+                            // Turn right when touched
+                            if (typeof window.movePlayerInDirection === 'function') {
+                                window.movePlayerInDirection('right');
+                            }
+                        });
+                        
+                        // Set up camera access as a fallback
+                        // This ensures we have access to the camera directly
+                        let setupInterval = setInterval(function() {
+                            const canvas = document.querySelector('canvas');
+                            if (canvas && canvas.__threeContext) {
+                                window.gameCanvas = canvas;
+                                
+                                // Try to directly access the camera
+                                try {
+                                    const threeRenderer = canvas.__threeContext || 
+                                                        canvas.__renderer || 
+                                                        window.renderer;
+                                    
+                                    if (threeRenderer && threeRenderer.scene && threeRenderer.scene.camera) {
+                                        window._camera = threeRenderer.scene.camera;
+                                    }
+                                } catch(e) {
+                                    console.log("Fallback camera access failed, still trying...");
+                                }
+                                
+                                if (window.controls || window._camera) {
+                                    clearInterval(setupInterval);
+                                }
+                            }
+                        }, 500);
+                        
+                        // Prevent any default touch behaviors on controls
+                        [forwardBtn, leftBtn, rightBtn].forEach(btn => {
+                            btn.addEventListener('touchstart', (e) => e.preventDefault());
+                            btn.addEventListener('touchend', (e) => e.preventDefault());
+                        });
+                        
+                        // Inject direct camera control after 2 seconds as final fallback
+                        setTimeout(function() {
+                            // If game is loaded but our controls aren't working,
+                            // directly patch the main.js animation loop
+                            if (window.camera && !window._camera) {
+                                window._camera = window.camera;
+                                console.log("Direct camera access established");
+                            }
+                            
+                            // FINAL BRUTE FORCE SOLUTION:
+                            // Replace the entire mobile controls with direct DOM-based buttons
+                            // that completely bypass the Three.js controls system
+                            if (!window.mobileControlsWorking && !window.joystickInitialized) {
+                                console.log("Implementing final brute force mobile controls");
+                                
+                                // Remove existing buttons
+                                const mobileControls = document.querySelector('.mobile-controls');
+                                if (mobileControls) mobileControls.innerHTML = '';
+                                
+                                // Create new buttons with inline styles for guaranteed rendering
+                                const newControlsHTML = `
+                                    <div style="position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:center; z-index:9999;">
+                                        <button id="mobileBtnLeft" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">←</button>
+                                        <button id="mobileBtnForward" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">↑</button>
+                                        <button id="mobileBtnRight" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">→</button>
+                                    </div>
+                                `;
+                                
+                                // Inject new controls directly into body
+                                const controlsContainer = document.createElement('div');
+                                controlsContainer.innerHTML = newControlsHTML;
+                                document.body.appendChild(controlsContainer.firstElementChild);
+                                
+                                // Set up direct event handlers
+                                document.getElementById('mobileBtnForward').addEventListener('touchstart', function(e) {
+                                    e.preventDefault();
+                                    if (window.camera) {
+                                        const angleY = window.camera.rotation.y || 0;
+                                        window.camera.position.x -= Math.sin(angleY) * 1;
+                                        window.camera.position.z -= Math.cos(angleY) * 1;
+                                    }
+                                });
+                                
+                                document.getElementById('mobileBtnLeft').addEventListener('touchstart', function(e) {
+                                    e.preventDefault();
+                                    if (window.camera) {
+                                        const current = window.camera.rotation.y || 0;
+                                        window.camera.rotation.y = current + Math.PI/2;
+                                    }
+                                });
+                                
+                                document.getElementById('mobileBtnRight').addEventListener('touchstart', function(e) {
+                                    e.preventDefault();
+                                    if (window.camera) {
+                                        const current = window.camera.rotation.y || 0;
+                                        window.camera.rotation.y = current - Math.PI/2;
+                                    }
+                                });
+                                
+                                window.mobileControlsWorking = true;
+                            }
+                        }, 2000);
+                        
+                        // Show orientation toggle button on mobile
+                        const orientationToggle = document.getElementById('orientationToggle');
+                        if (orientationToggle) {
+                            orientationToggle.style.display = 'block';
+                            
+                            // Set up click handler for orientation toggle
+                            orientationToggle.addEventListener('click', function() {
+                                try {
+                                    if (screen.orientation) {
+                                        // Modern API
+                                        if (screen.orientation.type.includes('portrait')) {
+                                            screen.orientation.lock('landscape').catch(e => console.log('Orientation lock error:', e));
+                                        } else {
+                                            screen.orientation.lock('portrait').catch(e => console.log('Orientation lock error:', e));
+                                        }
+                                    } else if (screen.msLockOrientation) {
+                                        // IE/Edge
+                                        if (screen.msOrientation.includes('portrait')) {
+                                            screen.msLockOrientation('landscape');
+                                        } else {
+                                            screen.msLockOrientation('portrait');
+                                        }
+                                    } else {
+                                        // Fallback - just tell user to rotate manually
+                                        alert('Please rotate your device manually to switch orientation.');
+                                    }
+                                } catch (e) {
+                                    console.log('Error toggling orientation:', e);
+                                    alert('Please rotate your device manually to switch orientation.');
+                                }
+                            });
+                        }
+                        
+                        // Check orientation on load and suggest landscape if needed
+                        function checkOrientation() {
+                            const isPortrait = window.innerHeight > window.innerWidth;
+                            if (isPortrait) {
+                                const message = document.createElement('div');
+                                message.style.position = 'fixed';
+                                message.style.top = '0';
+                                message.style.left = '0';
+                                message.style.width = '100%';
+                                message.style.padding = '10px';
+                                message.style.background = 'rgba(0,0,0,0.8)';
+                                message.style.color = 'white';
+                                message.style.textAlign = 'center';
+                                message.style.zIndex = '10000';
+                                message.innerHTML = 'For the best experience, rotate your device to landscape mode.';
+                                
+                                document.body.appendChild(message);
+                                
+                                // Remove after 5 seconds
+                                setTimeout(() => {
+                                    if (message.parentNode) {
+                                        message.parentNode.removeChild(message);
+                                    }
+                                }, 5000);
+                            }
+                        }
+                        
+                        // Call on load and on resize
+                        checkOrientation();
+                        window.addEventListener('resize', checkOrientation);
+                    }
                 }
-                
-                // FINAL BRUTE FORCE SOLUTION:
-                // Replace the entire mobile controls with direct DOM-based buttons
-                // that completely bypass the Three.js controls system
-                if (!window.mobileControlsWorking) {
-                    console.log("Implementing final brute force mobile controls");
-                    
-                    // Remove existing buttons
-                    const mobileControls = document.querySelector('.mobile-controls');
-                    if (mobileControls) mobileControls.innerHTML = '';
-                    
-                    // Create new buttons with inline styles for guaranteed rendering
-                    const newControlsHTML = `
-                        <div style="position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:center; z-index:9999;">
-                            <button id="mobileBtnLeft" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">←</button>
-                            <button id="mobileBtnForward" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">↑</button>
-                            <button id="mobileBtnRight" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">→</button>
-                        </div>
-                    `;
-                    
-                    // Inject new controls directly into body
-                    const controlsContainer = document.createElement('div');
-                    controlsContainer.innerHTML = newControlsHTML;
-                    document.body.appendChild(controlsContainer.firstElementChild);
-                    
-                    // Set up direct event handlers
-                    document.getElementById('mobileBtnForward').addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        if (window.camera) {
-                            const angleY = window.camera.rotation.y || 0;
-                            window.camera.position.x -= Math.sin(angleY) * 1;
-                            window.camera.position.z -= Math.cos(angleY) * 1;
-                        }
-                    });
-                    
-                    document.getElementById('mobileBtnLeft').addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        if (window.camera) {
-                            const current = window.camera.rotation.y || 0;
-                            window.camera.rotation.y = current + Math.PI/2;
-                        }
-                    });
-                    
-                    document.getElementById('mobileBtnRight').addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        if (window.camera) {
-                            const current = window.camera.rotation.y || 0;
-                            window.camera.rotation.y = current - Math.PI/2;
-                        }
-                    });
-                    
-                    window.mobileControlsWorking = true;
-                }
-            }, 2000);
-        }
+            }, 1000); // Wait 1 second to check if joystick is initialized
+        });
     </script>
 </body>
 </html> 
