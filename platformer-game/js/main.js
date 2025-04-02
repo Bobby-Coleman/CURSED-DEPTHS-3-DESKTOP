@@ -5,6 +5,11 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Read battle level from URL parameters (if available)
+const urlParams = new URLSearchParams(window.location.search);
+const returnBattleLevel = urlParams.get('battleLevel');
+console.log("Platformer game started from battle level:", returnBattleLevel);
+
 // Set canvas dimensions to fill the window
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -202,7 +207,12 @@ window.addEventListener('keyup', (e) => {
             break;
         case 'Escape':
             // Exit platformer and return to main game
-            window.location.href = '../index.html';
+            if (returnBattleLevel) {
+                console.log("Returning to battle level:", returnBattleLevel);
+                window.location.href = '../index.html?returnToLevel=' + returnBattleLevel;
+            } else {
+                window.location.href = '../index.html';
+            }
             break;
     }
 });
@@ -819,7 +829,12 @@ function showExitDoor() {
     exitDoor.style.cursor = 'pointer';
     exitDoor.textContent = 'Exit Game';
     exitDoor.onclick = function() {
-        window.location.href = '../index.html';
+        if (returnBattleLevel) {
+            console.log("Returning to battle level:", returnBattleLevel);
+            window.location.href = '../index.html?returnToLevel=' + returnBattleLevel;
+        } else {
+            window.location.href = '../index.html';
+        }
     };
     document.body.appendChild(exitDoor);
 } 

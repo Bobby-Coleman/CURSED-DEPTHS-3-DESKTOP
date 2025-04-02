@@ -148,9 +148,13 @@ window.startGame = startGame;
 window.showControlsTutorial = showControlsTutorial;
 
 function init() {
+    // Check for returnToLevel parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnLevel = urlParams.get('returnToLevel');
+    
     // Reset game state
     gameState = {
-        level: 1,
+        level: returnLevel ? parseInt(returnLevel) : 1, // Use returnLevel if available
         killStreak: 0,
         gameOver: false,
         isShopLevel: false,
@@ -591,7 +595,8 @@ function animate() {
                 
                 if (hasTwoHeadedGoat) {
                     // Transition to platformer game if they have the relic
-                    window.location.href = 'platformer-game/index.html';
+                    // Pass current battle level so player can return later
+                    window.location.href = 'platformer-game/index.html?battleLevel=' + gameState.level;
                 } else {
                     // Show message that they need the relic
                     ui.showMessage("Please find the Two Headed Goat relic to enter");
