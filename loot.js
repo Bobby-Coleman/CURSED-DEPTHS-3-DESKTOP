@@ -16,7 +16,11 @@ export class LootSystem {
         // 30% chance to drop a heart, otherwise only blood
         const roll = Math.random();
         if (roll < 0.3) {
-            const heartDrop = this.createHeartDrop(x, y);
+            // Add random offset to prevent overlap with blood
+            const offsetX = (Math.random() - 0.5) * 30; // -15 to +15 pixels X offset
+            const offsetY = (Math.random() - 0.5) * 30; // -15 to +15 pixels Y offset
+            
+            const heartDrop = this.createHeartDrop(x + offsetX, y + offsetY);
             if (heartDrop) {
                 this.drops.push(heartDrop);
             }
@@ -102,19 +106,27 @@ export class LootSystem {
     }
     
     createHeartDrop(x, y) {
-        // Create heart
-        const geometry = new THREE.CircleGeometry(10, 32);
-        const material = new THREE.MeshBasicMaterial({ color: 0xFF69B4 }); // Pink
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, 1);
-        this.scene.add(mesh);
+        // Create heart using the sprite texture
+        const heartTexture = new THREE.TextureLoader().load('assets/sprites/heart.png');
+        
+        // Create a sprite material with the heart texture
+        const material = new THREE.SpriteMaterial({ 
+            map: heartTexture,
+            color: 0xffffff // White tint to keep the original color
+        });
+        
+        // Create sprite instead of geometry
+        const heartSprite = new THREE.Sprite(material);
+        heartSprite.scale.set(20, 20, 1); // Set appropriate scale
+        heartSprite.position.set(x, y, 1);
+        this.scene.add(heartSprite);
         
         return {
             type: 'heart',
             data: {
                 amount: 1
             },
-            mesh: mesh
+            mesh: heartSprite
         };
     }
     
