@@ -3712,6 +3712,191 @@ I'll comment out the lines within the `animate` function that specifically updat
 
 ---
 
+_**User**_
+
+this!
+
+---
+
+_**Assistant**_
+
+Ah, thank you for the screenshot and the file content!
+
+Okay, I see the problem clearly now. The error `TypeError: ui.updateRelicHover is not a function` is still showing up in the console.
+
+Looking at the `main.js` code you provided, the lines I tried to comment out in the previous step are still active:
+
+```javascript
+            // Update relic hover state (Desktop only)
+            if (!isMobile) {
+                // This line is still causing the error because ui.js doesn't have this function yet
+                ui.updateRelicHover(mouse.x, mouse.y, player, gameState); 
+                // Handle relic selling (Desktop: R key)
+                if (keys.r && !keys.wasR && gameState.hoveredRelicIndex !== -1) {
+                    keys.wasR = true; // Prevent holding R
+                    sellRelic(gameState.hoveredRelicIndex); // Call global sellRelic function
+                }
+            } else {
+                 gameState.hoveredRelicIndex = -1; 
+                 // TODO: Implement touch interaction for selling relics on mobile?
+            }
+```
+
+It seems my previous edit to temporarily disable that block didn't get applied correctly. My apologies for that!
+
+Let's fix the root cause now. Instead of just commenting it out, I'll add the missing empty `updateRelicHover` method to the `UI` class in `ui.js`, just like we did for `Level.update`. This will resolve the error permanently.
+
+
+
+---
+
+```diff
+          // Don't reset required blood - it will be set separately
+      }
++ 
++     // Add the missing updateRelicHover method definition
++     updateRelicHover(mouseX, mouseY, player, gameState) {
++         // This function is called in main.js animate loop for desktop hover effects.
++         // The actual logic for showing tooltips and setting gameState.hoveredRelicIndex
++         // is currently handled by mouseover/mouseout listeners added directly to 
++         // the relic slots in the updateStats method. 
++         // So, this function can remain empty for now just to prevent the TypeError.
++         // If more complex hover logic based on raw coordinates is needed later, 
++         // it can be added here.
++     }
+  }
+```
+
+---
+
+Okay, the `updateRelicHover` method has now been added to `ui.js`. This should resolve the error you were seeing.
+
+Let's commit this fix and push it.
+
+
+
+---
+
+```bash
+git add . && git commit -m "Fix missing UI.updateRelicHover method"
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 MOBILE 1 % git add . && git commit -m "Fix missing UI.updateR
+elicHover method"             git add . && git commit -m "Fix missing UI.updateRelicHover method"
+[main 0b45753] Fix missing UI.updateRelicHover method
+ 3 files changed, 617 insertions(+), 43 deletions(-)
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 MOBILE 1 %
+```
+
+---
+
+Pushing the fix to Heroku:
+
+
+
+---
+
+```bash
+git push heroku-test main
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 MOBILE 1 % git push heroku-test main
+Enumerating objects: 13, done.
+Counting objects: 100% (13/13), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (7/7), done.
+Writing objects: 100% (7/7), 8.61 KiB | 2.87 MiB/s, done.
+Total 7 (delta 5), reused 0 (delta 0), pack-reused 0
+remote: Updated 152 paths from 5c5f025
+remote: Compressing source files... done.
+remote: Building source:
+remote: 
+remote: -----> Building on the Heroku-24 stack
+remote: -----> Using buildpack: heroku/nodejs
+remote: -----> Node.js app detected
+remote:        
+remote: -----> Creating runtime environment
+remote:        
+remote:        NPM_CONFIG_LOGLEVEL=error
+remote:        NODE_VERBOSE=false
+remote:        NODE_ENV=production
+remote:        NODE_MODULES_CACHE=true
+remote:        
+remote: -----> Installing binaries
+remote:        engines.node (package.json):   unspecified
+remote:        engines.npm (package.json):    unspecified (use default)
+remote:        
+remote:        Resolving node version 22.x...
+remote:        Downloading and installing node 22.14.0...
+remote:        Using default npm version: 10.9.2
+remote:        
+remote: -----> Restoring cache
+remote:        - npm cache
+remote:        
+remote: -----> Installing dependencies
+remote:        Installing node modules
+remote:        
+remote:        added 81 packages, and audited 82 packages in 1s
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        
+remote: -----> Build
+remote:        
+remote: -----> Caching build
+remote:        - npm cache
+remote:        
+remote: -----> Pruning devDependencies
+remote:        
+remote:        up to date, audited 82 packages in 411ms
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        npm notice
+remote:        npm notice New major version of npm available! 10.9.2 -> 11.2.0
+remote:        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.2.0
+remote:        npm notice To update run: npm install -g npm@11.2.0
+remote:        npm notice
+remote:        
+remote: -----> Build succeeded!
+remote: -----> Discovering process types
+remote:        Procfile declares types -> web
+remote: 
+remote: -----> Compressing...
+remote:        Done: 317M
+remote: -----> Launching...
+remote:  !     Warning: Your slug size (317 MB) exceeds our soft limit (300 MB) which may affect boot time.
+remote:        Released v6
+remote:        https://cursed-depths-4-2318297ae646.herokuapp.com/ deployed to Heroku
+remote: 
+remote: Verifying deploy... done.
+To https://git.heroku.com/cursed-depths-4.git
+   09e2b2b..0b45753  main -> main
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 MOBILE 1 %
+```
+
+---
+
+Okay, the `ui.updateRelicHover` fix is deployed.
+
+Please clear your cache and reload the app on desktop again. Hopefully, this resolves the last error and the game world appears correctly!
+
+---
+
+_**User**_
+
+that brought it back but now I can't move on desktop or shoot ! 
+
+---
+
+_**Assistant**_
+
 
 
 ---

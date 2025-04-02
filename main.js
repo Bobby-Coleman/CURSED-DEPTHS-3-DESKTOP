@@ -581,10 +581,8 @@ function animate() {
                 // Mobile path (working)
                 player.update(null, null, mobileInputState, enemies, deltaTime);
             } else {
-                // --- TEMPORARILY DISABLE DESKTOP INPUT UPDATE FOR DEBUGGING ---
-                // Pass null input state to player.update
-                player.update(null, null, null, enemies, deltaTime); 
-                // player.update(keys, mouse, null, enemies, deltaTime); // Original line commented out
+                // --- Restore Desktop Input Update --- 
+                player.update(keys, mouse, null, enemies, deltaTime); // Pass desktop keys/mouse
             }
 
             // Update loot system (auto-pickup, etc.)
@@ -701,44 +699,54 @@ function animate() {
                     return; // Exit animate frame early after level transition
                 }
                 
-                // Check item pickups (Desktop: E key)
-                // Temporarily disable desktop pickup check as well
-                // if (!isMobile && keys.e && !keys.wasE && gameState.currentPickup) { 
-                //     keys.wasE = true; 
-                //     handleItemPickup();
-                // }
+                // --- Restore Desktop Pickup Check ---
+                 gameState.currentPickup = lootSystem.checkPickup(player, ui); // Check for pickups regardless of device
+                 if (!isMobile && keys.e && !keys.wasE && gameState.currentPickup) { 
+                     keys.wasE = true; 
+                     handleItemPickup();
+                 }
                 // TODO: Implement touch interaction for pickup on mobile?
                 
             } else {
                 // --- Shop Level Logic ---
-                // Temporarily disable desktop shop interaction
-                // let shopItem = null;
-                // if (!isMobile) {
-                //     shopItem = shop.checkItemInteraction(player, mouse.x, mouse.y, gameState);
-                //     // ... show popup ...
-                // }
-                // if (!isMobile && keys.e && !keys.wasE && shopItem) { 
-                //     keys.wasE = true;
-                //     handleShopPurchase(shopItem);
-                //     // ... hide popup ...
-                // }
+                // --- Restore Desktop Shop Interaction ---
+                let shopItem = null;
+                if (!isMobile) {
+                    shopItem = shop.checkItemInteraction(player, mouse.x, mouse.y, gameState);
+                    if (shopItem) {
+                        ui.showItemPopup(shopItem, mouse.x, mouse.y);
+                    } else {
+                        ui.hidePopup(); // Hide if not hovering
+                    }
+                }
+                // Handle purchase (Desktop: E key)
+                if (!isMobile && keys.e && !keys.wasE && shopItem) { 
+                    keys.wasE = true;
+                    handleShopPurchase(shopItem);
+                    shopItem = null; // Clear shop item after purchase attempt to prevent re-buy
+                    ui.hidePopup(); // Hide popup after purchase attempt
+                }
+                // TODO: Implement touch interaction for shop purchase on mobile?
+                
+                 // Check portal collision in shop
                  if (currentLevel.portalActive && currentLevel.checkPortalCollision(player)) {
                      nextLevel();
                      return; 
                  }
             }
             
-            // Update relic hover state (Desktop only)
-            // Temporarily disable relic hover/selling logic
-            // if (!isMobile) {
-            //     // ui.updateRelicHover(mouse.x, mouse.y, player, gameState);
-            //     if (keys.r && !keys.wasR && gameState.hoveredRelicIndex !== -1) {
-            //         keys.wasR = true; 
-            //         sellRelic(gameState.hoveredRelicIndex); 
-            //     }
-            // } else {
-            //      gameState.hoveredRelicIndex = -1; 
-            // }
+            // --- Restore Relic Hover/Selling Logic (Desktop only) ---
+            if (!isMobile) {
+                ui.updateRelicHover(mouse.x, mouse.y, player, gameState);
+                // Handle relic selling (Desktop: R key)
+                if (keys.r && !keys.wasR && gameState.hoveredRelicIndex !== -1) {
+                    keys.wasR = true; // Prevent holding R
+                    sellRelic(gameState.hoveredRelicIndex); // Call global sellRelic function
+                }
+            } else {
+                 gameState.hoveredRelicIndex = -1; // Ensure no relic is hovered on mobile
+                 // TODO: Implement touch interaction for selling relics on mobile?
+            }
 
             // Check game over conditions
             checkGameOver();
