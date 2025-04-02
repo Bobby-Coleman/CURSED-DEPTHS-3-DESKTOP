@@ -76,20 +76,21 @@ let hasMoreBackgrounds = true;
 
 // Add memory text system
 const memoryTexts = [
-    "Image 1 - From the outside, it looked like a normal childhood.",
-    "Image 2 - Cardboard forts. Plastic swords. Playing until the sun went down.",
-    "Image 3 - Kite strings tangled with your dad’s cigarette smoke.",
-    "Image 4 - But he drank. And sometimes he wasn’t just drunk. He was mean.",
-    "Image 5 - You didn’t question it. You caught the bus. Memorized locker combos.",
-    "Image 6 - And then—her. The kind of girl you think only exists in movies.",
-    "Image 7 - You proposed way too fast. But it felt like a win.",
-    "Image 8 - Then came your daughter. Tiny fists. Loud lungs. Everything.",
-    "Image 9 - But life doesn’t hand out happy endings. It just...moves.",
-    "Image 10 - And it echoes. The things you never fixed get louder.",
-    "Image 11 - One day, you blink—and it’s all different. Irreversibly different.",
-    "Image 12 - The day you lost her. Your daughter. Like the air got punched out of the world.",
-    "Image 13 - You defaulted. Slipped into the only blueprint you had.",
-    "Image 14 - And the cycle finished what it started."
+    "Oh, this room. I didn't want you to see this yet.",
+    "From the outside, it looked like a normal childhood.",
+    "Cardboard forts. Plastic swords. Playing until the sun went down.",
+    "Kite strings tangled with your dad’s cigarette smoke.",
+    "But he drank. And sometimes he wasn’t just drunk. He was mean.",
+    "You didn’t question it. You caught the bus. Memorized locker combos.",
+    "And then—her. The kind of girl you think only exists in movies.",
+    "You proposed way too fast. But it felt like a win.",
+    "Then came your daughter. Tiny fists. Loud lungs. Everything.",
+    "But life doesn’t hand out happy endings. It just...moves.",
+    "And it echoes. The things you never fixed get louder.",
+    "One day, you blink—and it’s all different. Irreversibly different.",
+    "The day you lost her. Your daughter. Like the air got punched out of the world.",
+    "You defaulted. Slipped into the only blueprint you had.",
+    "And the cycle finished what it started."
   ];
   
 
