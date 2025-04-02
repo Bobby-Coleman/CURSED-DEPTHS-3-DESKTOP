@@ -103,55 +103,37 @@ export class Enemy {
             this.shootCooldown = 4000;
             this.lastShotTime = 0;
             
-            // Create mesh with sprite sheet 
+            // Create mesh with sprite sheet
             const geometry = new THREE.PlaneGeometry(64, 64);
             const material = new THREE.MeshBasicMaterial({
-                color: 0xFFFFFF, // White to show texture immediately
+                color: 0xFFFFFF, // White color to show sprite properly
                 transparent: true,
                 alphaTest: 0.1,
                 side: THREE.DoubleSide
             });
             this.mesh = new THREE.Mesh(geometry, material);
             
-            // Setup animation frames first (important!)
-            this.setupAnimationFrames();
-            
-            console.log("BOMBER: Created mesh with geometry:", geometry);
-            console.log("BOMBER: Created material:", material);
-            console.log("BOMBER: Animation frames setup with frames:", this.frames ? this.frames.length : 0);
-            
-            // Manually update UVs to start with first frame
-            this.updateUVs(0);
-            console.log("BOMBER: Initial UVs set");
-            
-            // Load bomber enemy sprite sheet with absolute URL to ensure it loads
-            const texturePath = window.location.origin + '/assets/sprites/bomber_enemy.png';
-            console.log("BOMBER: Loading texture from:", texturePath);
-            
-            const texture = new THREE.TextureLoader().load(texturePath, 
+            // Load bomber enemy sprite sheet
+            const texture = new THREE.TextureLoader().load('assets/sprites/bomber_enemy.png', 
                 // Success callback
                 (loadedTexture) => {
-                    console.log('BOMBER: Sprite sheet loaded successfully', loadedTexture);
+                    console.log('Bomber enemy sprite sheet loaded successfully');
                     this.mesh.material.map = loadedTexture;
-                    this.mesh.material.color.setHex(0xFFFFFF); // Ensure white color to show texture
                     this.mesh.material.needsUpdate = true;
-                    
-                    // Force update UVs again after texture loads
-                    this.updateUVs(0);
-                    console.log("BOMBER: UVs updated after texture load");
                 },
                 // Progress callback
                 undefined,
                 // Error callback
                 (error) => {
-                    console.error('Error loading bomber sprite sheet:', error, texturePath);
-                    this.mesh.material.color.setHex(0xFF6600); // Fallback to orange
+                    console.error('Error loading bomber sprite sheet:', error);
+                    this.mesh.material.color.setHex(0xFF6600); // Fallback to orange if sprite fails to load
                 }
             );
-            
-            // Set texture filtering
             texture.magFilter = THREE.NearestFilter;
             texture.minFilter = THREE.NearestFilter;
+            
+            // Setup animation frames similar to basic monster
+            this.setupAnimationFrames();
             
             // Create explosion effect mesh
             const explosionGeometry = new THREE.CircleGeometry(50, 32);
