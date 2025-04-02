@@ -142,26 +142,26 @@
             
             // Forward button
             forwardBtn.addEventListener('touchstart', () => {
-                window.game.keys.w = true;
+                window.moveForward = true;
             });
             forwardBtn.addEventListener('touchend', () => {
-                window.game.keys.w = false;
+                window.moveForward = false;
             });
             
             // Left button
             leftBtn.addEventListener('touchstart', () => {
-                window.game.keys.a = true;
+                window.moveLeft = true;
             });
             leftBtn.addEventListener('touchend', () => {
-                window.game.keys.a = false;
+                window.moveLeft = false;
             });
             
             // Right button
             rightBtn.addEventListener('touchstart', () => {
-                window.game.keys.d = true;
+                window.moveRight = true;
             });
             rightBtn.addEventListener('touchend', () => {
-                window.game.keys.d = false;
+                window.moveRight = false;
             });
 
             // Prevent default touch behaviors

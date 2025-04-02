@@ -4091,6 +4091,406 @@ Would you like to try a different approach for the mobile controls?
 
 ---
 
+_**User**_
+
+okay, remove the nipple.js and add a simple forward walking button and look to the right and left arrow buttons at the bottom for mobile. SIMPLE buttons that act as wad for mobile but small arrow ui elements. That way it HAS to work. MOBILE ONLY change nothing else
+
+---
+
+_**Assistant**_
+
+I'll help you create simple mobile-only buttons for movement. We'll add:
+1. A forward (W) button
+2. Left turn (A) button
+3. Right turn (D) button
+
+Let me modify the HTML to add these mobile controls:
+
+---
+
+```diff
+              z-index: 1000;
+          }
++         /* Mobile Controls */
++         .mobile-controls {
++             display: none;
++             position: fixed;
++             bottom: 20px;
++             left: 0;
++             right: 0;
++             text-align: center;
++             z-index: 1000;
++         }
++         
++         .mobile-btn {
++             background: rgba(255, 255, 255, 0.3);
++             border: 2px solid white;
++             color: white;
++             width: 60px;
++             height: 60px;
++             border-radius: 50%;
++             margin: 0 10px;
++             font-size: 24px;
++             touch-action: manipulation;
++             user-select: none;
++             -webkit-user-select: none;
++         }
++ 
++         .mobile-btn:active {
++             background: rgba(255, 255, 255, 0.5);
++         }
++ 
++         @media (max-width: 768px) {
++             .mobile-controls {
++                 display: flex;
++                 justify-content: center;
++                 align-items: center;
++                 gap: 20px;
++             }
++             #controls {
++                 display: none;
++             }
++         }
+      </style>
+  </head>
+      <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
+      <a href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
++     <div class="mobile-controls">
++         <button class="mobile-btn" id="leftBtn">←</button>
++         <button class="mobile-btn" id="forwardBtn">↑</button>
++         <button class="mobile-btn" id="rightBtn">→</button>
++     </div>
+      <script>
+          // Initialize nipple.js joystick
+              window.game.keys.d = false;
+          });
++ 
++         // Mobile Controls
++         if (window.innerWidth <= 768) {
++             const forwardBtn = document.getElementById('forwardBtn');
++             const leftBtn = document.getElementById('leftBtn');
++             const rightBtn = document.getElementById('rightBtn');
++             
++             // Forward button
++             forwardBtn.addEventListener('touchstart', () => {
++                 window.game.keys.w = true;
++             });
++             forwardBtn.addEventListener('touchend', () => {
++                 window.game.keys.w = false;
++             });
++             
++             // Left button
++             leftBtn.addEventListener('touchstart', () => {
++                 window.game.keys.a = true;
++             });
++             leftBtn.addEventListener('touchend', () => {
++                 window.game.keys.a = false;
++             });
++             
++             // Right button
++             rightBtn.addEventListener('touchstart', () => {
++                 window.game.keys.d = true;
++             });
++             rightBtn.addEventListener('touchend', () => {
++                 window.game.keys.d = false;
++             });
++ 
++             // Prevent default touch behaviors
++             [forwardBtn, leftBtn, rightBtn].forEach(btn => {
++                 btn.addEventListener('touchstart', (e) => e.preventDefault());
++                 btn.addEventListener('touchend', (e) => e.preventDefault());
++             });
++         }
+      </script>
+  </body>
+```
+
+---
+
+Now let's remove the old nipple.js code:
+
+---
+
+```diff
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Museum3D - Infinite Hallway</title>
+-     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+      <style>
+          body {
+      </div>
+      <script>
+-         // Initialize nipple.js joystick
+-         const joystickManager = nipplejs.create({
+-             zone: document.getElementById('joystick'),
+-             mode: 'static',
+-             position: { left: '50%', top: '50%' },
+-             color: 'white',
+-             size: 150
+-         });
+- 
+-         joystickManager.on('move', (evt, data) => {
+-             // Convert joystick angle to movement direction
+-             const angle = data.angle.degree;
+-             const force = data.force;
+-             
+-             // Map joystick direction to WASD keys
+-             if (force > 0.5) {  // Only move if joystick is pushed hard enough
+-                 if (angle >= 315 || angle < 45) {  // Right
+-                     window.game.keys.d = true;
+-                 } else if (angle >= 45 && angle < 135) {  // Down
+-                     window.game.keys.s = true;
+-                 } else if (angle >= 135 && angle < 225) {  // Left
+-                     window.game.keys.a = true;
+-                 } else if (angle >= 225 && angle < 315) {  // Up
+-                     window.game.keys.w = true;
+-                 }
+-             }
+-         });
+- 
+-         joystickManager.on('end', () => {
+-             // Reset all movement keys when joystick is released
+-             window.game.keys.w = false;
+-             window.game.keys.a = false;
+-             window.game.keys.s = false;
+-             window.game.keys.d = false;
+-         });
+- 
+          // Mobile Controls
+          if (window.innerWidth <= 768) {
+```
+
+---
+
+Let's also remove the old joystick div and its styles:
+
+---
+
+```diff
+              z-index: 1000;
+          }
+-         #joystick {
+-             position: absolute;
+-             bottom: 50px;
+-             left: 50px;
+-             width: 150px;
+-             height: 150px;
+-             z-index: 1000;
+-         }
+          /* Mobile Controls */
+          .mobile-controls {
+          <p>E - Interact</p>
+      </div>
+-     <div id="joystick"></div>
++     <div class="mobile-controls">
++         <button class="mobile-btn" id="leftBtn">←</button>
++         <button class="mobile-btn" id="forwardBtn">↑</button>
++         <button class="mobile-btn" id="rightBtn">→</button>
++     </div>
+      <button id="audioButton">Play Music</button>
+      
+      <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
+      <a href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
+-     <div class="mobile-controls">
+-         <button class="mobile-btn" id="leftBtn">←</button>
+-         <button class="mobile-btn" id="forwardBtn">↑</button>
+-         <button class="mobile-btn" id="rightBtn">→</button>
+-     </div>
+      <script>
+          // Mobile Controls
+```
+
+---
+
+I've made the following changes:
+
+1. Removed all nipple.js related code and dependencies
+2. Added simple mobile-only control buttons:
+   - Forward (↑) button for moving forward (W key)
+   - Left (←) button for turning left (A key)
+   - Right (→) button for turning right (D key)
+3. The buttons are:
+   - Only visible on mobile devices (screens < 768px)
+   - Semi-transparent white circles with arrows
+   - Positioned at the bottom center of the screen
+   - Properly spaced and sized for easy tapping
+   - Have touch feedback (highlight when pressed)
+4. The controls:
+   - Use simple touchstart/touchend events
+   - Directly map to WASD keys
+   - Prevent default touch behaviors to avoid scrolling
+   - Hide the keyboard controls info on mobile
+
+This is a much simpler and more reliable approach than the joystick. Would you like me to push these changes to Heroku?
+
+---
+
+_**User**_
+
+push this
+
+---
+
+_**Assistant**_
+
+I'll help you push these changes to Heroku. First, let's check the status:
+
+---
+
+```bash
+git status
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % git status
+On branch main
+Your branch and 'origin/main' have diverged,
+and have 42 and 1 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .specstory/history/2025-04-01_21-00-troubleshooting-audio-playback-in-heroku.md
+        modified:   museum3d/index.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Let's add and commit the changes:
+
+---
+
+```bash
+git add .
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % 
+
+```
+
+---
+
+```bash
+git commit -m "Added simple mobile control buttons for movement"
+```
+
+```
+<m "Added simple mobile control buttons for movement"
+[main 5ed5425] Added simple mobile control buttons for movement
+ 2 files changed, 1523 insertions(+), 42 deletions(-)
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Now let's push to Heroku:
+
+---
+
+```bash
+git push heroku main
+```
+
+```
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 % git push heroku main
+Enumerating objects: 13, done.
+Counting objects: 100% (13/13), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (7/7), done.
+Writing objects: 100% (7/7), 7.75 KiB | 1.55 MiB/s, done.
+Total 7 (delta 4), reused 0 (delta 0), pack-reused 0
+remote: Updated 143 paths from 98cf7df
+remote: Compressing source files... done.
+remote: Building source:
+remote: 
+remote: -----> Building on the Heroku-24 stack
+remote: -----> Using buildpack: heroku/nodejs
+remote: -----> Node.js app detected
+remote:        
+remote: -----> Creating runtime environment
+remote:        
+remote:        NPM_CONFIG_LOGLEVEL=error
+remote:        NODE_VERBOSE=false
+remote:        NODE_ENV=production
+remote:        NODE_MODULES_CACHE=true
+remote:        
+remote: -----> Installing binaries
+remote:        engines.node (package.json):   unspecified
+remote:        engines.npm (package.json):    unspecified (use default)
+remote:        
+remote:        Resolving node version 22.x...
+remote:        Downloading and installing node 22.14.0...
+remote:        Using default npm version: 10.9.2
+remote:        
+remote: -----> Restoring cache
+remote:        - npm cache
+remote:        
+remote: -----> Installing dependencies
+remote:        Installing node modules
+remote:        
+remote:        added 81 packages, and audited 82 packages in 1s
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        
+remote: -----> Build
+remote:        
+remote: -----> Caching build
+remote:        - npm cache
+remote:        
+remote: -----> Pruning devDependencies
+remote:        
+remote:        up to date, audited 82 packages in 455ms
+remote:        
+remote:        14 packages are looking for funding
+remote:          run `npm fund` for details
+remote:        
+remote:        found 0 vulnerabilities
+remote:        npm notice
+remote:        npm notice New major version of npm available! 10.9.2 -> 11.2.0
+remote:        npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.2.0
+remote:        npm notice To update run: npm install -g npm@11.2.0
+remote:        npm notice
+remote:        
+remote: -----> Build succeeded!
+remote: -----> Discovering process types
+remote:        Procfile declares types -> web
+remote: 
+remote: -----> Compressing...
+remote:        Done: 315.5M
+remote: -----> Launching...
+remote:  !     Warning: Your slug size (315 MB) exceeds our soft limit (300 MB) which may affect boot time.
+remote:        Released v45
+remote:        https://cursed-depths-3-de6de9e234ae.herokuapp.com/ deployed to Heroku
+remote: 
+remote: Verifying deploy... done.
+To https://git.heroku.com/cursed-depths-3.git
+   7c67f2e..5ed5425  main -> main
+Admin@MacBook-2 CURSED-DEPTHS-3-DESKTOP-main 2 %
+```
+
+---
+
+Perfect! The changes have been successfully pushed to Heroku. The app is now live at https://cursed-depths-3-de6de9e234ae.herokuapp.com/ with the new mobile controls:
+
+1. Three simple buttons at the bottom of the screen (only on mobile devices):
+   - Left arrow (←) for turning left
+   - Up arrow (↑) for moving forward
+   - Right arrow (→) for turning right
+2. The buttons are semi-transparent and have touch feedback
+3. The old joystick code has been completely removed
+4. The keyboard controls info is hidden on mobile
+
+You can now test the mobile controls by visiting the site on your mobile device. The buttons should be much more reliable than the previous joystick implementation.
+
+---
+
 
 
 ---
