@@ -122,7 +122,7 @@ export class LootSystem {
         // Create larger sprite to be more visible
         const heartSprite = new THREE.Sprite(material);
         heartSprite.scale.set(40, 40, 1); // Double size to be more visible (was 20x20)
-        heartSprite.position.set(x, y, 2); // Put at z=2 to be above blood (was z=1)
+        heartSprite.position.set(x, y, 1000); // Set z to 1000 to ensure it's on top of everything
         this.scene.add(heartSprite);
         
         return {
