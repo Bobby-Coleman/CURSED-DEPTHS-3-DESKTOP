@@ -612,10 +612,10 @@ function animate() {
             
             // --- Portal/Interaction Checks ---
             // Pentagram Portal (to Platformer Game)
-            if (currentLevel.isPentagramActive && currentLevel.checkPentagramPortal(player)) {
+            if (currentLevel.checkPentagramPortal(player)) { 
                 const hasTwoHeadedGoat = player.relics.some(r => r.id === 'twoHeadedGoat');
                 if (hasTwoHeadedGoat) {
-                    window.location.href = 'platformer-game/index.html?returnToLevel=' + gameState.level; // Pass return level
+                    window.location.href = 'platformer-game/index.html?returnToLevel=' + gameState.level; 
                 } else {
                     ui.showMessage("Find the Two Headed Goat relic first.");
                 }
