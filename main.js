@@ -1261,6 +1261,13 @@ function initMobileControls() {
         console.warn("Mobile debug overlay element not found.");
     }
 
+    // --- Touch Interaction State ---
+    let touchStartTime = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const MAX_TAP_DURATION = 200; // ms
+    const MAX_TAP_DISTANCE = 10; // pixels
+
     const joystickOptions = {
         mode: 'static',             // Keep joystick fixed in its zone
         position: { left: '50%', top: '50%' }, // Center nipple in the div
@@ -1339,6 +1346,60 @@ function initMobileControls() {
     } catch (error) {
         console.error("Error initializing right joystick:", error);
     }
+
+    // --- General Tap Listener (for buying items, etc.) ---
+    const gameElement = renderer.domElement; // Use the renderer's canvas
+
+    gameElement.addEventListener('touchstart', (event) => {
+        // Ignore multi-touch gestures or if touch starts in joystick zones
+        if (event.touches.length > 1 || 
+            leftJoystickZone.contains(event.targetTouches[0].target) || 
+            rightJoystickZone.contains(event.targetTouches[0].target)) {
+            return;
+        }
+        
+        touchStartTime = Date.now();
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+    }, { passive: true }); // Use passive for performance if preventDefault isn't needed
+
+    gameElement.addEventListener('touchend', (event) => {
+        // Ignore if it wasn't a single touch
+        if (event.changedTouches.length !== 1) return;
+
+        const touchEndX = event.changedTouches[0].clientX;
+        const touchEndY = event.changedTouches[0].clientY;
+        const touchDuration = Date.now() - touchStartTime;
+
+        const distanceMoved = Math.sqrt(
+            Math.pow(touchEndX - touchStartX, 2) +
+            Math.pow(touchEndY - touchStartY, 2)
+        );
+
+        // Check if it's a valid tap (short duration, minimal movement, outside joysticks)
+        if (touchDuration < MAX_TAP_DURATION && 
+            distanceMoved < MAX_TAP_DISTANCE &&
+            !leftJoystickZone.contains(event.target) && // Check end target too
+            !rightJoystickZone.contains(event.target) &&
+            gameState.isShopLevel && shop && shop.isOpen) { // Only check in shop
+
+            // Convert tap coordinates to world coordinates
+            const rect = gameElement.getBoundingClientRect();
+            const tapX = touchEndX - rect.left;
+            const tapY = touchEndY - rect.top;
+            const worldX = (tapX / rect.width) * ROOM_SIZE - ROOM_SIZE / 2;
+            const worldY = -(tapY / rect.height) * ROOM_SIZE + ROOM_SIZE / 2;
+
+            // Check for shop item interaction
+            const tappedItem = shop.checkItemInteraction(player, worldX, worldY); // Pass player, x, y
+
+            if (tappedItem) {
+                console.log("Tapped on shop item:", tappedItem.data.name);
+                // Attempt to buy the item using the existing handler
+                handleShopPurchase(tappedItem); 
+            }
+        }
+    });
 }
 
 // --- Debug Overlay Update ---

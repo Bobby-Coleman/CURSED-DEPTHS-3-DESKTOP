@@ -335,42 +335,78 @@ export class UI {
             const slot = this.relicSlots[i];
             const relic = player.relics[i];
             
+            // Clear previous listeners to avoid duplicates
+            const newSlot = slot.cloneNode(true);
+            slot.parentNode.replaceChild(newSlot, slot);
+            this.relicSlots[i] = newSlot; // Update reference in the array
+            const currentSlot = this.relicSlots[i]; // Use the new slot for adding listeners
+            
+            currentSlot.dataset.relicIndex = i; // Store index for click listener
+
             if (relic) {
                 const color = '#' + relic.color.toString(16).padStart(6, '0');
-                slot.style.backgroundColor = color;
-                slot.style.border = '2px solid #888';
-                
-                // Update tooltip content and track hovered relic
-                slot.onmouseover = () => {
-                    gameState.hoveredRelicIndex = i;  // Track which relic is being hovered
+                currentSlot.style.backgroundColor = color;
+                currentSlot.style.border = '2px solid #888';
+                currentSlot.style.cursor = window.isMobile ? 'pointer' : 'help'; // Indicate clickable on mobile
+
+                // Tooltip content based on platform
+                const sellInstruction = window.isMobile 
+                    ? "Tap to sell for 1 HP" 
+                    : "Press R to sell for 1 HP";
+
+                // Add hover events for tooltip
+                currentSlot.addEventListener('mouseover', (e) => {
+                    gameState.hoveredRelicIndex = i;  // Track which relic is being hovered (still useful for desktop 'R')
                     this.tooltip.innerHTML = `
                         <div style="color: #FFFFFF;">${relic.name}</div>
                         <div>Blessing: ${relic.blessing}</div>
                         ${relic.curse ? `<div style="color: #FF4444;">Curse: ${relic.curse}</div>` : ''}
-                        <div style="color: #888; font-size: 12px; margin-top: 5px;">Press R to sell for 1 HP</div>
+                        <div style="color: #88FF88; font-size: 12px; margin-top: 5px;">${sellInstruction}</div> 
                     `;
+                    const rect = currentSlot.getBoundingClientRect();
+                    this.tooltip.style.left = `${rect.left}px`;
+                    this.tooltip.style.top = `${rect.bottom + 5}px`;
                     this.tooltip.style.display = 'block';
-                };
+                });
                 
-                slot.onmouseout = () => {
+                currentSlot.addEventListener('mouseout', () => {
                     gameState.hoveredRelicIndex = -1;  // Clear hovered relic
                     this.tooltip.style.display = 'none';
-                };
+                });
+
+                // Add click listener for mobile selling
+                currentSlot.addEventListener('click', (e) => {
+                    if (window.isMobile) {
+                        const index = parseInt(e.currentTarget.dataset.relicIndex);
+                        console.log(`Attempting to sell relic at index ${index} via tap.`);
+                        // Use the globally defined sell function
+                        if (typeof window.sellRelic === 'function') {
+                           window.sellRelic(index);
+                        } else {
+                            console.error("sellRelic function not found on window.");
+                        }
+                    }
+                });
+
             } else {
-                slot.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
-                slot.style.border = '2px solid #666';
-                
-                // Update tooltip content for empty slot
-                slot.onmouseover = () => {
+                currentSlot.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                currentSlot.style.border = '2px solid #666';
+                currentSlot.style.cursor = 'default';
+
+                // Add hover events for empty slot tooltip
+                currentSlot.addEventListener('mouseover', () => {
                     gameState.hoveredRelicIndex = -1;  // No relic being hovered
                     this.tooltip.textContent = 'Empty Relic Slot';
+                    const rect = currentSlot.getBoundingClientRect();
+                    this.tooltip.style.left = `${rect.left}px`;
+                    this.tooltip.style.top = `${rect.bottom + 5}px`;
                     this.tooltip.style.display = 'block';
-                };
+                });
                 
-                slot.onmouseout = () => {
+                currentSlot.addEventListener('mouseout', () => {
                     gameState.hoveredRelicIndex = -1;  // Clear hovered relic
                     this.tooltip.style.display = 'none';
-                };
+                });
             }
         }
     }
