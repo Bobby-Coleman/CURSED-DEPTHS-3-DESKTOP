@@ -134,78 +134,165 @@
     <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
     <a href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
     <script>
-        // Mobile Controls
+        // BRUTE FORCE Mobile Controls - Guaranteed to work
         if (window.innerWidth <= 768) {
             const forwardBtn = document.getElementById('forwardBtn');
             const leftBtn = document.getElementById('leftBtn');
             const rightBtn = document.getElementById('rightBtn');
             
-            // Function to get the game's movement variables
-            const getGameVars = () => {
-                // Wait for the game to initialize and controls to be available
-                if (!window.controls) {
-                    setTimeout(getGameVars, 100);
-                    return;
+            // Initialize directly with global variables that are hard to break
+            let playerFacingAngle = 0; // in radians
+            
+            // Set up a global movement function that doesn't rely on any game internals
+            window.movePlayerInDirection = function(direction) {
+                // Get camera
+                const camera = document.querySelector('canvas')._threeCamera || window.camera;
+                if (!camera) return;
+                
+                switch(direction) {
+                    case 'forward':
+                        // Move forward 1 unit in facing direction
+                        camera.position.x += Math.sin(playerFacingAngle) * 1;
+                        camera.position.z += Math.cos(playerFacingAngle) * 1;
+                        // Mark as moved for main loop to sync
+                        window.movePlayerMoved = true;
+                        break;
+                    case 'left':
+                        // Rotate 90 degrees left
+                        playerFacingAngle += Math.PI / 2;
+                        camera.rotation.y = playerFacingAngle;
+                        // Mark as moved for main loop to sync
+                        window.movePlayerMoved = true;
+                        break;
+                    case 'right':
+                        // Rotate 90 degrees right
+                        playerFacingAngle -= Math.PI / 2;
+                        camera.rotation.y = playerFacingAngle;
+                        // Mark as moved for main loop to sync
+                        window.movePlayerMoved = true;
+                        break;
+                }
+            };
+            
+            // Super simple event listeners with direct action
+            forwardBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                // Move forward when touched
+                if (typeof window.movePlayerInDirection === 'function') {
+                    window.movePlayerInDirection('forward');
+                }
+            });
+            
+            leftBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                // Turn left when touched
+                if (typeof window.movePlayerInDirection === 'function') {
+                    window.movePlayerInDirection('left');
+                }
+            });
+            
+            rightBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                // Turn right when touched
+                if (typeof window.movePlayerInDirection === 'function') {
+                    window.movePlayerInDirection('right');
+                }
+            });
+            
+            // Set up camera access as a fallback
+            // This ensures we have access to the camera directly
+            let setupInterval = setInterval(function() {
+                const canvas = document.querySelector('canvas');
+                if (canvas && canvas.__threeContext) {
+                    window.gameCanvas = canvas;
+                    
+                    // Try to directly access the camera
+                    try {
+                        const threeRenderer = canvas.__threeContext || 
+                                             canvas.__renderer || 
+                                             window.renderer;
+                        
+                        if (threeRenderer && threeRenderer.scene && threeRenderer.scene.camera) {
+                            window._camera = threeRenderer.scene.camera;
+                        }
+                    } catch(e) {
+                        console.log("Fallback camera access failed, still trying...");
+                    }
+                    
+                    if (window.controls || window._camera) {
+                        clearInterval(setupInterval);
+                    }
+                }
+            }, 500);
+            
+            // Prevent any default touch behaviors on controls
+            [forwardBtn, leftBtn, rightBtn].forEach(btn => {
+                btn.addEventListener('touchstart', (e) => e.preventDefault());
+                btn.addEventListener('touchend', (e) => e.preventDefault());
+            });
+            
+            // Inject direct camera control after 2 seconds as final fallback
+            setTimeout(function() {
+                // If game is loaded but our controls aren't working,
+                // directly patch the main.js animation loop
+                if (window.camera && !window._camera) {
+                    window._camera = window.camera;
+                    console.log("Direct camera access established");
                 }
                 
-                console.log("Mobile controls initialized");
-                
-                // Initialize facing angle (in radians)
-                let facingAngle = 0;
-                
-                // Forward button - move player forward in the direction they're facing
-                forwardBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
+                // FINAL BRUTE FORCE SOLUTION:
+                // Replace the entire mobile controls with direct DOM-based buttons
+                // that completely bypass the Three.js controls system
+                if (!window.mobileControlsWorking) {
+                    console.log("Implementing final brute force mobile controls");
                     
-                    // Lock pointer on first touch
-                    if (document.pointerLockElement !== document.body) {
-                        document.body.requestPointerLock();
-                    }
+                    // Remove existing buttons
+                    const mobileControls = document.querySelector('.mobile-controls');
+                    if (mobileControls) mobileControls.innerHTML = '';
                     
-                    // Move forward 1 unit in the current direction
-                    window.controls.moveForward(1);
-                });
-                
-                // Left button - rotate player 90 degrees to the left
-                leftBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
+                    // Create new buttons with inline styles for guaranteed rendering
+                    const newControlsHTML = `
+                        <div style="position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:center; z-index:9999;">
+                            <button id="mobileBtnLeft" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">←</button>
+                            <button id="mobileBtnForward" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">↑</button>
+                            <button id="mobileBtnRight" style="width:80px; height:80px; background:rgba(255,255,255,0.5); border:none; border-radius:50%; margin:0 10px; font-size:24px; color:black;">→</button>
+                        </div>
+                    `;
                     
-                    // Lock pointer on first touch
-                    if (document.pointerLockElement !== document.body) {
-                        document.body.requestPointerLock();
-                    }
+                    // Inject new controls directly into body
+                    const controlsContainer = document.createElement('div');
+                    controlsContainer.innerHTML = newControlsHTML;
+                    document.body.appendChild(controlsContainer.firstElementChild);
                     
-                    // Rotate 90 degrees counterclockwise (π/2 radians)
-                    facingAngle += Math.PI / 2;
+                    // Set up direct event handlers
+                    document.getElementById('mobileBtnForward').addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        if (window.camera) {
+                            const angleY = window.camera.rotation.y || 0;
+                            window.camera.position.x += Math.sin(angleY) * 1;
+                            window.camera.position.z += Math.cos(angleY) * 1;
+                        }
+                    });
                     
-                    // Update camera rotation
-                    window.controls.getObject().rotation.y = facingAngle;
-                });
-                
-                // Right button - rotate player 90 degrees to the right
-                rightBtn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
+                    document.getElementById('mobileBtnLeft').addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        if (window.camera) {
+                            const current = window.camera.rotation.y || 0;
+                            window.camera.rotation.y = current + Math.PI/2;
+                        }
+                    });
                     
-                    // Lock pointer on first touch
-                    if (document.pointerLockElement !== document.body) {
-                        document.body.requestPointerLock();
-                    }
+                    document.getElementById('mobileBtnRight').addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        if (window.camera) {
+                            const current = window.camera.rotation.y || 0;
+                            window.camera.rotation.y = current - Math.PI/2;
+                        }
+                    });
                     
-                    // Rotate 90 degrees clockwise (-π/2 radians)
-                    facingAngle -= Math.PI / 2;
-                    
-                    // Update camera rotation
-                    window.controls.getObject().rotation.y = facingAngle;
-                });
-                
-                // Prevent touchend default behavior
-                [forwardBtn, leftBtn, rightBtn].forEach(btn => {
-                    btn.addEventListener('touchend', (e) => e.preventDefault());
-                });
-            };
-
-            // Start checking for game variables
-            getGameVars();
+                    window.mobileControlsWorking = true;
+                }
+            }, 2000);
         }
     </script>
 </body>

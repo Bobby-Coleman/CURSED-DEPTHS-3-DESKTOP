@@ -78,6 +78,9 @@ window.game = {
     moveRight
 };
 
+// Expose camera globally for mobile controls
+window.camera = camera;
+
 // Constants
 const HALLWAY_LENGTH = 40;  // Longer segments for better performance
 const HALLWAY_WIDTH = 10;
@@ -111,6 +114,9 @@ function init() {
     
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.y = PLAYER_HEIGHT;
+    
+    // Expose camera globally for mobile controls
+    window.camera = camera;
 
     // Basic ambient lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -133,6 +139,10 @@ function init() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));  // Cap pixel ratio for performance
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    // Expose renderer globally for mobile controls
+    window.renderer = renderer;
+    renderer.domElement._threeCamera = camera;
 
     // Controls setup
     controls = new PointerLockControls(camera, document.body);
@@ -378,7 +388,18 @@ function animate() {
             }
         });
 
+        // If mobile controls moved the camera directly, sync controls position with it
+        if (window.innerWidth <= 768 && window.movePlayerMoved) {
+            window.movePlayerMoved = false;
+            controls.getObject().position.copy(camera.position);
+        }
+
         prevTime = time;
+    }
+
+    // Re-attach camera to canvas element for direct access
+    if (renderer && renderer.domElement) {
+        renderer.domElement._threeCamera = camera;
     }
 
     renderer.render(scene, camera);
