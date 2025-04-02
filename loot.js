@@ -110,35 +110,37 @@ export class LootSystem {
         // Create a heart shape using custom geometry
         const heartShape = new THREE.Shape();
         
-        // Draw heart shape
+        // Draw heart shape - make it larger and simpler
+        const scale = 2.5; // Make heart larger
         heartShape.moveTo(0, 0);
-        heartShape.bezierCurveTo(0, -5, -10, -15, -20, 0);
-        heartShape.bezierCurveTo(-30, 15, -10, 35, 0, 20);
-        heartShape.bezierCurveTo(10, 35, 30, 15, 20, 0);
-        heartShape.bezierCurveTo(10, -15, 0, -5, 0, 0);
+        heartShape.bezierCurveTo(0, -5 * scale, -10 * scale, -15 * scale, -20 * scale, 0);
+        heartShape.bezierCurveTo(-30 * scale, 15 * scale, -10 * scale, 35 * scale, 0, 20 * scale);
+        heartShape.bezierCurveTo(10 * scale, 35 * scale, 30 * scale, 15 * scale, 20 * scale, 0);
+        heartShape.bezierCurveTo(10 * scale, -15 * scale, 0, -5 * scale, 0, 0);
         
         // Create geometry from heart shape
         const geometry = new THREE.ShapeGeometry(heartShape);
         
-        // Create material with purple color
+        // Create material with brighter purple color and higher opacity
         const material = new THREE.MeshBasicMaterial({ 
-            color: 0x9932CC, // Deep purple
+            color: 0xBF00FF, // Bright purple
             transparent: true,
+            opacity: 0.9, // Higher opacity
             depthTest: false,
             side: THREE.DoubleSide // Render both sides
         });
         
-        // Create mesh with moderate z-index
+        // Create mesh with very high z-index to ensure visibility
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, 20); // Set z to 20 to be above blood but not too high
-        
-        // Scale up the heart to make it larger (1.5x larger)
-        mesh.scale.set(1.5, 1.5, 1);
+        mesh.position.set(x, y, 50); // Increase z-index to 50
         
         // Rotate to orient properly
         mesh.rotation.z = Math.PI;
         
         this.scene.add(mesh);
+        
+        // Play heart drop sound
+        this.playHeartDropSound();
         
         return {
             type: 'heart',
@@ -147,6 +149,36 @@ export class LootSystem {
             },
             mesh: mesh
         };
+    }
+    
+    // Play sound when heart drops
+    playHeartDropSound() {
+        // Create audio context if it doesn't exist
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Create oscillator for a short chime sound
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        // Connect nodes
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        // Configure sound - higher pitch chime sound
+        oscillator.type = 'sine'; // Sine wave for smooth chime
+        oscillator.frequency.setValueAtTime(880, this.audioContext.currentTime); // A5 note
+        oscillator.frequency.exponentialRampToValueAtTime(1320, this.audioContext.currentTime + 0.1); // Up to E6
+        
+        // Set volume with slight fade-in and fade-out
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.03);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+        
+        // Play sound
+        oscillator.start();
+        oscillator.stop(this.audioContext.currentTime + 0.3);
     }
     
     createGoldDrop(x, y) {
