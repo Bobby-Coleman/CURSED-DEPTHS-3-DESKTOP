@@ -70,6 +70,9 @@ let velocity = new THREE.Vector3();
 let direction = new THREE.Vector3();
 let font;
 
+// Flag to indicate nipplejs joystick initialization
+window.joystickInitialized = false;
+
 // Expose movement variables to window for mobile controls
 window.game = {
     moveForward,
@@ -100,7 +103,7 @@ function init() {
     // Initialize background music
     const backgroundMusic = document.getElementById('backgroundMusic');
     if (backgroundMusic) {
-        backgroundMusic.volume = 0.5; // Set volume to 50%
+        backgroundMusic.volume = 0.2; // Reduced from 0.5 to 0.2 (40% of original volume)
         // Try to play the music
         backgroundMusic.play().catch(error => {
             console.log("Autoplay prevented:", error);
@@ -169,6 +172,334 @@ function init() {
     // Create initial hallway segments
     for (let i = 0; i < SEGMENTS_IN_VIEW; i++) {
         createHallwaySegment(i);
+    }
+    
+    // Initialize joystick for mobile devices
+    if (window.innerWidth <= 768) {
+        console.log("Mobile device detected, initializing dual joystick system...");
+        
+        // Set flag early to prevent fallback controls
+        window.joystickInitialized = true;
+        
+        // Ensure audio is initialized on first touch
+        document.addEventListener('touchstart', function initAudio() {
+            // Create audio context for feedback
+            if (!window.audioFeedbackContext) {
+                try {
+                    window.audioFeedbackContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Play a silent sound to unlock audio
+                    const oscillator = window.audioFeedbackContext.createOscillator();
+                    const gainNode = window.audioFeedbackContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(window.audioFeedbackContext.destination);
+                    
+                    // Set volume to 0 to make it silent
+                    gainNode.gain.setValueAtTime(0, window.audioFeedbackContext.currentTime);
+                    
+                    // Play for 1ms
+                    oscillator.start();
+                    oscillator.stop(window.audioFeedbackContext.currentTime + 0.001);
+                    
+                    // Try to play background music if available
+                    const backgroundMusic = document.getElementById('backgroundMusic');
+                    if (backgroundMusic) {
+                        backgroundMusic.play().catch(e => console.log('Music autoplay failed:', e));
+                    }
+                } catch (e) {
+                    console.error("Web Audio API not supported:", e);
+                }
+            }
+            
+            // Remove this listener after first touch
+            document.removeEventListener('touchstart', initAudio);
+        }, { once: false });
+        
+        // Define joystick options - common settings
+        function getJoystickOptions(position) {
+            return {
+                zone: document.getElementById(position === 'left' ? 'joystickZone' : 'rotationJoystickZone'),
+                mode: 'static',
+                position: position === 'left' 
+                    ? { left: '80px', bottom: '80px' }
+                    : { right: '80px', bottom: '80px' },
+                color: 'white',
+                size: 150,
+                lockX: false,
+                lockY: false,
+                fadeTime: 100
+            };
+        }
+        
+        // Create manager objects to store joystick instances
+        const joystickManager = {
+            movement: null,
+            rotation: null
+        };
+        
+        // Create movement joystick (left side)
+        try {
+            console.log("Creating movement joystick...");
+            
+            // Ensure the zone element is visible with proper styling
+            const moveJoystickZone = document.getElementById('joystickZone');
+            if (moveJoystickZone) {
+                moveJoystickZone.style.display = 'block';
+                moveJoystickZone.style.zIndex = '10000';
+            }
+            
+            // Create the movement joystick
+            joystickManager.movement = nipplejs.create(getJoystickOptions('left'));
+            
+            // Add movement to window for debugging
+            window.moveJoystick = joystickManager.movement;
+            
+            // Setup movement joystick event handlers
+            if (joystickManager.movement && joystickManager.movement.length > 0) {
+                console.log("Movement joystick created successfully, setting up event handlers");
+                
+                // Joystick started
+                joystickManager.movement[0].on('start', function(evt, data) {
+                    console.log("Movement joystick start");
+                    vibrateDevice(10);
+                });
+                
+                // Joystick moved
+                joystickManager.movement[0].on('move', function(evt, data) {
+                    // Skip if no data or force is too low
+                    if (!data || !data.force || data.force < 0.2) return;
+                    
+                    // Get the world direction vectors
+                    const forward = new THREE.Vector3();
+                    camera.getWorldDirection(forward);
+                    forward.y = 0; // Keep movement on horizontal plane
+                    forward.normalize();
+                    
+                    // Calculate right vector (perpendicular to forward)
+                    const right = new THREE.Vector3();
+                    right.crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
+                    
+                    // FIX: Invert X axis to fix strafing direction
+                    const joyX = -data.vector.x; // Added negative sign to fix X axis (left/right)
+                    const joyY = data.vector.y;
+                    
+                    // FIX: Reduce movement speed even further
+                    const moveSpeed = (PLAYER_SPEED * data.force / 300);
+                    
+                    // Calculate final movement vector
+                    const moveX = (right.x * joyX + forward.x * joyY) * moveSpeed;
+                    const moveZ = (right.z * joyX + forward.z * joyY) * moveSpeed;
+                    
+                    // Log movement for debugging (occasionally)
+                    if (Math.random() < 0.01) {
+                        console.log(`Movement joystick: force=${data.force.toFixed(2)}, vector=[${joyX.toFixed(2)},${joyY.toFixed(2)}], moveSpeed=${moveSpeed.toFixed(2)}`);
+                    }
+                    
+                    // Apply movement directly to camera position
+                    const newX = camera.position.x + moveX;
+                    const newZ = camera.position.z + moveZ;
+                    
+                    // Check wall collisions for X axis
+                    const distanceToLeftWall = newX + WALL_BOUNDARY;
+                    const distanceToRightWall = WALL_BOUNDARY - newX;
+                    const COLLISION_BUFFER = 0.2;
+                    
+                    // Only apply X movement if not colliding with walls
+                    if (distanceToLeftWall >= COLLISION_BUFFER && distanceToRightWall >= COLLISION_BUFFER) {
+                        camera.position.x = newX;
+                    }
+                    
+                    // Always apply Z movement (no walls in this direction)
+                    camera.position.z = newZ;
+                    
+                    // Sync with controls
+                    if (controls && controls.getObject) {
+                        controls.getObject().position.copy(camera.position);
+                    }
+                    
+                    // Occasionally play subtle movement audio
+                    if (Math.random() < 0.05 && data.force > 0.7) {
+                        playAudioFeedback('move');
+                    }
+                });
+                
+                // Joystick ended
+                joystickManager.movement[0].on('end', function(evt, data) {
+                    console.log("Movement joystick end");
+                });
+            } else {
+                console.error("Failed to initialize movement joystick");
+            }
+            
+        } catch (error) {
+            console.error("Error creating movement joystick:", error);
+        }
+        
+        // Create rotation joystick (right side)
+        try {
+            console.log("Creating rotation joystick...");
+            
+            // Ensure the zone element is visible with proper styling
+            const rotationJoystickZone = document.getElementById('rotationJoystickZone');
+            if (rotationJoystickZone) {
+                rotationJoystickZone.style.display = 'block';
+                rotationJoystickZone.style.zIndex = '10000';
+            }
+            
+            // Create the rotation joystick
+            joystickManager.rotation = nipplejs.create(getJoystickOptions('right'));
+            
+            // Add rotation to window for debugging
+            window.rotateJoystick = joystickManager.rotation;
+            
+            // Setup rotation joystick event handlers
+            if (joystickManager.rotation && joystickManager.rotation.length > 0) {
+                console.log("Rotation joystick created successfully, setting up event handlers");
+                
+                // Joystick started
+                joystickManager.rotation[0].on('start', function(evt, data) {
+                    console.log("Rotation joystick start");
+                    vibrateDevice(10);
+                });
+                
+                // Joystick moved
+                joystickManager.rotation[0].on('move', function(evt, data) {
+                    // Skip if no data or force is too low
+                    if (!data || !data.force || data.force < 0.2) return;
+                    
+                    // Get joystick X value, this will control rotation
+                    const joyX = data.vector.x;
+                    
+                    // Calculate rotation speed based on joystick deflection and force
+                    // Higher force = faster rotation
+                    const rotateSpeed = (Math.PI/50) * joyX * data.force; // Adjust divisor for sensitivity
+                    
+                    // Log rotation for debugging (occasionally)
+                    if (Math.random() < 0.01) {
+                        console.log(`Rotation joystick: force=${data.force.toFixed(2)}, joyX=${joyX.toFixed(2)}, rotateSpeed=${rotateSpeed.toFixed(4)}`);
+                    }
+                    
+                    // Apply rotation directly to camera
+                    camera.rotation.y -= rotateSpeed;
+                    
+                    // Sync with controls object
+                    if (controls && controls.getObject) {
+                        controls.getObject().rotation.y = camera.rotation.y;
+                    }
+                    
+                    // Occasionally play subtle rotation sound for feedback
+                    if (Math.random() < 0.02 && Math.abs(joyX) > 0.7) {
+                        playAudioFeedback('rotate');
+                    }
+                });
+                
+                // Joystick ended
+                joystickManager.rotation[0].on('end', function(evt, data) {
+                    console.log("Rotation joystick end");
+                });
+            } else {
+                console.error("Failed to initialize rotation joystick");
+            }
+            
+        } catch (error) {
+            console.error("Error creating rotation joystick:", error);
+        }
+        
+        // Handle window resize to reposition joysticks
+        window.addEventListener('resize', function() {
+            console.log("Window resized, recreating joysticks");
+            
+            // Destroy existing joysticks if they exist
+            if (joystickManager.movement) {
+                joystickManager.movement.destroy();
+            }
+            if (joystickManager.rotation) {
+                joystickManager.rotation.destroy();
+            }
+            
+            // Recreate joysticks with updated positions
+            joystickManager.movement = nipplejs.create(getJoystickOptions('left'));
+            joystickManager.rotation = nipplejs.create(getJoystickOptions('right'));
+            
+            // Reattach event handlers
+            // This would be better with separate functions, but for brevity we'll recreate
+            if (joystickManager.movement && joystickManager.movement.length > 0) {
+                joystickManager.movement[0].on('move', function(evt, data) {
+                    if (!data || !data.force || data.force < 0.2) return;
+                    
+                    const forward = new THREE.Vector3();
+                    camera.getWorldDirection(forward);
+                    forward.y = 0;
+                    forward.normalize();
+                    
+                    const right = new THREE.Vector3();
+                    right.crossVectors(new THREE.Vector3(0, 1, 0), forward).normalize();
+                    
+                    // FIX: Invert X axis to fix strafing direction
+                    const joyX = -data.vector.x; // Added negative sign to fix X axis (left/right)
+                    const joyY = data.vector.y;
+                    
+                    // FIX: Reduce movement speed even further
+                    const moveSpeed = (PLAYER_SPEED * data.force / 300);
+                    
+                    const moveX = (right.x * joyX + forward.x * joyY) * moveSpeed;
+                    const moveZ = (right.z * joyX + forward.z * joyY) * moveSpeed;
+                    
+                    const newX = camera.position.x + moveX;
+                    const newZ = camera.position.z + moveZ;
+                    
+                    const distanceToLeftWall = newX + WALL_BOUNDARY;
+                    const distanceToRightWall = WALL_BOUNDARY - newX;
+                    const COLLISION_BUFFER = 0.2;
+                    
+                    if (distanceToLeftWall >= COLLISION_BUFFER && distanceToRightWall >= COLLISION_BUFFER) {
+                        camera.position.x = newX;
+                    }
+                    
+                    camera.position.z = newZ;
+                    
+                    if (controls && controls.getObject) {
+                        controls.getObject().position.copy(camera.position);
+                    }
+                });
+            }
+            
+            if (joystickManager.rotation && joystickManager.rotation.length > 0) {
+                joystickManager.rotation[0].on('move', function(evt, data) {
+                    if (!data || !data.force || data.force < 0.2) return;
+                    
+                    const joyX = data.vector.x;
+                    const rotateSpeed = (Math.PI/50) * joyX * data.force;
+                    
+                    camera.rotation.y -= rotateSpeed;
+                    
+                    if (controls && controls.getObject) {
+                        controls.getObject().rotation.y = camera.rotation.y;
+                    }
+                });
+            }
+        });
+        
+        // Add globals to window for debugging
+        window.joystickManager = joystickManager;
+        
+        // Auto-hide mobile instructions after 5 seconds
+        setTimeout(function() {
+            const mobileInfo = document.getElementById('mobileInfo');
+            if (mobileInfo) {
+                // Fade out effect
+                let opacity = 1;
+                const fadeInterval = setInterval(function() {
+                    opacity -= 0.1;
+                    mobileInfo.style.opacity = opacity;
+                    
+                    if (opacity <= 0) {
+                        clearInterval(fadeInterval);
+                        mobileInfo.style.display = 'none';
+                    }
+                }, 100);
+            }
+        }, 5000);
     }
 }
 
@@ -298,48 +629,58 @@ function animate() {
         const time = performance.now();
         const delta = (time - prevTime) / 1000;
 
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
+        // Only apply keyboard movement if joysticks aren't being used
+        const joysticksActive = window.joystickManager && 
+            ((window.joystickManager.movement && window.joystickManager.movement[0] && window.joystickManager.movement[0].active) ||
+             (window.joystickManager.rotation && window.joystickManager.rotation[0] && window.joystickManager.rotation[0].active));
+        
+        if (!joysticksActive) {
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
 
-        direction.z = Number(moveForward) - Number(moveBackward);
-        direction.x = Number(moveRight) - Number(moveLeft);
-        direction.normalize();
+            direction.z = Number(moveForward) - Number(moveBackward);
+            direction.x = Number(moveRight) - Number(moveLeft);
+            direction.normalize();
 
-        if (moveForward || moveBackward) velocity.z -= direction.z * PLAYER_SPEED * delta;
-        if (moveLeft || moveRight) velocity.x -= direction.x * PLAYER_SPEED * delta;
+            // Apply joystick force if available
+            const speedMultiplier = window.joystickForce || 1.0;
+            
+            if (moveForward || moveBackward) velocity.z -= direction.z * PLAYER_SPEED * delta * speedMultiplier;
+            if (moveLeft || moveRight) velocity.x -= direction.x * PLAYER_SPEED * delta * speedMultiplier;
 
-        // Improved wall collision detection
-        const nextX = camera.position.x - velocity.x * delta;
-        const nextZ = camera.position.z - velocity.z * delta;
-        
-        // Calculate distances to walls after potential movement
-        const distanceToLeftWall = nextX + WALL_BOUNDARY;
-        const distanceToRightWall = WALL_BOUNDARY - nextX;
-        
-        // Check wall collisions with buffer zone
-        const COLLISION_BUFFER = 0.1; // Small buffer to prevent wall touching
-        
-        let canMoveX = true;
-        let canMoveZ = true;
-        
-        // Prevent X movement if too close to walls
-        if (distanceToLeftWall < COLLISION_BUFFER || distanceToRightWall < COLLISION_BUFFER) {
-            canMoveX = false;
-            velocity.x = 0; // Stop horizontal momentum
-        }
-        
-        // Apply allowed movement
-        if (canMoveX) {
-            controls.moveRight(-velocity.x * delta);
-        }
-        if (canMoveZ) {
-            controls.moveForward(-velocity.z * delta);
-        }
+            // Improved wall collision detection
+            const nextX = camera.position.x - velocity.x * delta;
+            const nextZ = camera.position.z - velocity.z * delta;
+            
+            // Calculate distances to walls after potential movement
+            const distanceToLeftWall = nextX + WALL_BOUNDARY;
+            const distanceToRightWall = WALL_BOUNDARY - nextX;
+            
+            // Check wall collisions with buffer zone
+            const COLLISION_BUFFER = 0.1; // Small buffer to prevent wall touching
+            
+            let canMoveX = true;
+            let canMoveZ = true;
+            
+            // Prevent X movement if too close to walls
+            if (distanceToLeftWall < COLLISION_BUFFER || distanceToRightWall < COLLISION_BUFFER) {
+                canMoveX = false;
+                velocity.x = 0; // Stop horizontal momentum
+            }
+            
+            // Apply allowed movement
+            if (canMoveX) {
+                controls.moveRight(-velocity.x * delta);
+            }
+            if (canMoveZ) {
+                controls.moveForward(-velocity.z * delta);
+            }
 
-        // Enforce absolute boundaries (failsafe)
-        if (Math.abs(camera.position.x) >= WALL_BOUNDARY) {
-            camera.position.x = Math.sign(camera.position.x) * WALL_BOUNDARY;
-            velocity.x = 0;
+            // Enforce absolute boundaries (failsafe)
+            if (Math.abs(camera.position.x) >= WALL_BOUNDARY) {
+                camera.position.x = Math.sign(camera.position.x) * WALL_BOUNDARY;
+                velocity.x = 0;
+            }
         }
 
         // Recycle hallway segments
@@ -553,4 +894,169 @@ function initAudio() {
             document.removeEventListener('keydown', playOnKey);
         }
     });
+}
+
+// Function to provide haptic feedback if available
+function vibrateDevice(pattern) {
+    if (navigator.vibrate) {
+        navigator.vibrate(pattern);
+    }
+}
+
+// Function to play audio feedback
+function playAudioFeedback(type) {
+    // Create audio context if it doesn't exist
+    if (!window.audioFeedbackContext) {
+        try {
+            window.audioFeedbackContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.error("Web Audio API not supported:", e);
+            return;
+        }
+    }
+    
+    // Only proceed if audio context exists
+    if (!window.audioFeedbackContext) return;
+    
+    const context = window.audioFeedbackContext;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    
+    // Configure different sounds based on feedback type
+    switch (type) {
+        case 'move':
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(300, context.currentTime);
+            gainNode.gain.setValueAtTime(0.05, context.currentTime); // Very quiet for movement
+            gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.1);
+            break;
+        case 'rotate':
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(440, context.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(340, context.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0.1, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.15);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.15);
+            break;
+        case 'button':
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(200, context.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, context.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.2, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.1);
+            break;
+    }
+}
+
+// Function to create rotation control buttons
+function createRotationControls() {
+    console.log("Creating rotation controls for mobile");
+    // Create container for rotation controls
+    const container = document.createElement('div');
+    container.id = 'rotationControls';
+    container.style.position = 'fixed';
+    container.style.bottom = '100px';
+    container.style.right = '20px';
+    container.style.zIndex = '10000';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '10px';
+    
+    // Create rotate left button
+    const rotateLeftBtn = document.createElement('button');
+    rotateLeftBtn.innerHTML = '↶';
+    rotateLeftBtn.style.width = '80px';
+    rotateLeftBtn.style.height = '80px';
+    rotateLeftBtn.style.borderRadius = '50%';
+    rotateLeftBtn.style.background = 'rgba(255, 255, 255, 0.4)';
+    rotateLeftBtn.style.border = '3px solid white';
+    rotateLeftBtn.style.color = 'white';
+    rotateLeftBtn.style.fontSize = '40px';
+    rotateLeftBtn.style.touchAction = 'manipulation';
+    rotateLeftBtn.style.userSelect = 'none';
+    rotateLeftBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+    
+    // Create rotate right button
+    const rotateRightBtn = document.createElement('button');
+    rotateRightBtn.innerHTML = '↷';
+    rotateRightBtn.style.width = '80px';
+    rotateRightBtn.style.height = '80px';
+    rotateRightBtn.style.borderRadius = '50%';
+    rotateRightBtn.style.background = 'rgba(255, 255, 255, 0.4)';
+    rotateRightBtn.style.border = '3px solid white';
+    rotateRightBtn.style.color = 'white';
+    rotateRightBtn.style.fontSize = '40px';
+    rotateRightBtn.style.touchAction = 'manipulation';
+    rotateRightBtn.style.userSelect = 'none';
+    rotateRightBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+    
+    // Add feedback styles on touch
+    const addActiveStyles = (btn) => {
+        btn.style.background = 'rgba(255, 255, 255, 0.6)';
+        btn.style.transform = 'scale(0.95)';
+    };
+    
+    const removeActiveStyles = (btn) => {
+        btn.style.background = 'rgba(255, 255, 255, 0.4)';
+        btn.style.transform = 'scale(1)';
+    };
+    
+    // Create a rotation function that ensures controls are properly synced
+    const rotateCamera = (angleChange) => {
+        if (!window.camera) return;
+        
+        // Update camera rotation
+        window.camera.rotation.y += angleChange;
+        
+        // Sync with controls if available
+        if (window.controls && window.controls.getObject) {
+            window.controls.getObject().rotation.y = window.camera.rotation.y;
+        }
+        
+        // Provide feedback
+        vibrateDevice(20);
+        playAudioFeedback('rotate');
+        
+        // Debug log
+        console.log("Camera rotated by", angleChange, "radians. New rotation:", window.camera.rotation.y);
+    };
+    
+    // Add event listeners for left rotation with the improved rotation function
+    rotateLeftBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        addActiveStyles(rotateLeftBtn);
+        rotateCamera(Math.PI/4); // Rotate left (positive angle in radians)
+    });
+    
+    rotateLeftBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        removeActiveStyles(rotateLeftBtn);
+    });
+    
+    // Add event listeners for right rotation with the improved rotation function 
+    rotateRightBtn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        addActiveStyles(rotateRightBtn);
+        rotateCamera(-Math.PI/4); // Rotate right (negative angle in radians)
+    });
+    
+    rotateRightBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        removeActiveStyles(rotateRightBtn);
+    });
+    
+    // Add buttons to container
+    container.appendChild(rotateLeftBtn);
+    container.appendChild(rotateRightBtn);
+    
+    // Add container to document
+    document.body.appendChild(container);
 } 
