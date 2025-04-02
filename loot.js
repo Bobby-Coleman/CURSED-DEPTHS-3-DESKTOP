@@ -107,26 +107,29 @@ export class LootSystem {
     }
     
     createHeartDrop(x, y) {
-        // Create heart using simple geometry instead of sprite
-        const geometry = new THREE.CircleGeometry(10, 32);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: 0xFF69B4, // Pink color
+        // Create heart using sprite texture with heart.png
+        const heartTexture = new THREE.TextureLoader().load('./assets/sprites/heart.png');
+        const material = new THREE.SpriteMaterial({ 
+            map: heartTexture,
             transparent: true,
-            depthTest: false, // Ensure heart is always visible
-            depthWrite: false // Prevent z-fighting with other sprites
+            depthTest: false
         });
         
-        // Create mesh with high z-index
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(x, y, 1000); // Set z to 1000 to ensure it's on top of everything
-        this.scene.add(mesh);
+        // Create sprite with moderate z-index
+        const sprite = new THREE.Sprite(material);
+        sprite.position.set(x, y, 20); // Set z to 20 to be above blood but not too high
+        
+        // Set sprite size to match blood drops (approximately 24 units)
+        sprite.scale.set(24, 24, 1);
+        
+        this.scene.add(sprite);
         
         return {
             type: 'heart',
             data: {
                 amount: 1
             },
-            mesh: mesh
+            mesh: sprite
         };
     }
     
