@@ -142,51 +142,64 @@
             
             // Function to get the game's movement variables
             const getGameVars = () => {
-                // Wait for the game to initialize
-                if (!window.game) {
+                // Wait for the game to initialize and controls to be available
+                if (!window.controls) {
                     setTimeout(getGameVars, 100);
                     return;
                 }
                 
-                // Forward button
-                forwardBtn.addEventListener('touchstart', () => {
-                    window.game.moveForward = true;
+                console.log("Mobile controls initialized");
+                
+                // Initialize facing angle (in radians)
+                let facingAngle = 0;
+                
+                // Forward button - move player forward in the direction they're facing
+                forwardBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    
                     // Lock pointer on first touch
                     if (document.pointerLockElement !== document.body) {
                         document.body.requestPointerLock();
                     }
-                });
-                forwardBtn.addEventListener('touchend', () => {
-                    window.game.moveForward = false;
+                    
+                    // Move forward 1 unit in the current direction
+                    window.controls.moveForward(1);
                 });
                 
-                // Left button
-                leftBtn.addEventListener('touchstart', () => {
-                    window.game.moveLeft = true;
+                // Left button - rotate player 90 degrees to the left
+                leftBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    
                     // Lock pointer on first touch
                     if (document.pointerLockElement !== document.body) {
                         document.body.requestPointerLock();
                     }
-                });
-                leftBtn.addEventListener('touchend', () => {
-                    window.game.moveLeft = false;
+                    
+                    // Rotate 90 degrees counterclockwise (π/2 radians)
+                    facingAngle += Math.PI / 2;
+                    
+                    // Update camera rotation
+                    window.controls.getObject().rotation.y = facingAngle;
                 });
                 
-                // Right button
-                rightBtn.addEventListener('touchstart', () => {
-                    window.game.moveRight = true;
+                // Right button - rotate player 90 degrees to the right
+                rightBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    
                     // Lock pointer on first touch
                     if (document.pointerLockElement !== document.body) {
                         document.body.requestPointerLock();
                     }
+                    
+                    // Rotate 90 degrees clockwise (-π/2 radians)
+                    facingAngle -= Math.PI / 2;
+                    
+                    // Update camera rotation
+                    window.controls.getObject().rotation.y = facingAngle;
                 });
-                rightBtn.addEventListener('touchend', () => {
-                    window.game.moveRight = false;
-                });
-
-                // Prevent default touch behaviors
+                
+                // Prevent touchend default behavior
                 [forwardBtn, leftBtn, rightBtn].forEach(btn => {
-                    btn.addEventListener('touchstart', (e) => e.preventDefault());
                     btn.addEventListener('touchend', (e) => e.preventDefault());
                 });
             };

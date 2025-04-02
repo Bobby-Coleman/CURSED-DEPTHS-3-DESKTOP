@@ -136,6 +136,9 @@ function init() {
 
     // Controls setup
     controls = new PointerLockControls(camera, document.body);
+    
+    // Expose controls to window for mobile controls
+    window.controls = controls;
 
     // Automatically lock controls when game starts
     document.addEventListener('click', () => {
