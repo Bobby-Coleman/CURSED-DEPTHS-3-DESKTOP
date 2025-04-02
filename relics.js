@@ -133,7 +133,7 @@ export class RelicSystem {
                 name: 'Blood Amplifier',
                 blessing: '+20 Blood when clearing a room',
                 curse: 'None',
-                color: 0xAA0000,
+                color:  0xFFFF00,
                 onUnequip: (player) => {
                     if (window.gameState) {
                         window.gameState.blood = Math.max(0, window.gameState.blood - 20);
