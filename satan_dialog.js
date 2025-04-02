@@ -1,5 +1,5 @@
 export const satanDialogs = [
-    "Welcome to Hell bitch. What, expecting someone taller? Too bad. Everything here costs 2HP. Walk up and hover on a relic to see what it does. Some help you, some curse you. That’s the game.",
+    "Welcome to Hell, bitch. What, expecting someone taller? Too bad. Everything here costs 2HP. Walk up and hover on a relic to see what it does. Some help you, some curse you. Some are coded incorrectly and do nothing. All intentionally part of the suffering down here.",
     "No, I don’t make people do bad things. I just watch. Like Netflix, but meaner.",
     "I once tried therapy. My therapist burst into flames. Classic overreaction.",
     "You think you had a bad childhood? Try being blamed for everything since time began.",

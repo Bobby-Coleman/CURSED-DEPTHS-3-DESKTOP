@@ -86,15 +86,7 @@
             }
         }
     </style>
-    <script>
-        // Check if coming directly to this page, if so, redirect to driving game
-        if (!sessionStorage.getItem('fromDrivingGame')) {
-            window.location.href = './driving-game/start.html';
-        } else {
-            // Clear the flag once redirected back to main game
-            sessionStorage.removeItem('fromDrivingGame');
-        }
-    </script>
+  
     <!-- Add nipple.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 </head>
