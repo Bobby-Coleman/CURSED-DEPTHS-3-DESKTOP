@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 
 export class Player {
-    constructor(scene, isMobile = false) {
+    constructor(scene, camera, isMobile = false) {
         this.scene = scene;
+        this.camera = camera;
         this.isMobile = isMobile;
         this.hp = 15;
         this.maxHp = 15;
@@ -482,10 +483,10 @@ export class Player {
     }
     
     updateHPTextPosition() {
-        if (!this.hpText || !this.mesh) return;
+        if (!this.hpText || !this.mesh || !this.camera) return;
         
         const width = window.innerWidth, height = window.innerHeight;
-        const vector = this.mesh.position.clone().project(camera);
+        const vector = this.mesh.position.clone().project(this.camera);
 
         const x = (vector.x * 0.5 + 0.5) * width;
         const y = (-vector.y * 0.5 + 0.5) * height;

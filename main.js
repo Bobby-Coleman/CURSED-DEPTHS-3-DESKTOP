@@ -205,8 +205,8 @@ function init() {
     // Initialize level first so we know where the hatch is
     currentLevel = new Level(scene, ROOM_SIZE, gameState.level);
     
-    // Initialize player
-    player = new Player(scene, isMobile);
+    // Initialize player - Pass scene, camera, and isMobile flag
+    player = new Player(scene, camera, isMobile);
     player.ammo = 3000; // Set initial ammo to 3000
     player.maxAmmo = 3000; // Set max ammo to 3000
     
@@ -900,7 +900,7 @@ function restartGame() {
     currentLevel = new Level(scene, ROOM_SIZE, gameState.level);
     
     // Initialize player
-    player = new Player(scene);
+    player = new Player(scene, camera, isMobile);
     player.ammo = 3000; // Set initial ammo to 3000
     player.maxAmmo = 3000; // Set max ammo to 3000
     
