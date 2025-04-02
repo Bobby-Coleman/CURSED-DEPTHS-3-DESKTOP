@@ -330,6 +330,8 @@ export class LootSystem {
                 // Heal player
                 if (player.hp < player.maxHp) {
                     player.hp = Math.min(player.maxHp, player.hp + drop.data.amount);
+                    // Show +1 HP text effect
+                    this.showHeartPickupText();
                 } else {
                     return {
                         success: false,
@@ -388,6 +390,34 @@ export class LootSystem {
         return {
             success: true
         };
+    }
+    
+    // Show +1 HP text in the middle of the screen
+    showHeartPickupText() {
+        // Create the text element
+        const textElement = document.createElement('div');
+        textElement.textContent = '+1 HP!';
+        textElement.style.position = 'absolute';
+        textElement.style.left = '50%';
+        textElement.style.top = '50%';
+        textElement.style.transform = 'translate(-50%, -50%)';
+        textElement.style.color = '#FF0000'; // Bright red
+        textElement.style.fontFamily = 'Arial, sans-serif';
+        textElement.style.fontSize = '48px'; // Medium-large text
+        textElement.style.fontWeight = 'bold';
+        textElement.style.textShadow = '2px 2px 4px #000000'; // Black shadow for visibility
+        textElement.style.zIndex = '1000'; // Make sure it appears on top
+        textElement.style.pointerEvents = 'none'; // Don't interfere with game input
+        
+        // Add to the document
+        document.body.appendChild(textElement);
+        
+        // Remove after 500ms (half a second)
+        setTimeout(() => {
+            if (textElement.parentNode) {
+                textElement.parentNode.removeChild(textElement);
+            }
+        }, 500);
     }
     
     // Update blood drops (call this in the game loop)
