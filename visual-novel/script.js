@@ -430,6 +430,41 @@ function updateDialog() {
         dialogBox.textContent = ""; // Remove the text
         chatBox.style.display = 'none'; // Hide chat box at the end
         choiceButton.style.display = 'block';
+        
+        // Check if we're on a mobile device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        
+        // For mobile, create a direct blue button
+        if (isMobile) {
+            // Hide the original button on mobile
+            choiceButton.style.display = 'none';
+            
+            // Create a new blue button
+            const mobileButton = document.createElement('button');
+            mobileButton.textContent = 'Take the keys and leave';
+            mobileButton.style.position = 'fixed';
+            mobileButton.style.bottom = '120px';
+            mobileButton.style.left = '50%';
+            mobileButton.style.transform = 'translateX(-50%)';
+            mobileButton.style.padding = '15px 30px';
+            mobileButton.style.background = '#0066ff'; // Blue color
+            mobileButton.style.color = 'white';
+            mobileButton.style.border = 'none';
+            mobileButton.style.borderRadius = '5px';
+            mobileButton.style.fontSize = 'clamp(14px, 2vw, 20px)';
+            mobileButton.style.fontFamily = 'Arial, sans-serif';
+            mobileButton.style.zIndex = '100';
+            
+            // Direct link to the driving game
+            mobileButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/driving-game/driving.html?playMusic=true&beerCount=3';
+            });
+            
+            // Add the button to the document
+            document.body.appendChild(mobileButton);
+        }
+        
         // For the choice, keep husband visible but fade characters slightly
         wifeMad.style.opacity = "0";
         wifeSad.style.opacity = "0";
