@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Museum3D - Infinite Hallway</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -55,13 +54,45 @@
             cursor: pointer;
             z-index: 1000;
         }
-        #joystick {
-            position: absolute;
-            bottom: 50px;
-            left: 50px;
-            width: 150px;
-            height: 150px;
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
             z-index: 1000;
+        }
+        
+        .mobile-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 10px;
+            font-size: 24px;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .mobile-btn:active {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 20px;
+            }
+            #controls {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -74,7 +105,11 @@
         <p>Mouse - Look around</p>
         <p>E - Interact</p>
     </div>
-    <div id="joystick"></div>
+    <div class="mobile-controls">
+        <button class="mobile-btn" id="leftBtn">←</button>
+        <button class="mobile-btn" id="forwardBtn">↑</button>
+        <button class="mobile-btn" id="rightBtn">→</button>
+    </div>
     <button id="audioButton">Play Music</button>
     
     <!-- Add audio elements with multiple sources for compatibility -->
@@ -99,41 +134,42 @@
     <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
     <a href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
     <script>
-        // Initialize nipple.js joystick
-        const joystickManager = nipplejs.create({
-            zone: document.getElementById('joystick'),
-            mode: 'static',
-            position: { left: '50%', top: '50%' },
-            color: 'white',
-            size: 150
-        });
-
-        joystickManager.on('move', (evt, data) => {
-            // Convert joystick angle to movement direction
-            const angle = data.angle.degree;
-            const force = data.force;
+        // Mobile Controls
+        if (window.innerWidth <= 768) {
+            const forwardBtn = document.getElementById('forwardBtn');
+            const leftBtn = document.getElementById('leftBtn');
+            const rightBtn = document.getElementById('rightBtn');
             
-            // Map joystick direction to WASD keys
-            if (force > 0.5) {  // Only move if joystick is pushed hard enough
-                if (angle >= 315 || angle < 45) {  // Right
-                    window.game.keys.d = true;
-                } else if (angle >= 45 && angle < 135) {  // Down
-                    window.game.keys.s = true;
-                } else if (angle >= 135 && angle < 225) {  // Left
-                    window.game.keys.a = true;
-                } else if (angle >= 225 && angle < 315) {  // Up
-                    window.game.keys.w = true;
-                }
-            }
-        });
+            // Forward button
+            forwardBtn.addEventListener('touchstart', () => {
+                window.game.keys.w = true;
+            });
+            forwardBtn.addEventListener('touchend', () => {
+                window.game.keys.w = false;
+            });
+            
+            // Left button
+            leftBtn.addEventListener('touchstart', () => {
+                window.game.keys.a = true;
+            });
+            leftBtn.addEventListener('touchend', () => {
+                window.game.keys.a = false;
+            });
+            
+            // Right button
+            rightBtn.addEventListener('touchstart', () => {
+                window.game.keys.d = true;
+            });
+            rightBtn.addEventListener('touchend', () => {
+                window.game.keys.d = false;
+            });
 
-        joystickManager.on('end', () => {
-            // Reset all movement keys when joystick is released
-            window.game.keys.w = false;
-            window.game.keys.a = false;
-            window.game.keys.s = false;
-            window.game.keys.d = false;
-        });
+            // Prevent default touch behaviors
+            [forwardBtn, leftBtn, rightBtn].forEach(btn => {
+                btn.addEventListener('touchstart', (e) => e.preventDefault());
+                btn.addEventListener('touchend', (e) => e.preventDefault());
+            });
+        }
     </script>
 </body>
 </html> 
