@@ -21,7 +21,7 @@ export class Player {
         this.weaponRange = 350;
         this.healOnKill = 0;
         
-        this.speed = this.isMobile ? 2.5 : 4.0;
+        this.speed = this.isMobile ? 2.5 : 4.5;
         
         this.isInvulnerable = false;
         this.invulnerabilityTime = 250;

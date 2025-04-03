@@ -616,10 +616,19 @@
                 introOverlay.style.transition = 'opacity 0.5s ease-out';
                 introOverlay.style.opacity = '0';
                 
-                // Wait for fade out transition before removing
+                // Wait for fade out transition before removing overlay and starting game
                 setTimeout(() => {
                     introOverlay.style.display = 'none';
+                    // --- Game start call removed - will be triggered by dialog.js ---
+                    /*
+                    if (typeof window.startGame === 'function') {
+                        window.startGame();
+                    } else {
+                        console.error("startGame function not found!");
+                    }
+                    */
                 }, 500); 
+                // -------------------------------------------------------
 
                 // Play the intro voice
                 if (introVoice) {

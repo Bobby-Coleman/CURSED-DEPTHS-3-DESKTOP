@@ -246,6 +246,14 @@ export class Dialog {
             this.blackBackground = null; // Clear reference
         }
         
+        // ---- Call the main game start function on the parent window ----
+        if (window.parent && typeof window.parent.startGame === 'function') {
+            window.parent.startGame();
+        } else {
+            console.error("Could not find startGame function on parent window!");
+        }
+        // -------------------------------------------------------------
+
         // window.startGame(); // Still commented out
         window.showControlsTutorial();
     }
