@@ -3,12 +3,9 @@ export class Dialog {
         // Dialog system for the game's introduction
         this.currentLine = 0;
         this.lines = [
-            "Hey man. You're probably wondering where you are right now.",
-            "Yeah, I know, It's dark and scary.",
-            "Well I want you to know you're dead.",
-            "Good luck. I don't believe in you.",
-            "And neither do your parents by the way.",
+            "Hey, champ. Bad news—you died. Real messy. Car crash, blood everywhere. Good news—for me—you're in hell. Welcome.\n\nYou were a real piece of shit, by the way. Cheated on your wife, remember that? I do. Some of my best work. Anyway, now you get to fight your inner demons forever."
         ];
+        // Create audio
         
         // Create audio context for sound effects
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -16,6 +13,9 @@ export class Dialog {
         // Create background music
         this.backgroundMusic = new Audio('assets/audio/background_music.wav');
         this.backgroundMusic.loop = true;
+        
+        // Create intro voice line audio
+        this.introVoiceLine = new Audio('assets/audio/satan_death_dialog.mp3');
         
         // Create dialog container
         this.container = document.createElement('div');
@@ -74,23 +74,6 @@ export class Dialog {
         this.dialogBox.style.transform = 'translateX(-50%)';
         this.container.appendChild(this.dialogBox);
         
-        // Create next button
-        this.nextButton = document.createElement('button');
-        this.nextButton.textContent = 'Next';
-        this.nextButton.style.marginTop = '20px';
-        this.nextButton.style.padding = '10px 20px';
-        this.nextButton.style.fontSize = '16px';
-        this.nextButton.style.cursor = 'pointer';
-        this.nextButton.style.backgroundColor = '#FF0000';
-        this.nextButton.style.color = 'white';
-        this.nextButton.style.border = 'none';
-        this.nextButton.style.borderRadius = '5px';
-        this.nextButton.style.position = 'fixed';
-        this.nextButton.style.bottom = '5%';
-        this.nextButton.style.left = '50%';
-        this.nextButton.style.transform = 'translateX(-50%)';
-        this.container.appendChild(this.nextButton);
-        
         // Create enter hell button (initially hidden)
         this.enterHellButton = document.createElement('button');
         this.enterHellButton.textContent = 'Enter Hell';
@@ -110,7 +93,6 @@ export class Dialog {
         this.container.appendChild(this.enterHellButton);
         
         // Add event listeners
-        this.nextButton.addEventListener('click', () => this.nextLine());
         this.enterHellButton.addEventListener('click', () => this.startGame());
         
         // Initialize typing state
@@ -118,6 +100,14 @@ export class Dialog {
         this.currentWordIndex = 0;
         this.isTyping = false;
         this.typingSpeed = 100; // ms per word
+        
+        // Play intro voice line only for the first line
+        if (this.currentLine === 0) {
+            this.introVoiceLine.play().catch(error => {
+                // Autoplay might be blocked, log error or handle gracefully
+                console.error("Error playing intro voice line:", error);
+            });
+        }
         
         // Show first line
         this.showCurrentLine();
@@ -187,38 +177,17 @@ export class Dialog {
         this.currentWordIndex = 0;
         this.isTyping = true;
         
-        // Disable next button while typing
-        this.nextButton.disabled = true;
-        
         // Type each word
         const words = this.lines[this.currentLine].split(' ');
         for (const word of words) {
             await this.typeWord(word);
         }
         
-        // Re-enable next button
-        this.nextButton.disabled = false;
         this.isTyping = false;
         
         // Show/hide buttons based on current line
         if (this.currentLine === this.lines.length - 1) {
-            this.nextButton.style.display = 'none';
             this.enterHellButton.style.display = 'block';
-        } else {
-            this.nextButton.style.display = 'block';
-            this.enterHellButton.style.display = 'none';
-        }
-    }
-    
-    nextLine() {
-        if (this.currentLine < this.lines.length - 1) {
-            // Start background music on first next click
-            if (this.currentLine === 0) {
-                this.backgroundMusic.volume = 0.3; // Set to 30% volume
-                this.backgroundMusic.play();
-            }
-            this.currentLine++;
-            this.showCurrentLine();
         }
     }
     
