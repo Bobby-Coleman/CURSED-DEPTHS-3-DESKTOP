@@ -203,9 +203,11 @@
         }
 
         #introContent {
-            position: relative;
-            width: 35%; /* Reduced further from 40% */
-            margin-right: 15%; /* Increased further from 10% */
+            position: absolute;
+            top: 50%;
+            right: 5%; /* Position closer to right edge */
+            transform: translateY(-50%);
+            width: 30%; /* Make narrower */
             padding: 30px;
             background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background for text */
             color: white;
@@ -578,7 +580,7 @@
                     introTextElement.textContent += textToType.charAt(charIndex);
                     charIndex++;
                     // Adjust typing speed here (milliseconds)
-                    typingTimeout = setTimeout(typeWriter, 50);
+                    typingTimeout = setTimeout(typeWriter, 30);
                 } else {
                     // Typing finished
                     introTextElement.style.borderRight = 'none'; // Remove cursor simulation if needed
