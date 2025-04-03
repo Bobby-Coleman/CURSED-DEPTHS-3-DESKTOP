@@ -204,8 +204,8 @@
 
         #introContent {
             position: relative;
-            width: 45%; /* Take up slightly less than half the screen width */
-            margin-right: 5%; /* Add some margin from the right edge */
+            width: 40%; /* Reduced from 45% */
+            margin-right: 10%; /* Increased from 5% to push further right */
             padding: 30px;
             background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background for text */
             color: white;
@@ -279,6 +279,8 @@
             <p id="introText"></p>
             <button id="startButton" style="display: none;">Start</button>
         </div>
+        <!-- Copied Vibe Jam Tag -->
+        <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
     </div>
     <div id="info">Use WASD or arrow keys to move</div>
     <div id="mobileInfo">Use left joystick to move and right joystick to rotate view</div>
@@ -318,8 +320,9 @@
     }
     </script>
     <script type="module" src="js/main.js"></script>
+    <a target="_blank" href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
+    <!-- Restored Original Vibe Jam Corner Tag -->
     <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
-    <a href="https://itch.io/jam/vibe-jam-2025" id="vibeJamLink" style="position: absolute; bottom: 20px; right: 20px; color: white; text-decoration: none; font-family: Arial, sans-serif; font-size: 16px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; z-index: 1000;">Vibe Jam 2025</a>
     <script>
         // Only run the original mobile controls if joystick isn't initialized
         window.addEventListener('load', function() {
