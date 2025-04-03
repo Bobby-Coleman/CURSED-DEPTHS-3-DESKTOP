@@ -135,18 +135,6 @@ function init() {
     // Expose controls to window for mobile controls
     window.controls = controls;
 
-    // Automatically lock controls when game starts
-    document.addEventListener('click', () => {
-        controls.lock();
-    });
-
-    controls.addEventListener('unlock', () => {
-        // Re-lock on next click
-        document.addEventListener('click', () => {
-            controls.lock();
-        }, { once: true });
-    });
-
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     window.addEventListener('resize', onWindowResize);
@@ -524,6 +512,20 @@ function startGame() {
 
     // Schedule the redirect to visual novel
     scheduleRedirect();
+
+    // Lock controls on click once game starts
+    document.addEventListener('click', () => {
+        if (controls) controls.lock();
+    });
+
+    // Re-lock on click after unlock
+    if (controls) {
+        controls.addEventListener('unlock', () => {
+            document.addEventListener('click', () => {
+                if (controls) controls.lock();
+            }, { once: true });
+        });
+    }
 
     // Start the animation loop
     animate();
