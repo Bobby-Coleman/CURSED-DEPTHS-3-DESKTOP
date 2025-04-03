@@ -1180,11 +1180,10 @@ class DrivingGame {
         
         // Update trippy effect
         if (this.beersCollected > 0) {
-            const maxOpacity = 0.5525; // Reduced max opacity by 15% (0.65 * 0.85)
+            const maxOpacity = 0.75;
             // Start with much lower opacity (0.05) and build up more gradually
             const baseOpacity = 0.05;
-            // Halved the rate of increase per beer (beersCollected / 10 instead of / 5)
-            const additionalOpacity = (this.beersCollected / 10) * (maxOpacity - baseOpacity); 
+            const additionalOpacity = (this.beersCollected / 5) * (maxOpacity - baseOpacity);
             const opacity = Math.min(maxOpacity, baseOpacity + additionalOpacity);
             
             // Create rainbow gradient
@@ -1196,10 +1195,8 @@ class DrivingGame {
             
             // Start with much weaker blur (1px) and build up more gradually
             const baseBlur = 1;
-            const maxBlur = 10.2; // Reduced max blur by 15% (12 * 0.85)
-             // Halved the rate of increase per beer (beersCollected / 10 instead of / 5)
-            const additionalBlur = (this.beersCollected / 10) * (maxBlur - baseBlur);
-            const blurAmount = Math.min(maxBlur, baseBlur + additionalBlur);
+            const additionalBlur = (this.beersCollected / 5) * (12 - baseBlur);
+            const blurAmount = Math.min(12, baseBlur + additionalBlur);
             
             this.trippyOverlay.style.background = gradient;
             this.trippyOverlay.style.opacity = opacity;
@@ -1569,25 +1566,19 @@ class DrivingGame {
         // Set a flag in sessionStorage to indicate we're coming from the driving game
         sessionStorage.setItem('fromDrivingGame', 'true');
         
-        // Use the base URL set by our dynamic script
+        // More robust GitHub Pages URL handling
         let baseUrl = '';
         
-        if (window.baseUrl) {
-            // Use the dynamically set base URL (set in the HTML)
-            baseUrl = window.baseUrl.replace(/\/$/, ''); // Remove trailing slash if present
+        if (window.location.hostname.includes('github.io')) {
+            // On GitHub Pages - use the full repo path
+            const pathSegments = window.location.pathname.split('/');
+            const repoName = pathSegments[1]; // This should be "CURSED-DEPTHS-3"
+            baseUrl = '/' + repoName;
         } else {
-            // Fallback to the old method if baseUrl wasn't set
-            if (window.location.hostname.includes('github.io')) {
-                // On GitHub Pages - use the full repo path
-                const pathSegments = window.location.pathname.split('/');
-                const repoName = pathSegments[1]; // This should be the repository name
-                baseUrl = '/' + repoName;
-            } else {
-                // Local development - navigate relative to the root
-                const fullPath = window.location.pathname;
-                if (fullPath.includes('/driving-game/')) {
-                    baseUrl = fullPath.substring(0, fullPath.indexOf('/driving-game'));
-                }
+            // Local development - navigate relative to the root
+            const fullPath = window.location.pathname;
+            if (fullPath.includes('/driving-game/')) {
+                baseUrl = fullPath.substring(0, fullPath.indexOf('/driving-game'));
             }
         }
         
@@ -1829,10 +1820,8 @@ class DrivingGame {
         fogPatch.style.height = '100%';
         fogPatch.style.borderRadius = '0';
         
-        // Apply color overlay based on beer count - Halved rate and reduced max by 15%
-        const maxTintOpacity = 0.255; // Reduced max opacity by 15% (0.3 * 0.85)
-        const ratePerBeer = 0.0375; // Halved the rate per beer (0.075 / 2)
-        const tintOpacity = Math.min(beerCount * ratePerBeer, maxTintOpacity); 
+        // Apply color overlay based on beer count - REDUCED BY HALF
+        const tintOpacity = Math.min(beerCount * 0.075, 0.3); // Reduced by half
         fogPatch.style.backgroundColor = `rgba(255, 255, 255, ${tintOpacity})`;
         
         fogPatch.style.zIndex = '1000';
@@ -1903,25 +1892,18 @@ class DrivingGame {
 // Initialize game once the page is loaded
 window.onload = function() {
     window.startMainGame = function() {
-        // Use the base URL set by our dynamic script in the HTML
+        // Get full repository path for GitHub Pages
+        const fullPath = window.location.pathname;
+        const repoName = fullPath.split('/')[1]; // Should get "CURSED-DEPTHS-3" for GitHub Pages
         let basePath = '';
         
-        if (window.baseUrl) {
-            // Use the dynamically set base URL
-            basePath = window.baseUrl.replace(/\/$/, ''); // Remove trailing slash if present
-        } else {
-            // Fallback method if baseUrl wasn't set
-            const fullPath = window.location.pathname;
-            const repoName = fullPath.split('/')[1]; // Should get repository name for GitHub Pages
-            
-            // Check if we're on GitHub Pages or local
-            if (window.location.hostname.includes('github.io')) {
-                // We're on GitHub Pages
-                basePath = '/' + repoName;
-            } else if (fullPath.includes('/driving-game/')) {
-                // We're on localhost
-                basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
-            }
+        // Check if we're on GitHub Pages or local
+        if (window.location.hostname.includes('github.io')) {
+            // We're on GitHub Pages
+            basePath = '/' + repoName;
+        } else if (fullPath.includes('/driving-game/')) {
+            // We're on localhost
+            basePath = fullPath.substring(0, fullPath.indexOf('/driving-game'));
         }
         
         // Navigate directly to the main index - no dialog scene
