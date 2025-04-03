@@ -3,6 +3,7 @@ export class Dialog {
         // Dialog system for the game's introduction
         this.currentLine = 0;
         this.lines = [
+            "Oh, you're awake?",
             "Hey, champ. Bad news—you died. Real messy. Car crash, blood everywhere. Good news—for me—you're in hell. Welcome.\n\nYou were a real piece of shit, by the way. Cheated on your wife, remember that? I do. Some of my best work. Anyway, now you get to fight your inner demons forever."
         ];
         // Create audio
@@ -74,6 +75,23 @@ export class Dialog {
         this.dialogBox.style.transform = 'translateX(-50%)';
         this.container.appendChild(this.dialogBox);
         
+        // Create next button
+        this.nextButton = document.createElement('button');
+        this.nextButton.textContent = 'Next';
+        this.nextButton.style.marginTop = '20px';
+        this.nextButton.style.padding = '10px 20px';
+        this.nextButton.style.fontSize = '16px';
+        this.nextButton.style.cursor = 'pointer';
+        this.nextButton.style.backgroundColor = '#FF0000';
+        this.nextButton.style.color = 'white';
+        this.nextButton.style.border = 'none';
+        this.nextButton.style.borderRadius = '5px';
+        this.nextButton.style.position = 'fixed';
+        this.nextButton.style.bottom = '5%';
+        this.nextButton.style.left = '50%';
+        this.nextButton.style.transform = 'translateX(-50%)';
+        this.container.appendChild(this.nextButton);
+        
         // Create enter hell button (initially hidden)
         this.enterHellButton = document.createElement('button');
         this.enterHellButton.textContent = 'Enter Hell';
@@ -93,21 +111,14 @@ export class Dialog {
         this.container.appendChild(this.enterHellButton);
         
         // Add event listeners
+        this.nextButton.addEventListener('click', () => this.nextLine());
         this.enterHellButton.addEventListener('click', () => this.startGame());
         
         // Initialize typing state
         this.currentText = '';
         this.currentWordIndex = 0;
-        this.isTyping = false;
-        this.typingSpeed = 100; // ms per word
-        
-        // Play intro voice line only for the first line
-        if (this.currentLine === 0) {
-            this.introVoiceLine.play().catch(error => {
-                // Autoplay might be blocked, log error or handle gracefully
-                console.error("Error playing intro voice line:", error);
-            });
-        }
+        this.isTyping = true;
+        this.typingSpeed = 200; // ms per word
         
         // Show first line
         this.showCurrentLine();
@@ -177,17 +188,43 @@ export class Dialog {
         this.currentWordIndex = 0;
         this.isTyping = true;
         
+        // Disable next button while typing
+        this.nextButton.disabled = true;
+        
         // Type each word
         const words = this.lines[this.currentLine].split(' ');
         for (const word of words) {
             await this.typeWord(word);
         }
         
+        // Re-enable next button
+        this.nextButton.disabled = false;
         this.isTyping = false;
         
         // Show/hide buttons based on current line
         if (this.currentLine === this.lines.length - 1) {
+            this.nextButton.style.display = 'none';
             this.enterHellButton.style.display = 'block';
+        } else {
+            this.nextButton.style.display = 'block';
+            this.enterHellButton.style.display = 'none';
+        }
+    }
+    
+    nextLine() {
+        if (this.currentLine < this.lines.length - 1) {
+            // Start background music on first *actual* next click (going to line 1)
+            if (this.currentLine === 0) {
+                this.backgroundMusic.volume = 0.3; 
+                this.backgroundMusic.play().catch(e => console.error("BG music error:", e));
+
+                // Play the intro voice line when advancing to the main dialog
+                this.introVoiceLine.play().catch(error => {
+                    console.error("Error playing intro voice line on nextLine:", error);
+                });
+            }
+            this.currentLine++;
+            this.showCurrentLine();
         }
     }
     
