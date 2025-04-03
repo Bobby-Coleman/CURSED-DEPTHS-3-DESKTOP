@@ -177,8 +177,109 @@
             z-index: 1000;
         }
     </style>
+    <style>
+        /* Intro Overlay Styles */
+        #introOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99999; /* Ensure it's on top */
+            display: flex;
+            justify-content: flex-end; /* Align content to the right */
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7); /* Fallback background */
+        }
+
+        #introBackground {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the entire screen */
+            z-index: -1; /* Behind the text content */
+        }
+
+        #introContent {
+            position: relative;
+            width: 45%; /* Take up slightly less than half the screen width */
+            margin-right: 5%; /* Add some margin from the right edge */
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background for text */
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-size: 1.2em;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            text-align: left; /* Align text left within the container */
+        }
+
+        #introText {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            min-height: 150px; /* Ensure space while typing */
+        }
+
+        /* Blinking cursor effect */
+        #introText::after {
+            content: '_';
+            opacity: 1;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        #startButton {
+            display: none; /* Hidden initially */
+            background: black;
+            color: white;
+            padding: 12px 25px;
+            border: 1px solid white;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        #startButton:hover {
+            background: white;
+            color: black;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            #introContent {
+                width: 85%; /* Wider on smaller screens */
+                margin-right: auto; /* Center horizontally */
+                margin-left: auto;
+                text-align: center; /* Center text */
+                font-size: 1em;
+            }
+            #introText {
+                min-height: 200px; /* Adjust height */
+            }
+            #startButton {
+                 padding: 10px 20px;
+                 font-size: 1em;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div id="introOverlay">
+        <img id="introBackground" src="audio/intro_background.png" alt="Intro Background">
+        <div id="introContent">
+            <p id="introText"></p>
+            <button id="startButton" style="display: none;">Start</button>
+        </div>
+    </div>
     <div id="info">Use WASD or arrow keys to move</div>
     <div id="mobileInfo">Use left joystick to move and right joystick to rotate view</div>
     <div id="countdown" style="position: absolute; top: 10px; left: 50%; transform: translateX(-50%); color: white; font-family: Arial, sans-serif; font-size: 72px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; pointer-events: none;">36</div>
@@ -453,6 +554,89 @@
                     }
                 }
             }, 1000); // Wait 1 second to check if joystick is initialized
+        });
+    </script>
+    <script>
+        // Intro Overlay Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const introOverlay = document.getElementById('introOverlay');
+            const introTextElement = document.getElementById('introText');
+            const startButton = document.getElementById('startButton');
+            const introVoice = document.getElementById('introVoice');
+            const textToType = "This game is a glimpse into how I see the world—messy, uncertain, full of choices that don't feel clear. I don't know how to code, but AI let me shape something I've never been able to say out loud. Everything here came from that. I hope it reaches you.";
+            let charIndex = 0;
+            let typingTimeout;
+
+            function typeWriter() {
+                if (charIndex < textToType.length) {
+                    introTextElement.textContent += textToType.charAt(charIndex);
+                    charIndex++;
+                    // Adjust typing speed here (milliseconds)
+                    typingTimeout = setTimeout(typeWriter, 50);
+                } else {
+                    // Typing finished
+                    introTextElement.style.borderRight = 'none'; // Remove cursor simulation if needed
+                     // Remove blinking cursor animation class or style
+                    introTextElement.classList.add('typing-finished'); // Add a class to target ::after removal
+                    introTextElement.style.setProperty('--cursor-opacity', '0'); // Or directly control via CSS var
+
+                    startButton.style.display = 'block'; // Show the start button
+                    // Ensure cursor removal
+                    const styleSheet = document.styleSheets[0]; // Or find the correct one
+                    try {
+                         styleSheet.insertRule('#introText.typing-finished::after { display: none; }', styleSheet.cssRules.length);
+                    } catch (e) { 
+                        console.warn("Could not remove cursor style dynamically:", e);
+                        // Fallback: Just hide the animation
+                         introTextElement.style.animation = 'none'; 
+                         const cursorSpan = introTextElement.querySelector('.typing-cursor');
+                         if(cursorSpan) cursorSpan.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Modify CSS to remove cursor after typing
+            const style = document.createElement('style');
+            style.innerHTML = `#introText.typing-finished::after { content: ''; animation: none; }`;
+            document.head.appendChild(style);
+
+
+            startButton.addEventListener('click', () => {
+                // Stop typing if button is clicked early
+                clearTimeout(typingTimeout);
+                
+                introOverlay.style.transition = 'opacity 0.5s ease-out';
+                introOverlay.style.opacity = '0';
+                
+                // Wait for fade out transition before removing
+                setTimeout(() => {
+                    introOverlay.style.display = 'none';
+                }, 500); 
+
+                // Play the intro voice
+                if (introVoice) {
+                    introVoice.play().catch(error => {
+                        console.error("Audio play failed:", error);
+                        // Handle autoplay restrictions: maybe show a message or require another interaction
+                        // For now, we just log the error.
+                    });
+                }
+                
+                // Start the actual game logic (animation loop, timers, background music)
+                if (typeof window.startGame === 'function') {
+                    window.startGame();
+                } else {
+                    console.error("startGame function not found!");
+                }
+
+                // NOTE: Starting the actual game logic (from main.js) might require
+                // modifying main.js to expose an initialization function, 
+                // or removing the 'defer' attribute dynamically here and reloading the script.
+                // This current implementation only hides the overlay and plays audio.
+            });
+
+            // Start the typing effect
+            typeWriter();
         });
     </script>
 </body>

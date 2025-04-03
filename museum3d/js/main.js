@@ -93,34 +93,16 @@ const PLAYER_SPEED = 150.0;  // Increased for smoother movement
 const SEGMENTS_IN_VIEW = 4;  // Keep 4 segments loaded at a time
 const WALL_BOUNDARY = HALLWAY_WIDTH/2 - 0.5;
 
-// Initialize the game
+// Initialize the game setup (without starting animation/timers)
 function init() {
     // Scene setup with fog
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
     scene.fog = new THREE.Fog(0x000000, 60, 100);  // Add fog for distance fade-out
     
-    // Initialize background music
-    const backgroundMusic = document.getElementById('backgroundMusic');
-    if (backgroundMusic) {
-        backgroundMusic.volume = 0.2; // Reduced from 0.5 to 0.2 (40% of original volume)
-        // Try to play the music
-        backgroundMusic.play().catch(error => {
-            console.log("Autoplay prevented:", error);
-            // Add click handler to start music on user interaction
-            document.addEventListener('click', function startMusic() {
-                backgroundMusic.play();
-                document.removeEventListener('click', startMusic);
-            }, { once: true });
-        });
-    }
-    
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.y = PLAYER_HEIGHT;
     
-    // Expose camera globally for mobile controls
-    window.camera = camera;
-
     // Basic ambient lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
@@ -503,6 +485,63 @@ function init() {
     }
 }
 
+// Function to start the actual game (animation, timers, music)
+function startGame() {
+    console.log("Starting game...");
+
+    // Initialize and play background music
+    const backgroundMusic = document.getElementById('backgroundMusic');
+    if (backgroundMusic) {
+        backgroundMusic.volume = 0.2; 
+        backgroundMusic.play().catch(error => {
+            console.log("Background music autoplay prevented:", error);
+            // Add click handler to start music on user interaction if needed
+            document.addEventListener('click', function startBgMusic() {
+                backgroundMusic.play();
+                document.removeEventListener('click', startBgMusic);
+            }, { once: true });
+        });
+    }
+
+    // Start countdown timer
+    const countdownElement = document.getElementById('countdown');
+    if (countdownElement) {
+        let timeLeft = 36;
+        countdownElement.textContent = timeLeft; // Show initial time immediately
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            countdownElement.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                countdownElement.textContent = "0";
+                // Redirect logic is now triggered by scheduleRedirect
+            }
+        }, 1000);
+    } else {
+        console.warn("Countdown element not found!");
+    }
+
+    // Schedule the redirect to visual novel
+    scheduleRedirect();
+
+    // Start the animation loop
+    animate();
+}
+
+// Make startGame globally accessible
+window.startGame = startGame;
+
+// Schedule the redirect to visual novel (called by startGame)
+function scheduleRedirect() {
+    console.log("Scheduling redirect to visual novel...");
+    // Redirect after 36 seconds (matching the countdown)
+    setTimeout(() => {
+        console.log("Redirecting to visual novel now");
+        window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/visual-novel/index.html';
+    }, 36000);
+}
+
 function createHallwaySegment(index) {
     const segment = {
         walls: [],
@@ -746,155 +785,13 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Load font and initialize game
+// Load font and initialize basic game setup
 const fontLoader = new FontLoader();
 fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(loadedFont) {
     font = loadedFont;
-    init();
-    animate();
-    
-    // Initialize audio with multiple approaches and fallbacks
-    initAudio();
+    init(); // Only call init here to set up the scene etc.
+    // Do NOT call animate() or initAudio() here anymore
 });
-
-// Multiple approaches to ensure audio plays successfully
-function initAudio() {
-    console.log("Initializing audio system...");
-    
-    // Store status for debugging
-    let audioStatus = {
-        elementFound: false,
-        playAttempted: false,
-        playSucceeded: false,
-        playError: null,
-        redirectScheduled: false
-    };
-    
-    // Get the audio element from the DOM
-    const audioElement = document.getElementById('introVoice');
-    if (!audioElement) {
-        console.error("Audio element not found in the DOM!");
-        return;
-    }
-    audioStatus.elementFound = true;
-    
-    // Get the button for manual playback
-    const audioButton = document.getElementById('audioButton');
-    if (audioButton) {
-        // Hide button initially, show if autoplay fails
-        audioButton.style.display = 'none';
-        
-        // Add click handler to the button
-        audioButton.addEventListener('click', function() {
-            console.log("Audio button clicked");
-            playAudioWithElement(audioElement);
-            audioButton.style.display = 'none'; // Hide after click
-        });
-    }
-    
-    // Helper function to actually play the audio
-    function playAudioWithElement(element) {
-        if (audioStatus.playSucceeded) {
-            console.log("Audio already playing, not starting again");
-            return;
-        }
-        
-        console.log("Attempting to play audio...");
-        audioStatus.playAttempted = true;
-        
-        // First check if the audio source is valid
-        if (!element.src && element.getElementsByTagName('source').length === 0) {
-            console.error("No audio source found!");
-            audioStatus.playError = "No source";
-            return;
-        }
-        
-        // Enforce volume setting
-        element.volume = 1.0;
-        
-        // Play with detailed error handling
-        element.play()
-            .then(() => {
-                console.log("Audio playback started successfully!");
-                audioStatus.playSucceeded = true;
-                
-                // Schedule the redirect only once we confirm audio is playing
-                if (!audioStatus.redirectScheduled) {
-                    scheduleRedirect();
-                }
-            })
-            .catch(error => {
-                console.error("Audio playback failed:", error);
-                audioStatus.playError = error.message || "Unknown error";
-                
-                // Show the manual play button if autoplay fails
-                if (audioButton) {
-                    audioButton.style.display = 'block';
-                }
-                
-                // Schedule redirect even if audio fails
-                if (!audioStatus.redirectScheduled) {
-                    scheduleRedirect();
-                }
-            });
-    }
-    
-    // Schedule the redirect to visual novel
-    function scheduleRedirect() {
-        console.log("Scheduling redirect to visual novel...");
-        audioStatus.redirectScheduled = true;
-        
-        // Redirect after 26 seconds
-        setTimeout(() => {
-            console.log("Redirecting to visual novel now");
-            window.location.href = 'https://cursed-depths-3-de6de9e234ae.herokuapp.com/visual-novel/index.html';
-        }, 36000);
-    }
-    
-    // Try to play automatically after 4 seconds
-    setTimeout(() => {
-        console.log("4-second timer elapsed, attempting to play audio...");
-        playAudioWithElement(audioElement);
-    }, 4000);
-    
-    // Add countdown timer
-    const countdownElement = document.getElementById('countdown');
-    let timeLeft = 36;
-    
-    const countdownInterval = setInterval(() => {
-        timeLeft--;
-        countdownElement.textContent = timeLeft;
-        
-        if (timeLeft <= 0) {
-            clearInterval(countdownInterval);
-            countdownElement.textContent = "0";
-        }
-    }, 1000);
-    
-    // Provide a global function for debugging
-    window.debugAudioStatus = function() {
-        console.log("Audio Status:", audioStatus);
-        console.log("Audio Element:", audioElement);
-        return audioStatus;
-    };
-    
-    // Attempt to play when user interacts with the page
-    document.addEventListener('click', function playOnInteraction() {
-        console.log("User interaction detected, attempting to play audio...");
-        playAudioWithElement(audioElement);
-        document.removeEventListener('click', playOnInteraction);
-    });
-    
-    // Also attempt to play on keydown if other methods fail
-    document.addEventListener('keydown', function playOnKey(event) {
-        if (!audioStatus.playSucceeded && (event.code === 'KeyW' || event.code === 'KeyA' || 
-            event.code === 'KeyS' || event.code === 'KeyD')) {
-            console.log("Key press detected, attempting to play audio...");
-            playAudioWithElement(audioElement);
-            document.removeEventListener('keydown', playOnKey);
-        }
-    });
-}
 
 // Function to provide haptic feedback if available
 function vibrateDevice(pattern) {

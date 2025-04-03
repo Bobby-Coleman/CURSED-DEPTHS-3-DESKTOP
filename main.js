@@ -953,7 +953,7 @@ function showControlsTutorial() {
     tutorialOverlay.style.left = '0';
     tutorialOverlay.style.width = '100%';
     tutorialOverlay.style.height = '100%';
-    tutorialOverlay.style.backgroundColor = 'rgba(0, 0, 0, 1)'; // Changed to fully opaque black
+    tutorialOverlay.style.backgroundColor = 'rgba(0, 0, 0, 1)'; // Ensure fully opaque black
     tutorialOverlay.style.color = 'white';
     tutorialOverlay.style.fontFamily = 'monospace, sans-serif';
     tutorialOverlay.style.fontSize = '24px';
@@ -1030,8 +1030,12 @@ function showControlsTutorial() {
         tutorialOverlay.style.opacity = '0';
         setTimeout(() => {
             tutorialOverlay.remove();
-            gameState.isPaused = false;
-        }, 1000);
+            // Initialize the actual game *after* the overlay is removed
+            if (!player) { // Only start if not already started (e.g., via restart)
+                 startGame(); 
+            }
+            gameState.isPaused = false; // Unpause the game
+        }, 1000); // Wait for fade-out animation
     });
     
     // Next buttons for each line
