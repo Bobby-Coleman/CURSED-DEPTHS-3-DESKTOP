@@ -204,8 +204,8 @@
 
         #introContent {
             position: relative;
-            width: 40%; /* Reduced from 45% */
-            margin-right: 10%; /* Increased from 5% to push further right */
+            width: 35%; /* Reduced further from 40% */
+            margin-right: 15%; /* Increased further from 10% */
             padding: 30px;
             background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background for text */
             color: white;
@@ -236,6 +236,10 @@
 
         #startButton {
             display: none; /* Hidden initially */
+            position: absolute; /* Center on screen */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: black;
             color: white;
             padding: 12px 25px;
@@ -244,7 +248,6 @@
             font-size: 1.1em;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -277,8 +280,8 @@
         <img id="introBackground" src="assets/intro_background.png" alt="Intro Background">
         <div id="introContent">
             <p id="introText"></p>
-            <button id="startButton" style="display: none;">Start</button>
         </div>
+        <button id="startButton" style="display: none;">Start</button>
         <!-- Copied Vibe Jam Tag -->
         <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
     </div>
