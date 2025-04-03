@@ -1171,46 +1171,25 @@ class DrivingGame {
     }
     
     updateVisualEffects() {
+        // Halved the contribution per beer: 0.2 -> 0.1 for blur
+        const blurIntensity = Math.min(this.beersCollected * 0.1, 3.0); 
+        // Halved the contribution per beer: 0.04 -> 0.02 for color overlay
+        const colorShiftIntensity = Math.min(this.beersCollected * 0.02, 0.5); 
+
+        // Apply blur effect to the canvas
+        this.renderer.domElement.style.filter = `blur(${blurIntensity.toFixed(1)}px)`;
+        
+        // Apply cycling color overlay effect using hsla
+        const hueShift = (this.time * 10) % 360; // Controls the speed of color cycling
+        this.trippyOverlay.style.backgroundColor = `hsla(${hueShift}, 100%, 50%, ${colorShiftIntensity.toFixed(2)})`;
+        this.trippyOverlay.style.opacity = colorShiftIntensity > 0 ? '1' : '0'; // Ensure overlay is only visible if effect is active
+        this.trippyOverlay.style.mixBlendMode = 'overlay'; // Use 'overlay' blend mode for a trippy effect
+
         // Headlight flicker effect (subtle)
         this.headlights.forEach(light => {
-            // Random flicker intensity based on sine wave + noise
-            const flickerAmount = Math.sin(this.time * 10) * 0.1 + Math.random() * 0.1;
+            const flickerAmount = (Math.random() - 0.5) * 0.1;
             light.intensity = 1 + flickerAmount;
         });
-        
-        // Update trippy effect
-        if (this.beersCollected > 0) {
-            const maxOpacity = 0.75;
-            // Start with much lower opacity (0.05) and build up more gradually
-            const baseOpacity = 0.05;
-            const additionalOpacity = (this.beersCollected / 5) * (maxOpacity - baseOpacity);
-            const opacity = Math.min(maxOpacity, baseOpacity + additionalOpacity);
-            
-            // Create rainbow gradient
-            const hue = (this.time * 50) % 360;
-            const gradient = `linear-gradient(45deg, 
-                hsl(${hue}, 100%, 50%), 
-                hsl(${(hue + 120) % 360}, 100%, 50%), 
-                hsl(${(hue + 240) % 360}, 100%, 50%))`;
-            
-            // Start with much weaker blur (1px) and build up more gradually
-            const baseBlur = 1;
-            const additionalBlur = (this.beersCollected / 5) * (12 - baseBlur);
-            const blurAmount = Math.min(12, baseBlur + additionalBlur);
-            
-            this.trippyOverlay.style.background = gradient;
-            this.trippyOverlay.style.opacity = opacity;
-            this.trippyOverlay.style.mixBlendMode = 'normal';
-            this.trippyOverlay.style.backdropFilter = `blur(${blurAmount}px)`;
-            this.trippyOverlay.style.transition = 'opacity 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out';
-            
-            // Add a semi-transparent white background to increase opacity
-            this.trippyOverlay.style.backgroundColor = `rgba(255, 255, 255, ${opacity * 0.2})`;
-        } else {
-            this.trippyOverlay.style.opacity = '0';
-            this.trippyOverlay.style.backdropFilter = 'blur(0px)';
-            this.trippyOverlay.style.backgroundColor = 'transparent';
-        }
     }
     
     playCrashAnimation() {
