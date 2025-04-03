@@ -119,7 +119,7 @@ export class Dialog {
         this.currentText = '';
         this.currentWordIndex = 0;
         this.isTyping = true;
-        this.typingSpeed = 400; // ms per word - Doubled speed again
+        this.typingSpeed = 20; // ms per CHARACTER - much faster
         
         // Apply fade-in transition to the main container
         this.container.style.transition = 'opacity 2s ease-in-out';
@@ -179,11 +179,11 @@ export class Dialog {
         }, 80); // Slightly shorter duration for more "scrambled" effect
     }
     
-    async typeWord(word) {
-        this.currentText += word + ' ';
+    async typeCharacter(char) { // Renamed from typeWord
+        this.currentText += char; // Append character
         this.dialogBox.textContent = this.currentText;
-        // this.createScrambledSound(); // REMOVED typing sound
-        // Slow down typing speed - reference this.typingSpeed set in constructor
+        // Play sound very occasionally for effect?
+        // if (Math.random() < 0.1) this.createScrambledSound(); 
         await new Promise(resolve => setTimeout(resolve, this.typingSpeed)); 
     }
     
@@ -196,10 +196,10 @@ export class Dialog {
         // Disable next button while typing
         this.nextButton.disabled = true;
         
-        // Type each word
-        const words = this.lines[this.currentLine].split(' ');
-        for (const word of words) {
-            await this.typeWord(word);
+        // Type each character in the current line
+        const line = this.lines[this.currentLine];
+        for (const char of line) {
+            await this.typeCharacter(char); // Call character typing
         }
         
         // Re-enable next button
@@ -220,7 +220,7 @@ export class Dialog {
         if (this.currentLine < this.lines.length - 1) {
             // Start background music on first *actual* next click (going to line 1)
             if (this.currentLine === 0) {
-                this.backgroundMusic.volume = 0.2; // Lowered volume (approx 30% quieter than 0.3)
+                this.backgroundMusic.volume = 0.05; // Lowered volume further from 0.2
                 this.backgroundMusic.play().catch(e => console.error("BG music error:", e));
 
                 // Play the intro voice line when advancing to the main dialog
