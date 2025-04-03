@@ -33,18 +33,18 @@ export class Dialog {
         this.container.style.zIndex = '1000';
         this.container.style.opacity = '0'; // Start with 0 opacity
         
-        // Create fog overlay
-        this.fogOverlay = document.createElement('div');
-        this.fogOverlay.style.position = 'fixed';
-        this.fogOverlay.style.top = '0';
-        this.fogOverlay.style.left = '0';
-        this.fogOverlay.style.width = '100%';
-        this.fogOverlay.style.height = '100%';
-        this.fogOverlay.style.backgroundColor = '#000';
-        this.fogOverlay.style.opacity = '1';
-        this.fogOverlay.style.zIndex = '999';
-        this.fogOverlay.style.transition = 'opacity 5s ease-in-out';
-        document.body.appendChild(this.fogOverlay);
+        // Create persistent black background (previously fogOverlay)
+        this.blackBackground = document.createElement('div'); // Renamed for clarity
+        this.blackBackground.style.position = 'fixed';
+        this.blackBackground.style.top = '0';
+        this.blackBackground.style.left = '0';
+        this.blackBackground.style.width = '100%';
+        this.blackBackground.style.height = '100%';
+        this.blackBackground.style.backgroundColor = '#000'; // Opaque black
+        this.blackBackground.style.opacity = '1';       // Fully opaque
+        this.blackBackground.style.zIndex = '999';      // Below the main container
+        // No transition needed
+        document.body.appendChild(this.blackBackground);
         
         // Create background image
         this.background = document.createElement('img');
@@ -120,8 +120,11 @@ export class Dialog {
         this.isTyping = true;
         this.typingSpeed = 200; // ms per word
         
-        // Show first line
-        this.showCurrentLine();
+        // Apply fade-in transition to the main container
+        this.container.style.transition = 'opacity 2s ease-in-out';
+
+        // Show first line (will trigger container fade-in via show() method)
+        // this.showCurrentLine(); // Moved call to show()
     }
     
     createScrambledSound() {
@@ -178,8 +181,9 @@ export class Dialog {
     async typeWord(word) {
         this.currentText += word + ' ';
         this.dialogBox.textContent = this.currentText;
-        this.createScrambledSound();
-        await new Promise(resolve => setTimeout(resolve, this.typingSpeed));
+        // this.createScrambledSound(); // REMOVED typing sound
+        // Slow down typing speed - reference this.typingSpeed set in constructor
+        await new Promise(resolve => setTimeout(resolve, this.typingSpeed)); 
     }
     
     async showCurrentLine() {
@@ -232,28 +236,36 @@ export class Dialog {
         // Increase volume before starting game
         this.backgroundMusic.volume = 1.0; // Set to 100% volume
         // Remove dialog container
-        document.body.removeChild(this.container);
-        // Start the game and show tutorial
-        window.startGame();
+        if (document.body.contains(this.container)) {
+            document.body.removeChild(this.container);
+        }
+        // Remove the persistent black background
+        if (this.blackBackground && document.body.contains(this.blackBackground)) {
+            document.body.removeChild(this.blackBackground);
+            this.blackBackground = null; // Clear reference
+        }
+        
+        // window.startGame(); // Still commented out
         window.showControlsTutorial();
     }
     
     show() {
-        document.body.appendChild(this.container);
+        // Ensure black background exists (added in constructor)
+        if (!document.body.contains(this.blackBackground) && this.blackBackground) {
+             document.body.appendChild(this.blackBackground);
+        }
         
-        // Start the fog reveal effect
+        // Add container to the page
+        if (!document.body.contains(this.container)) {
+            document.body.appendChild(this.container);
+        }
+        
+        // Trigger container fade-in (runs shortly after adding to DOM)
         setTimeout(() => {
-            // Fade out the fog overlay
-            this.fogOverlay.style.opacity = '0';
-            
-            // Fade in the dialog container
-            this.container.style.opacity = '1';
-            this.container.style.transition = 'opacity 5s ease-in-out';
-            
-            // Remove the fog overlay after the transition
-            setTimeout(() => {
-                document.body.removeChild(this.fogOverlay);
-            }, 5000);
-        }, 100);
+            this.container.style.opacity = '1'; 
+        }, 50); // Small delay
+
+        // Show the first line of text AFTER starting the fade-in
+        this.showCurrentLine(); 
     }
 } 
