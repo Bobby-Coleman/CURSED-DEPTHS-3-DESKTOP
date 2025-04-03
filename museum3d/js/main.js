@@ -477,6 +477,16 @@ function init() {
 function startGame() {
     console.log("Starting game...");
 
+    // --- Play Intro Voice when game starts ---
+    const introVoice = document.getElementById('introVoice');
+    if (introVoice) {
+        introVoice.play().catch(error => {
+            console.error("Intro voice play failed:", error);
+            // Handle autoplay restrictions if necessary
+        });
+    }
+    // ----------------------------------------
+
     // Initialize and play background music
     const backgroundMusic = document.getElementById('backgroundMusic');
     if (backgroundMusic) {
