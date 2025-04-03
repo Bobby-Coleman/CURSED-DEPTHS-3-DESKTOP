@@ -224,8 +224,8 @@
             min-height: 150px; /* Ensure space while typing */
         }
 
-        /* Blinking cursor effect */
-        #introText::after {
+        /* Blinking cursor effect (only when active) */
+        #introText.typing-active::after {
             content: '_';
             opacity: 1;
             animation: blink 1s infinite;
@@ -280,10 +280,10 @@
 <body>
     <div id="introOverlay">
         <img id="introBackground" src="assets/intro_background.png" alt="Intro Background">
-        <div id="introContent">
+        <div id="introContent" style="display: none;">
             <p id="introText"></p>
         </div>
-        <button id="startButton" style="display: none;">Start</button>
+        <button id="startButton">Start</button>
         <!-- Copied Vibe Jam Tag -->
         <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
     </div>
@@ -565,95 +565,78 @@
         });
     </script>
     <script>
-        // Intro Overlay Logic
+        // Intro Overlay Logic (Revised Flow)
         document.addEventListener('DOMContentLoaded', () => {
             const introOverlay = document.getElementById('introOverlay');
             const introTextElement = document.getElementById('introText');
+            const introContent = document.getElementById('introContent'); // Get introContent div
             const startButton = document.getElementById('startButton');
-            const introVoice = document.getElementById('introVoice');
+            const backgroundMusic = document.getElementById('backgroundMusic');
             const textToType = "This game is a glimpse into how I see the world—messy, uncertain, full of choices that don't feel clear. I don't know how to code, but AI let me shape something I've never been able to say out loud. Everything here came from that. I hope it reaches you.";
             let charIndex = 0;
             let typingTimeout;
+
+            // Ensure initial state: button visible, text box hidden
+            if (startButton) startButton.style.display = 'block';
+            if (introContent) introContent.style.display = 'none';
 
             function typeWriter() {
                 if (charIndex < textToType.length) {
                     introTextElement.textContent += textToType.charAt(charIndex);
                     charIndex++;
-                    // Adjust typing speed here (milliseconds)
-                    typingTimeout = setTimeout(typeWriter, 30);
+                    typingTimeout = setTimeout(typeWriter, 30); // Faster typing speed
                 } else {
                     // Typing finished
-                    introTextElement.style.borderRight = 'none'; // Remove cursor simulation if needed
-                     // Remove blinking cursor animation class or style
-                    introTextElement.classList.add('typing-finished'); // Add a class to target ::after removal
-                    introTextElement.style.setProperty('--cursor-opacity', '0'); // Or directly control via CSS var
-
-                    startButton.style.display = 'block'; // Show the start button
-                    // Ensure cursor removal
-                    const styleSheet = document.styleSheets[0]; // Or find the correct one
-                    try {
-                         styleSheet.insertRule('#introText.typing-finished::after { display: none; }', styleSheet.cssRules.length);
-                    } catch (e) { 
-                        console.warn("Could not remove cursor style dynamically:", e);
-                        // Fallback: Just hide the animation
-                         introTextElement.style.animation = 'none'; 
-                         const cursorSpan = introTextElement.querySelector('.typing-cursor');
-                         if(cursorSpan) cursorSpan.style.display = 'none';
-                    }
+                    introTextElement.classList.remove('typing-active');
+                    introTextElement.classList.add('typing-finished');
+                    
+                    // Auto fade out and start game AFTER typing
+                    introOverlay.style.transition = 'opacity 0.5s ease-out';
+                    introOverlay.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        introOverlay.style.display = 'none';
+                        // Start the actual game logic (music continues)
+                        if (typeof window.startGame === 'function') {
+                            window.startGame();
+                        } else {
+                            console.error("startGame function not found!");
+                        }
+                    }, 500); 
                 }
             }
             
-            // Modify CSS to remove cursor after typing
+            // Ensure cursor style rules exist (for active and finished states)
             const style = document.createElement('style');
-            style.innerHTML = `#introText.typing-finished::after { content: ''; animation: none; }`;
+            style.innerHTML = `#introText.typing-finished::after { content: ''; animation: none; } #introText.typing-active::after { content: '_'; opacity: 1; animation: blink 1s infinite; }`;
             document.head.appendChild(style);
 
-
+            // --- Start Button Click Handler ---
             startButton.addEventListener('click', () => {
-                // Stop typing if button is clicked early
+                // Stop any previous typing 
                 clearTimeout(typingTimeout);
                 
-                introOverlay.style.transition = 'opacity 0.5s ease-out';
-                introOverlay.style.opacity = '0';
-                
-                // Wait for fade out transition before removing overlay and starting game
-                setTimeout(() => {
-                    introOverlay.style.display = 'none';
-                    // --- Game start call removed - will be triggered by dialog.js ---
-                    /*
-                    if (typeof window.startGame === 'function') {
-                        window.startGame();
-                    } else {
-                        console.error("startGame function not found!");
-                    }
-                    */
-                }, 500); 
-                // -------------------------------------------------------
+                // Hide button immediately
+                startButton.style.display = 'none';
 
-                // Play the intro voice
-                if (introVoice) {
-                    introVoice.play().catch(error => {
-                        console.error("Audio play failed:", error);
-                        // Handle autoplay restrictions: maybe show a message or require another interaction
-                        // For now, we just log the error.
+                // Show text box
+                if(introContent) introContent.style.display = 'block';
+
+                // Play background music ON CLICK
+                if (backgroundMusic) {
+                    backgroundMusic.volume = 0.2; 
+                    backgroundMusic.play().catch(error => {
+                        console.log("Background music play on click failed:", error);
                     });
                 }
-                
-                // Start the actual game logic (animation loop, timers, background music)
-                if (typeof window.startGame === 'function') {
-                    window.startGame();
-                } else {
-                    console.error("startGame function not found!");
-                }
 
-                // NOTE: Starting the actual game logic (from main.js) might require
-                // modifying main.js to expose an initialization function, 
-                // or removing the 'defer' attribute dynamically here and reloading the script.
-                // This current implementation only hides the overlay and plays audio.
+                // Activate and start typing animation
+                introTextElement.textContent = ''; // Clear text
+                charIndex = 0; 
+                introTextElement.classList.remove('typing-finished');
+                introTextElement.classList.add('typing-active'); // Activate cursor
+                typeWriter(); // Start typing
             });
-
-            // Start the typing effect
-            typeWriter();
         });
     </script>
 </body>
