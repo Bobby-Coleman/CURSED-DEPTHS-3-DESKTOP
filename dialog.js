@@ -17,6 +17,7 @@ export class Dialog {
         
         // Create intro voice line audio
         this.introVoiceLine = new Audio('assets/audio/satan_death_dialog.mp3');
+        this.introVoiceLine.volume = 1.0; // Boost voice volume to max
         
         // Create dialog container
         this.container = document.createElement('div');
@@ -118,7 +119,7 @@ export class Dialog {
         this.currentText = '';
         this.currentWordIndex = 0;
         this.isTyping = true;
-        this.typingSpeed = 200; // ms per word
+        this.typingSpeed = 400; // ms per word - Doubled speed again
         
         // Apply fade-in transition to the main container
         this.container.style.transition = 'opacity 2s ease-in-out';
@@ -219,7 +220,7 @@ export class Dialog {
         if (this.currentLine < this.lines.length - 1) {
             // Start background music on first *actual* next click (going to line 1)
             if (this.currentLine === 0) {
-                this.backgroundMusic.volume = 0.3; 
+                this.backgroundMusic.volume = 0.2; // Lowered volume (approx 30% quieter than 0.3)
                 this.backgroundMusic.play().catch(e => console.error("BG music error:", e));
 
                 // Play the intro voice line when advancing to the main dialog
